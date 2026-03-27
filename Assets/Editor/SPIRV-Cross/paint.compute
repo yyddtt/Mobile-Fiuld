@@ -1,0 +1,349 @@
+static const uint3 gl_WorkGroupSize = uint3(128u, 1u, 1u);
+
+cbuffer args_t : register(b0)
+{
+    float args_m0 : packoffset(c0);
+    int args_m1 : packoffset(c0.y);
+    int args_m2 : packoffset(c0.z);
+    int args_m3 : packoffset(c0.w);
+    int args_m4 : packoffset(c1);
+    int args_m5 : packoffset(c1.y);
+    int args_m6 : packoffset(c1.z);
+    int args_m7 : packoffset(c1.w);
+    int args_m8 : packoffset(c2);
+    int args_m9 : packoffset(c2.y);
+    int args_m10 : packoffset(c2.z);
+    int args_m11 : packoffset(c2.w);
+    int args_m12 : packoffset(c3);
+    int args_m13 : packoffset(c3.y);
+    int args_m14 : packoffset(c3.z);
+    int args_m15 : packoffset(c3.w);
+    int args_m16 : packoffset(c4);
+    int args_m17 : packoffset(c4.y);
+    int args_m18 : packoffset(c4.z);
+    int args_m19 : packoffset(c4.w);
+    int args_m20 : packoffset(c5);
+    int args_m21 : packoffset(c5.y);
+    int args_m22 : packoffset(c5.z);
+    int args_m23 : packoffset(c5.w);
+    int args_m24 : packoffset(c6);
+    int args_m25 : packoffset(c6.y);
+    int args_m26 : packoffset(c6.z);
+    int args_m27 : packoffset(c6.w);
+    int args_m28 : packoffset(c7);
+    int args_m29 : packoffset(c7.y);
+    int args_m30 : packoffset(c7.z);
+    int args_m31 : packoffset(c7.w);
+    int args_m32 : packoffset(c8);
+    int args_m33 : packoffset(c8.y);
+    int args_m34 : packoffset(c8.z);
+    int args_m35 : packoffset(c8.w);
+    int args_m36 : packoffset(c9);
+    int args_m37 : packoffset(c9.y);
+    int args_m38 : packoffset(c9.z);
+    int args_m39 : packoffset(c9.w);
+    int args_m40 : packoffset(c10);
+    int args_m41 : packoffset(c10.y);
+    int args_m42 : packoffset(c10.z);
+    int args_m43 : packoffset(c10.w);
+    int args_m44 : packoffset(c11);
+    int args_m45 : packoffset(c11.y);
+    int args_m46 : packoffset(c11.z);
+    int args_m47 : packoffset(c11.w);
+    int args_m48 : packoffset(c12);
+    int args_m49 : packoffset(c12.y);
+    int args_m50 : packoffset(c12.z);
+    int args_m51 : packoffset(c12.w);
+    int args_m52 : packoffset(c13);
+    int args_m53 : packoffset(c13.y);
+    int args_m54 : packoffset(c13.z);
+    int args_m55 : packoffset(c13.w);
+    int args_m56 : packoffset(c14);
+    int args_m57 : packoffset(c14.y);
+    int args_m58 : packoffset(c14.z);
+    int args_m59 : packoffset(c14.w);
+    int args_m60 : packoffset(c15);
+    int args_m61 : packoffset(c15.y);
+    int args_m62 : packoffset(c15.z);
+    int args_m63 : packoffset(c15.w);
+    int args_m64 : packoffset(c16);
+    int args_m65 : packoffset(c16.y);
+    int args_m66 : packoffset(c16.z);
+    int args_m67 : packoffset(c16.w);
+    int args_m68 : packoffset(c17);
+    int args_m69 : packoffset(c17.y);
+    int args_m70 : packoffset(c17.z);
+    int args_m71 : packoffset(c17.w);
+    int args_m72 : packoffset(c18);
+    int args_m73 : packoffset(c18.y);
+    int args_m74 : packoffset(c18.z);
+    int args_m75 : packoffset(c18.w);
+    int args_m76 : packoffset(c19);
+    int args_m77 : packoffset(c19.y);
+    int args_m78 : packoffset(c19.z);
+    int args_m79 : packoffset(c19.w);
+    int args_m80 : packoffset(c20);
+    int args_m81 : packoffset(c20.y);
+    int args_m82 : packoffset(c20.z);
+    int args_m83 : packoffset(c20.w);
+    int args_m84 : packoffset(c21);
+    int args_m85 : packoffset(c21.y);
+    int args_m86 : packoffset(c21.z);
+    int args_m87 : packoffset(c21.w);
+    int args_m88 : packoffset(c22);
+    int args_m89 : packoffset(c22.y);
+    int args_m90 : packoffset(c22.z);
+    int args_m91 : packoffset(c22.w);
+    int args_m92 : packoffset(c23);
+    int args_m93 : packoffset(c23.y);
+    int args_m94 : packoffset(c23.z);
+    int args_m95 : packoffset(c23.w);
+    int args_m96 : packoffset(c24);
+    int args_m97 : packoffset(c24.y);
+    int args_m98 : packoffset(c24.z);
+    int args_m99 : packoffset(c24.w);
+    int args_m100 : packoffset(c25);
+    int args_m101 : packoffset(c25.y);
+    int args_m102 : packoffset(c25.z);
+    int args_m103 : packoffset(c25.w);
+    int args_m104 : packoffset(c26);
+    int args_m105 : packoffset(c26.y);
+    int args_m106 : packoffset(c26.z);
+    int args_m107 : packoffset(c26.w);
+    int args_m108 : packoffset(c27);
+    int args_m109 : packoffset(c27.y);
+    int args_m110 : packoffset(c27.z);
+    int args_m111 : packoffset(c27.w);
+    int args_m112 : packoffset(c28);
+    int args_m113 : packoffset(c28.y);
+    int args_m114 : packoffset(c28.z);
+    int args_m115 : packoffset(c28.w);
+    int args_m116 : packoffset(c29);
+    int args_m117 : packoffset(c29.y);
+    int args_m118 : packoffset(c29.z);
+    int args_m119 : packoffset(c29.w);
+    int args_m120 : packoffset(c30);
+    int args_m121 : packoffset(c30.y);
+    int args_m122 : packoffset(c30.z);
+    int args_m123 : packoffset(c30.w);
+    int args_m124 : packoffset(c31);
+    int args_m125 : packoffset(c31.y);
+    int args_m126 : packoffset(c31.z);
+    int args_m127 : packoffset(c31.w);
+    int args_m128 : packoffset(c32);
+    int args_m129 : packoffset(c32.y);
+    int args_m130 : packoffset(c32.z);
+    int args_m131 : packoffset(c32.w);
+    int args_m132 : packoffset(c33);
+    int args_m133 : packoffset(c33.y);
+    int args_m134 : packoffset(c33.z);
+    int args_m135 : packoffset(c33.w);
+    int args_m136 : packoffset(c34);
+    int args_m137 : packoffset(c34.y);
+    int args_m138 : packoffset(c34.z);
+    int args_m139 : packoffset(c34.w);
+    int args_m140 : packoffset(c35);
+    int args_m141 : packoffset(c35.y);
+    int args_m142 : packoffset(c35.z);
+    int args_m143 : packoffset(c35.w);
+    int args_m144 : packoffset(c36);
+    int args_m145 : packoffset(c36.y);
+    int args_m146 : packoffset(c36.z);
+    int args_m147 : packoffset(c36.w);
+    int args_m148 : packoffset(c37);
+    int args_m149 : packoffset(c37.y);
+    int args_m150 : packoffset(c37.z);
+    int args_m151 : packoffset(c37.w);
+    int args_m152 : packoffset(c38);
+    int args_m153 : packoffset(c38.y);
+    int args_m154 : packoffset(c38.z);
+    int args_m155 : packoffset(c38.w);
+    int args_m156 : packoffset(c39);
+    int args_m157 : packoffset(c39.y);
+    int args_m158 : packoffset(c39.z);
+    int args_m159 : packoffset(c39.w);
+    int args_m160 : packoffset(c40);
+    int args_m161 : packoffset(c40.y);
+    int args_m162 : packoffset(c40.z);
+    int args_m163 : packoffset(c40.w);
+    int args_m164 : packoffset(c41);
+    int args_m165 : packoffset(c41.y);
+    int args_m166 : packoffset(c41.z);
+    int args_m167 : packoffset(c41.w);
+    int args_m168 : packoffset(c42);
+    int args_m169 : packoffset(c42.y);
+    int args_m170 : packoffset(c42.z);
+    int args_m171 : packoffset(c42.w);
+    int args_m172 : packoffset(c43);
+    int args_m173 : packoffset(c43.y);
+    int args_m174 : packoffset(c43.z);
+    int args_m175 : packoffset(c43.w);
+    int args_m176 : packoffset(c44);
+    int args_m177 : packoffset(c44.y);
+    int args_m178 : packoffset(c44.z);
+    int args_m179 : packoffset(c44.w);
+    int args_m180 : packoffset(c45);
+    int args_m181 : packoffset(c45.y);
+    int args_m182 : packoffset(c45.z);
+    int args_m183 : packoffset(c45.w);
+    int args_m184 : packoffset(c46);
+    int args_m185 : packoffset(c46.y);
+    int args_m186 : packoffset(c46.z);
+    int args_m187 : packoffset(c46.w);
+    int args_m188 : packoffset(c47);
+    int args_m189 : packoffset(c47.y);
+    int args_m190 : packoffset(c47.z);
+    int args_m191 : packoffset(c47.w);
+    int args_m192 : packoffset(c48);
+    int args_m193 : packoffset(c48.y);
+    int args_m194 : packoffset(c48.z);
+    int args_m195 : packoffset(c48.w);
+    int args_m196 : packoffset(c49);
+    int args_m197 : packoffset(c49.y);
+    int args_m198 : packoffset(c49.z);
+    int args_m199 : packoffset(c49.w);
+    int args_m200 : packoffset(c50);
+    int args_m201 : packoffset(c50.y);
+    int args_m202 : packoffset(c50.z);
+    int args_m203 : packoffset(c50.w);
+    int args_m204 : packoffset(c51);
+    int args_m205 : packoffset(c51.y);
+    int args_m206 : packoffset(c51.z);
+    int args_m207 : packoffset(c51.w);
+    int args_m208 : packoffset(c52);
+    int args_m209 : packoffset(c52.y);
+    int args_m210 : packoffset(c52.z);
+    int args_m211 : packoffset(c52.w);
+    int args_m212 : packoffset(c53);
+    int args_m213 : packoffset(c53.y);
+    int args_m214 : packoffset(c53.z);
+    int args_m215 : packoffset(c53.w);
+    int args_m216 : packoffset(c54);
+    int args_m217 : packoffset(c54.y);
+    int args_m218 : packoffset(c54.z);
+    int args_m219 : packoffset(c54.w);
+    int args_m220 : packoffset(c55);
+    int args_m221 : packoffset(c55.y);
+    int args_m222 : packoffset(c55.z);
+    int args_m223 : packoffset(c55.w);
+    int args_m224 : packoffset(c56);
+    int args_m225 : packoffset(c56.y);
+    int args_m226 : packoffset(c56.z);
+    int args_m227 : packoffset(c56.w);
+    int args_m228 : packoffset(c57);
+    int args_m229 : packoffset(c57.y);
+    int args_m230 : packoffset(c57.z);
+    int args_m231 : packoffset(c57.w);
+    int args_m232 : packoffset(c58);
+    int args_m233 : packoffset(c58.y);
+    int args_m234 : packoffset(c58.z);
+    int args_m235 : packoffset(c58.w);
+    int args_m236 : packoffset(c59);
+    int args_m237 : packoffset(c59.y);
+    int args_m238 : packoffset(c59.z);
+    int args_m239 : packoffset(c59.w);
+    int args_m240 : packoffset(c60);
+    int args_m241 : packoffset(c60.y);
+    int args_m242 : packoffset(c60.z);
+    int args_m243 : packoffset(c60.w);
+    int args_m244 : packoffset(c61);
+    int args_m245 : packoffset(c61.y);
+    int args_m246 : packoffset(c61.z);
+    int args_m247 : packoffset(c61.w);
+    int args_m248 : packoffset(c62);
+    int args_m249 : packoffset(c62.y);
+    int args_m250 : packoffset(c62.z);
+    int args_m251 : packoffset(c62.w);
+    int args_m252 : packoffset(c63);
+    int args_m253 : packoffset(c63.y);
+    int args_m254 : packoffset(c63.z);
+    int args_m255 : packoffset(c63.w);
+    int args_m256 : packoffset(c64);
+};
+
+RWByteAddressBuffer root_buffer_0_u32 : register(u2);
+RWByteAddressBuffer ext_arr_buffer_0_u32 : register(u3);
+cbuffer SPIRV_Cross_NumWorkgroups : register(b0)
+{
+    uint3 SPIRV_Cross_NumWorkgroups_1_count : packoffset(c0);
+};
+
+
+static uint3 gl_GlobalInvocationID;
+struct SPIRV_Cross_Input
+{
+    uint3 gl_GlobalInvocationID : SV_DispatchThreadID;
+};
+
+void comp_main()
+{
+    for (int tmp3_i32 = int(gl_GlobalInvocationID.x); tmp3_i32 < 204800; tmp3_i32 += int(SPIRV_Cross_NumWorkgroups_1_count.x * 128u))
+    {
+        int tmp8_i32 = tmp3_i32 / 320;
+        int tmp13_i32 = tmp3_i32 - (320 * tmp8_i32);
+        float tmp25_f32 = float(tmp8_i32);
+        float tmp26_f32 = float(tmp13_i32);
+        float tmp30_f32 = mad(tmp25_f32, 0.00312500004656612873077392578125f, -1.0f);
+        float tmp33_f32 = mad(tmp26_f32, 0.00312500004656612873077392578125f, -0.5f);
+        float tmp34_f32 = tmp30_f32 + tmp30_f32;
+        float tmp35_f32 = tmp33_f32 + tmp33_f32;
+        float tmp36_unknown = tmp34_f32;
+        float tmp38_unknown = tmp35_f32;
+        int tmp40_unknown = 0;
+        int _163;
+        _163 = 0;
+        float tmp67_f32;
+        float tmp68_f32;
+        int tmp72_i32;
+        float _161 = tmp34_f32;
+        float _162 = tmp35_f32;
+        for (;;)
+        {
+            float tmp45_f32 = _162 * _162;
+            int tmp49_i32 = (-int(sqrt(mad(_161, _161, tmp45_f32)) < 20.0f)) & 1;
+            int tmp50_unknown = tmp49_i32;
+            int _164;
+            if (tmp49_i32 != 0)
+            {
+                int tmp55_i32 = (-int(_163 < 50)) & 1;
+                tmp50_unknown = tmp55_i32;
+                _164 = tmp55_i32;
+            }
+            else
+            {
+                _164 = tmp49_i32;
+            }
+            if (_164 != 0)
+            {
+            }
+            else
+            {
+                if (true)
+                {
+                    break;
+                }
+            }
+            float tmp65_f32 = _161 + _161;
+            tmp67_f32 = mad(_161, _161, -tmp45_f32) + (-0.800000011920928955078125f);
+            tmp68_f32 = mad(tmp65_f32, _162, 0.10806046426296234130859375f);
+            tmp36_unknown = tmp67_f32;
+            tmp38_unknown = tmp68_f32;
+            tmp72_i32 = _163 + 1;
+            tmp40_unknown = tmp72_i32;
+            _163 = tmp72_i32;
+            _162 = tmp68_f32;
+            _161 = tmp67_f32;
+            continue;
+        }
+        float tmp75_f32 = float(_163);
+        root_buffer_0_u32.Store(((uint(tmp13_i32 + (tmp8_i32 * 320)) * 4u) >> 2u) * 4 + 0, asuint(mad(-tmp75_f32, 0.0199999995529651641845703125f, 1.0f)));
+        ext_arr_buffer_0_u32.Store(int(uint(tmp13_i32 << 2) >> uint(2)) * 4 + 0, 1094713344u);
+    }
+}
+
+[numthreads(128, 1, 1)]
+void main(SPIRV_Cross_Input stage_input)
+{
+    gl_GlobalInvocationID = stage_input.gl_GlobalInvocationID;
+    comp_main();
+}

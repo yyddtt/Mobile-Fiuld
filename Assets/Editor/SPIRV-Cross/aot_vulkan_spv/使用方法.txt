@@ -1,0 +1,4 @@
+spirv-cross --output aot_vulkan_compute/mpm1.compute --hlsl aot_vulkan_spv/mpm1.spv
+
+
+

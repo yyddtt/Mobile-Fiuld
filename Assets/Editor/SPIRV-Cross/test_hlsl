@@ -1,0 +1,28 @@
+static const uint3 gl_WorkGroupSize = uint3(1u, 1u, 1u);
+
+RWByteAddressBuffer _14 : register(u2);
+RWByteAddressBuffer _25 : register(u1);
+
+void substep_c54_00()
+{
+    int B = int(_14.Load(224));
+    int C = 8;
+    _25.Store((C >> 2) * 4 + 0, uint(B));
+    int E = int(_14.Load(228));
+    int F = 4;
+    _25.Store((F >> 2) * 4 + 0, uint(E));
+    int H = B * E;
+    int I = 0;
+    _25.Store((I >> 2) * 4 + 0, uint(H));
+}
+
+void comp_main()
+{
+    substep_c54_00();
+}
+
+[numthreads(1, 1, 1)]
+void main()
+{
+    comp_main();
+}

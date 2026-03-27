@@ -1,0 +1,2625 @@
+static const uint3 gl_WorkGroupSize = uint3(64u, 1u, 1u);
+
+RWByteAddressBuffer root_buffer_0 : register(u0);
+
+static uint3 gl_GlobalInvocationID;
+struct SPIRV_Cross_Input
+{
+    uint3 gl_GlobalInvocationID : SV_DispatchThreadID;
+};
+
+void comp_main()
+{
+    int begin_ = int(gl_GlobalInvocationID.x) + 0;
+    int end_ = 262144 + 0;
+    int _1206;
+    int _1224;
+    int _1242;
+    int _1266;
+    int _1289;
+    int _1329;
+    int _1347;
+    int _1365;
+    int _1387;
+    int _1408;
+    int _1448;
+    int _1466;
+    int _1484;
+    int _1506;
+    int _1527;
+    int _1572;
+    int _1590;
+    int _1608;
+    int _1630;
+    int _1651;
+    int _1684;
+    int _1702;
+    int _1720;
+    int _1742;
+    int _1763;
+    int _1796;
+    int _1814;
+    int _1832;
+    int _1854;
+    int _1875;
+    int _1920;
+    int _1938;
+    int _1956;
+    int _1978;
+    int _1999;
+    int _2032;
+    int _2050;
+    int _2068;
+    int _2090;
+    int _2111;
+    int _2144;
+    int _2162;
+    int _2180;
+    int _2202;
+    int _2223;
+    int _2267;
+    int _2285;
+    int _2303;
+    int _2325;
+    int _2346;
+    int _2378;
+    int _2396;
+    int _2414;
+    int _2436;
+    int _2457;
+    int _2489;
+    int _2507;
+    int _2525;
+    int _2547;
+    int _2568;
+    int _2604;
+    int _2622;
+    int _2640;
+    int _2662;
+    int _2683;
+    int _2715;
+    int _2733;
+    int _2751;
+    int _2773;
+    int _2794;
+    int _2826;
+    int _2844;
+    int _2862;
+    int _2884;
+    int _2905;
+    int _2941;
+    int _2959;
+    int _2977;
+    int _2999;
+    int _3020;
+    int _3052;
+    int _3070;
+    int _3088;
+    int _3110;
+    int _3131;
+    int _3163;
+    int _3181;
+    int _3199;
+    int _3221;
+    int _3242;
+    int _3287;
+    int _3305;
+    int _3323;
+    int _3345;
+    int _3366;
+    int _3398;
+    int _3416;
+    int _3434;
+    int _3456;
+    int _3477;
+    int _3509;
+    int _3527;
+    int _3545;
+    int _3567;
+    int _3588;
+    int _3624;
+    int _3642;
+    int _3660;
+    int _3682;
+    int _3703;
+    int _3735;
+    int _3753;
+    int _3771;
+    int _3793;
+    int _3814;
+    int _3846;
+    int _3864;
+    int _3882;
+    int _3904;
+    int _3925;
+    int _3961;
+    int _3979;
+    int _3997;
+    int _4019;
+    int _4040;
+    int _4072;
+    int _4090;
+    int _4108;
+    int _4130;
+    int _4151;
+    int _4183;
+    int _4201;
+    int _4219;
+    int _4241;
+    int _4262;
+    for (int ii = begin_; ii < end_; ii += 262144)
+    {
+        int tmp44394 = (ii + 0) & 262143;
+        if ((-int(tmp44394 < 140000)) != 0)
+        {
+            uint tmp40334 = 0u + (uint(0) * 83886080u);
+            uint tmp40338 = (tmp40334 + 0u) + (uint(tmp44394) * 12u);
+            int _89 = int(root_buffer_0.Load(uint(int(tmp40338 + 0u) >> int(2u)) * 4 + 0));
+            float tmp53 = asfloat(_89);
+            int _99 = int(root_buffer_0.Load(uint(int(tmp40338 + 4u) >> int(2u)) * 4 + 0));
+            float tmp59 = asfloat(_99);
+            int _110 = int(root_buffer_0.Load(uint(int(tmp40338 + 8u) >> int(2u)) * 4 + 0));
+            float tmp64 = asfloat(_110);
+            if (((((-int(tmp53 == 0.0f)) & 1) & ((-int(tmp59 == 0.0f)) & 1)) & ((-int(tmp64 == 0.0f)) & 1)) != 0)
+            {
+                continue;
+            }
+            else
+            {
+            }
+            float tmp71 = tmp53 * 64.0f;
+            float tmp72 = tmp59 * 64.0f;
+            float tmp73 = tmp64 * 64.0f;
+            int tmp77 = int(tmp71 - 0.5f);
+            int tmp78 = int(tmp72 - 0.5f);
+            int tmp79 = int(tmp73 - 0.5f);
+            if (((-int(tmp44394 >= 65536)) & 1) != 0)
+            {
+                root_buffer_0.Store(uint(int(((tmp40334 + 35651584u) + (uint(((tmp79 & 63) + ((tmp78 & 63) << 6)) + ((tmp77 & 63) << 12)) * 4u)) + 0u) >> int(2u)) * 4 + 0, uint(asint(10.0f)));
+            }
+            else
+            {
+            }
+            float tmp87 = tmp71 - float(tmp77);
+            float tmp89 = tmp72 - float(tmp78);
+            float tmp91 = tmp73 - float(tmp79);
+            float tmp93 = 1.5f - tmp87;
+            float tmp94 = 1.5f - tmp89;
+            float tmp95 = 1.5f - tmp91;
+            float tmp99 = (tmp94 * tmp94) * 0.5f;
+            float tmp100 = (tmp95 * tmp95) * 0.5f;
+            float tmp102 = tmp87 - 1.0f;
+            float tmp103 = tmp89 - 1.0f;
+            float tmp104 = tmp91 - 1.0f;
+            float tmp109 = 0.75f - (tmp102 * tmp102);
+            float tmp110 = 0.75f - (tmp103 * tmp103);
+            float tmp111 = 0.75f - (tmp104 * tmp104);
+            float tmp112 = tmp87 - 0.5f;
+            float tmp113 = tmp89 - 0.5f;
+            float tmp114 = tmp91 - 0.5f;
+            float tmp118 = (tmp113 * tmp113) * 0.5f;
+            float tmp119 = (tmp114 * tmp114) * 0.5f;
+            uint tmp40382 = (tmp40334 + 10485760u) + (uint(tmp44394) * 36u);
+            int _194 = int(root_buffer_0.Load(uint(int(tmp40382 + 0u) >> int(2u)) * 4 + 0));
+            float tmp121 = asfloat(_194);
+            int _200 = int(root_buffer_0.Load(uint(int(tmp40382 + 4u) >> int(2u)) * 4 + 0));
+            float tmp125 = asfloat(_200);
+            float tmp126 = tmp125 * 0.00019999999494757503271102905273438f;
+            int _206 = int(root_buffer_0.Load(uint(int(tmp40382 + 8u) >> int(2u)) * 4 + 0));
+            float tmp128 = asfloat(_206);
+            float tmp129 = tmp128 * 0.00019999999494757503271102905273438f;
+            int _212 = int(root_buffer_0.Load(uint(int(tmp40382 + 12u) >> int(2u)) * 4 + 0));
+            float tmp131 = asfloat(_212);
+            float tmp132 = tmp131 * 0.00019999999494757503271102905273438f;
+            int _219 = int(root_buffer_0.Load(uint(int(tmp40382 + 16u) >> int(2u)) * 4 + 0));
+            float tmp134 = asfloat(_219);
+            int _226 = int(root_buffer_0.Load(uint(int(tmp40382 + 20u) >> int(2u)) * 4 + 0));
+            float tmp137 = asfloat(_226);
+            float tmp138 = tmp137 * 0.00019999999494757503271102905273438f;
+            int _233 = int(root_buffer_0.Load(uint(int(tmp40382 + 24u) >> int(2u)) * 4 + 0));
+            float tmp140 = asfloat(_233);
+            float tmp141 = tmp140 * 0.00019999999494757503271102905273438f;
+            int _240 = int(root_buffer_0.Load(uint(int(tmp40382 + 28u) >> int(2u)) * 4 + 0));
+            float tmp143 = asfloat(_240);
+            float tmp144 = tmp143 * 0.00019999999494757503271102905273438f;
+            int _247 = int(root_buffer_0.Load(uint(int(tmp40382 + 32u) >> int(2u)) * 4 + 0));
+            float tmp146 = asfloat(_247);
+            float tmp148 = (tmp121 * 0.00019999999494757503271102905273438f) + 1.0f;
+            float tmp149 = (tmp134 * 0.00019999999494757503271102905273438f) + 1.0f;
+            float tmp150 = (tmp146 * 0.00019999999494757503271102905273438f) + 1.0f;
+            uint tmp40472 = (tmp40334 + 19922944u) + (uint(tmp44394) * 36u);
+            uint tmp40473 = tmp40472 + 0u;
+            int _261 = int(root_buffer_0.Load(uint(int(tmp40473) >> int(2u)) * 4 + 0));
+            float tmp152 = asfloat(_261);
+            uint tmp40483 = tmp40472 + 12u;
+            int _267 = int(root_buffer_0.Load(uint(int(tmp40483) >> int(2u)) * 4 + 0));
+            float tmp155 = asfloat(_267);
+            uint tmp40493 = tmp40472 + 24u;
+            int _274 = int(root_buffer_0.Load(uint(int(tmp40493) >> int(2u)) * 4 + 0));
+            float tmp159 = asfloat(_274);
+            float tmp161 = ((tmp148 * tmp152) + (tmp126 * tmp155)) + (tmp129 * tmp159);
+            uint tmp40503 = tmp40472 + 4u;
+            int _281 = int(root_buffer_0.Load(uint(int(tmp40503) >> int(2u)) * 4 + 0));
+            float tmp163 = asfloat(_281);
+            uint tmp40513 = tmp40472 + 16u;
+            int _287 = int(root_buffer_0.Load(uint(int(tmp40513) >> int(2u)) * 4 + 0));
+            float tmp166 = asfloat(_287);
+            uint tmp40523 = tmp40472 + 28u;
+            int _294 = int(root_buffer_0.Load(uint(int(tmp40523) >> int(2u)) * 4 + 0));
+            float tmp170 = asfloat(_294);
+            float tmp172 = ((tmp148 * tmp163) + (tmp126 * tmp166)) + (tmp129 * tmp170);
+            uint tmp40533 = tmp40472 + 8u;
+            int _301 = int(root_buffer_0.Load(uint(int(tmp40533) >> int(2u)) * 4 + 0));
+            float tmp174 = asfloat(_301);
+            uint tmp40543 = tmp40472 + 20u;
+            int _307 = int(root_buffer_0.Load(uint(int(tmp40543) >> int(2u)) * 4 + 0));
+            float tmp177 = asfloat(_307);
+            uint tmp40553 = tmp40472 + 32u;
+            int _314 = int(root_buffer_0.Load(uint(int(tmp40553) >> int(2u)) * 4 + 0));
+            float tmp181 = asfloat(_314);
+            float tmp183 = ((tmp148 * tmp174) + (tmp126 * tmp177)) + (tmp129 * tmp181);
+            float tmp188 = ((tmp132 * tmp152) + (tmp149 * tmp155)) + (tmp138 * tmp159);
+            float tmp193 = ((tmp132 * tmp163) + (tmp149 * tmp166)) + (tmp138 * tmp170);
+            float tmp198 = ((tmp132 * tmp174) + (tmp149 * tmp177)) + (tmp138 * tmp181);
+            float tmp203 = ((tmp141 * tmp152) + (tmp144 * tmp155)) + (tmp150 * tmp159);
+            float tmp208 = ((tmp141 * tmp163) + (tmp144 * tmp166)) + (tmp150 * tmp170);
+            float tmp213 = ((tmp141 * tmp174) + (tmp144 * tmp177)) + (tmp150 * tmp181);
+            uint tmp40563 = ((tmp40334 + 29360128u) + (uint(tmp44394) * 4u)) + 0u;
+            int _356 = int(root_buffer_0.Load(uint(int(tmp40563) >> int(2u)) * 4 + 0));
+            float tmp215 = asfloat(_356);
+            float tmp219 = 0.0f;
+            float tmp220 = 0.0f;
+            float tmp221 = 0.0f;
+            float tmp222 = 0.0f;
+            float tmp223 = 0.0f;
+            float tmp224 = 0.0f;
+            float tmp225 = 0.0f;
+            float tmp226 = 0.0f;
+            float tmp227 = 0.0f;
+            float tmp228 = 0.0f;
+            tmp219 = 1.0f;
+            tmp223 = (tmp203 * tmp203) + ((tmp188 * tmp188) + (tmp161 * tmp161));
+            tmp224 = (tmp208 * tmp203) + ((tmp193 * tmp188) + (tmp172 * tmp161));
+            tmp225 = (tmp213 * tmp203) + ((tmp198 * tmp188) + (tmp183 * tmp161));
+            tmp226 = (tmp208 * tmp208) + ((tmp193 * tmp193) + (tmp172 * tmp172));
+            tmp227 = (tmp213 * tmp208) + ((tmp198 * tmp193) + (tmp183 * tmp172));
+            tmp228 = (tmp213 * tmp213) + ((tmp198 * tmp198) + (tmp183 * tmp183));
+            for (int tmp267 = 0; tmp267 < 5; tmp267++)
+            {
+                float tmp268 = tmp224;
+                float tmp269 = tmp268 * 0.5f;
+                float tmp270 = tmp223;
+                float tmp271 = tmp226;
+                float tmp272 = tmp270 - tmp271;
+                int tmp275 = ((-int((tmp269 * tmp269) >= 9.9999996826552253889678874634872e-21f)) != 0) ? (-1) : 0;
+                float tmp278 = asfloat(tmp275 & asint(tmp269));
+                float tmp284 = asfloat((tmp275 & asint(tmp272)) | ((~tmp275) & 1065353216));
+                float tmp285 = tmp278 * tmp278;
+                float tmp286 = tmp284 * tmp284;
+                float tmp288 = rsqrt(tmp285 + tmp286);
+                int tmp293 = ((-int(tmp286 <= (tmp285 * 5.82842731475830078125f))) != 0) ? (-1) : 0;
+                int tmp295 = ~tmp293;
+                float tmp299 = asfloat((tmp295 & asint(tmp288 * tmp278)) | (tmp293 & 1053028117));
+                float tmp304 = asfloat((tmp295 & asint(tmp288 * tmp284)) | (tmp293 & 1064076126));
+                float tmp305 = tmp299 * tmp299;
+                float tmp306 = tmp304 * tmp304;
+                float tmp307 = tmp306 - tmp305;
+                float tmp308 = tmp304 * tmp299;
+                float tmp309 = tmp308 + tmp308;
+                float tmp310 = tmp305 + tmp306;
+                float tmp311 = tmp228;
+                float tmp313 = tmp225;
+                float tmp314 = tmp313 * tmp310;
+                float tmp315 = tmp227;
+                float tmp316 = tmp315 * tmp310;
+                float tmp317 = (tmp311 * tmp310) * tmp310;
+                float tmp323 = (tmp307 * tmp316) - (tmp309 * tmp314);
+                float tmp324 = tmp309 * tmp309;
+                float tmp327 = tmp307 * tmp307;
+                float tmp335 = tmp307 * tmp309;
+                float tmp336 = (tmp268 + tmp268) * tmp335;
+                float tmp340 = ((tmp271 * tmp327) + (tmp270 * tmp324)) - tmp336;
+                float tmp343 = tmp221;
+                float tmp345 = tmp222;
+                float tmp347 = tmp219;
+                float tmp353 = (tmp304 * tmp345) + (tmp299 * tmp347);
+                float tmp354 = (tmp304 * tmp347) - (tmp299 * tmp345);
+                float tmp355 = (tmp304 * tmp220) + (tmp299 * tmp343);
+                float tmp356 = (tmp304 * tmp343) - (tmp299 * tmp220);
+                float tmp357 = tmp323 * 0.5f;
+                float tmp358 = tmp340 - tmp317;
+                int tmp361 = ((-int((tmp357 * tmp357) >= 9.9999996826552253889678874634872e-21f)) != 0) ? (-1) : 0;
+                float tmp364 = asfloat(tmp361 & asint(tmp357));
+                float tmp370 = asfloat((tmp361 & asint(tmp358)) | ((~tmp361) & 1065353216));
+                float tmp371 = tmp364 * tmp364;
+                float tmp372 = tmp370 * tmp370;
+                float tmp374 = rsqrt(tmp371 + tmp372);
+                int tmp379 = ((-int(tmp372 <= (tmp371 * 5.82842731475830078125f))) != 0) ? (-1) : 0;
+                int tmp381 = ~tmp379;
+                float tmp385 = asfloat((tmp381 & asint(tmp374 * tmp364)) | (tmp379 & 1053028117));
+                float tmp390 = asfloat((tmp381 & asint(tmp374 * tmp370)) | (tmp379 & 1064076126));
+                float tmp391 = tmp385 * tmp385;
+                float tmp392 = tmp390 * tmp390;
+                float tmp393 = tmp392 - tmp391;
+                float tmp394 = tmp390 * tmp385;
+                float tmp395 = tmp394 + tmp394;
+                float tmp396 = tmp391 + tmp392;
+                float tmp398 = ((tmp268 * (tmp327 - tmp324)) - (tmp272 * tmp335)) * tmp396;
+                float tmp399 = ((tmp309 * tmp316) + (tmp307 * tmp314)) * tmp396;
+                float tmp400 = ((((tmp270 * tmp327) + (tmp271 * tmp324)) + tmp336) * tmp396) * tmp396;
+                float tmp406 = (tmp393 * tmp399) - (tmp395 * tmp398);
+                float tmp407 = tmp395 * tmp395;
+                float tmp410 = tmp393 * tmp393;
+                float tmp418 = tmp393 * tmp395;
+                float tmp419 = (tmp323 + tmp323) * tmp418;
+                float tmp423 = ((tmp317 * tmp410) + (tmp340 * tmp407)) - tmp419;
+                float tmp432 = (tmp390 * tmp355) + (tmp385 * tmp354);
+                float tmp433 = (tmp390 * tmp354) - (tmp385 * tmp355);
+                float tmp434 = (tmp390 * tmp356) + (tmp385 * tmp353);
+                float tmp435 = (tmp390 * tmp353) - (tmp385 * tmp356);
+                float tmp436 = tmp406 * 0.5f;
+                float tmp437 = tmp423 - tmp400;
+                int tmp440 = ((-int((tmp436 * tmp436) >= 9.9999996826552253889678874634872e-21f)) != 0) ? (-1) : 0;
+                float tmp443 = asfloat(tmp440 & asint(tmp436));
+                float tmp449 = asfloat((tmp440 & asint(tmp437)) | ((~tmp440) & 1065353216));
+                float tmp450 = tmp443 * tmp443;
+                float tmp451 = tmp449 * tmp449;
+                float tmp453 = rsqrt(tmp450 + tmp451);
+                int tmp458 = ((-int(tmp451 <= (tmp450 * 5.82842731475830078125f))) != 0) ? (-1) : 0;
+                int tmp460 = ~tmp458;
+                float tmp464 = asfloat((tmp460 & asint(tmp453 * tmp443)) | (tmp458 & 1053028117));
+                float tmp469 = asfloat((tmp460 & asint(tmp453 * tmp449)) | (tmp458 & 1064076126));
+                float tmp470 = tmp464 * tmp464;
+                float tmp471 = tmp469 * tmp469;
+                float tmp472 = tmp471 - tmp470;
+                float tmp473 = tmp469 * tmp464;
+                float tmp474 = tmp473 + tmp473;
+                float tmp475 = tmp470 + tmp471;
+                float tmp477 = ((tmp323 * (tmp410 - tmp407)) - (tmp358 * tmp418)) * tmp475;
+                float tmp478 = ((tmp395 * tmp399) + (tmp393 * tmp398)) * tmp475;
+                tmp226 = ((((tmp340 * tmp410) + (tmp317 * tmp407)) + tmp419) * tmp475) * tmp475;
+                tmp227 = (tmp474 * tmp478) + (tmp472 * tmp477);
+                tmp224 = (tmp472 * tmp478) - (tmp474 * tmp477);
+                float tmp489 = tmp474 * tmp474;
+                float tmp492 = tmp472 * tmp472;
+                float tmp500 = tmp472 * tmp474;
+                float tmp501 = (tmp406 + tmp406) * tmp500;
+                tmp228 = ((tmp423 * tmp492) + (tmp400 * tmp489)) + tmp501;
+                tmp225 = (tmp406 * (tmp492 - tmp489)) - (tmp437 * tmp500);
+                tmp223 = ((tmp400 * tmp492) + (tmp423 * tmp489)) - tmp501;
+                tmp221 = (tmp469 * tmp434) + (tmp464 * tmp433);
+                tmp219 = (tmp469 * tmp433) - (tmp464 * tmp434);
+                tmp222 = (tmp469 * tmp435) + (tmp464 * tmp432);
+                tmp220 = (tmp469 * tmp432) - (tmp464 * tmp435);
+            }
+            float tmp535 = (tmp222 * tmp222) + ((tmp221 * tmp221) + ((tmp220 * tmp220) + (tmp219 * tmp219)));
+            float tmp536 = rsqrt(tmp535);
+            float tmp537 = tmp536 * 0.5f;
+            float tmp542 = (tmp536 + tmp537) - (tmp535 * (tmp536 * (tmp536 * tmp537)));
+            float tmp543 = tmp219 * tmp542;
+            float tmp544 = tmp220 * tmp542;
+            float tmp545 = tmp221 * tmp542;
+            float tmp546 = tmp222 * tmp542;
+            float tmp547 = tmp544 * tmp544;
+            float tmp548 = tmp545 * tmp545;
+            float tmp549 = tmp546 * tmp546;
+            float tmp550 = tmp543 * tmp543;
+            float tmp551 = tmp550 - tmp547;
+            float tmp553 = (tmp551 - tmp548) + tmp549;
+            float tmp555 = (tmp551 + tmp548) - tmp549;
+            float tmp558 = ((tmp550 + tmp547) - tmp548) - tmp549;
+            float tmp559 = tmp544 + tmp544;
+            float tmp560 = tmp545 + tmp545;
+            float tmp561 = tmp546 + tmp546;
+            float tmp562 = tmp543 * tmp559;
+            float tmp563 = tmp543 * tmp560;
+            float tmp564 = tmp543 * tmp561;
+            float tmp565 = tmp545 * tmp559;
+            float tmp566 = tmp546 * tmp560;
+            float tmp567 = tmp544 * tmp561;
+            float tmp568 = tmp565 - tmp564;
+            float tmp569 = tmp566 - tmp562;
+            float tmp570 = tmp567 - tmp563;
+            float tmp571 = tmp565 + tmp564;
+            float tmp572 = tmp566 + tmp562;
+            float tmp573 = tmp567 + tmp563;
+            float tmp580 = ((tmp558 * tmp161) + (tmp571 * tmp172)) + (tmp570 * tmp183);
+            float tmp584 = ((tmp568 * tmp161) + (tmp555 * tmp172)) + (tmp572 * tmp183);
+            float tmp588 = ((tmp573 * tmp161) + (tmp569 * tmp172)) + (tmp553 * tmp183);
+            float tmp595 = ((tmp558 * tmp188) + (tmp571 * tmp193)) + (tmp570 * tmp198);
+            float tmp599 = ((tmp568 * tmp188) + (tmp555 * tmp193)) + (tmp572 * tmp198);
+            float tmp603 = ((tmp573 * tmp188) + (tmp569 * tmp193)) + (tmp553 * tmp198);
+            float tmp610 = ((tmp558 * tmp203) + (tmp571 * tmp208)) + (tmp570 * tmp213);
+            float tmp614 = ((tmp568 * tmp203) + (tmp555 * tmp208)) + (tmp572 * tmp213);
+            float tmp618 = ((tmp573 * tmp203) + (tmp569 * tmp208)) + (tmp553 * tmp213);
+            float tmp623 = ((tmp580 * tmp580) + (tmp595 * tmp595)) + (tmp610 * tmp610);
+            float tmp628 = ((tmp584 * tmp584) + (tmp599 * tmp599)) + (tmp614 * tmp614);
+            float tmp633 = ((tmp588 * tmp588) + (tmp603 * tmp603)) + (tmp618 * tmp618);
+            int tmp635 = ((-int(tmp623 < tmp628)) != 0) ? (-1) : 0;
+            int tmp636 = asint(tmp580);
+            int tmp637 = asint(tmp584);
+            int tmp639 = (tmp636 ^ tmp637) & tmp635;
+            int tmp640 = tmp636 ^ tmp639;
+            int tmp643 = asint(tmp595);
+            int tmp644 = asint(tmp599);
+            int tmp646 = (tmp643 ^ tmp644) & tmp635;
+            int tmp647 = tmp643 ^ tmp646;
+            int tmp650 = asint(tmp610);
+            int tmp651 = asint(tmp614);
+            int tmp653 = (tmp650 ^ tmp651) & tmp635;
+            int tmp654 = tmp650 ^ tmp653;
+            int tmp657 = asint(tmp623);
+            int tmp658 = asint(tmp628);
+            int tmp660 = (tmp657 ^ tmp658) & tmp635;
+            int tmp661 = tmp657 ^ tmp660;
+            float tmp668 = asfloat(tmp635 & (-1073741824)) + 1.0f;
+            int tmp673 = ((-int(asfloat(tmp661) < tmp633)) != 0) ? (-1) : 0;
+            int tmp674 = asint(tmp588);
+            int tmp676 = (tmp640 ^ tmp674) & tmp673;
+            int tmp679 = tmp674 ^ tmp676;
+            int tmp680 = asint(tmp603);
+            int tmp682 = (tmp647 ^ tmp680) & tmp673;
+            int tmp685 = tmp680 ^ tmp682;
+            int tmp686 = asint(tmp618);
+            int tmp688 = (tmp654 ^ tmp686) & tmp673;
+            int tmp691 = tmp686 ^ tmp688;
+            int tmp692 = asint(tmp633);
+            float tmp699 = asfloat(tmp673 & (-1073741824)) + 1.0f;
+            float tmp700 = asfloat(tmp640 ^ tmp676) * tmp699;
+            float tmp701 = asfloat(tmp647 ^ tmp682) * tmp699;
+            float tmp702 = asfloat(tmp654 ^ tmp688) * tmp699;
+            int tmp704 = ((-int(asfloat(tmp658 ^ tmp660) < asfloat(tmp692 ^ ((tmp661 ^ tmp692) & tmp673)))) != 0) ? (-1) : 0;
+            int tmp705 = asint(asfloat(tmp637 ^ tmp639) * tmp668);
+            int tmp707 = (tmp705 ^ tmp679) & tmp704;
+            float tmp709 = asfloat(tmp705 ^ tmp707);
+            int tmp712 = asint(asfloat(tmp644 ^ tmp646) * tmp668);
+            int tmp714 = (tmp712 ^ tmp685) & tmp704;
+            float tmp716 = asfloat(tmp712 ^ tmp714);
+            int tmp719 = asint(asfloat(tmp651 ^ tmp653) * tmp668);
+            int tmp721 = (tmp719 ^ tmp691) & tmp704;
+            float tmp728 = asfloat(tmp704 & (-1073741824)) + 1.0f;
+            float tmp729 = asfloat(tmp679 ^ tmp707) * tmp728;
+            float tmp730 = asfloat(tmp685 ^ tmp714) * tmp728;
+            int tmp737 = (((-int((tmp701 * tmp701) >= 9.9999999600419720025001879548654e-13f)) != 0) ? (-1) : 0) & asint(tmp701);
+            float tmp738 = asfloat(tmp737);
+            float tmp741 = max(max(0.0f - tmp700, tmp700), 9.9999999600419720025001879548654e-13f);
+            int tmp743 = ((-int(tmp700 >= 0.0f)) != 0) ? (-1) : 0;
+            float tmp746 = (tmp741 * tmp741) + (tmp738 * tmp738);
+            float tmp747 = rsqrt(tmp746);
+            float tmp748 = tmp747 * 0.5f;
+            int tmp756 = ~tmp743;
+            int tmp758 = asint(tmp741 + (((tmp747 + tmp748) - (tmp746 * (tmp747 * (tmp747 * tmp748)))) * tmp746));
+            float tmp763 = asfloat((tmp743 & tmp758) | (tmp756 & tmp737));
+            float tmp765 = asfloat((tmp743 & tmp737) | (tmp756 & tmp758));
+            float tmp768 = (tmp763 * tmp763) + (tmp765 * tmp765);
+            float tmp769 = rsqrt(tmp768);
+            float tmp770 = tmp769 * 0.5f;
+            float tmp775 = (tmp769 + tmp770) - (tmp768 * (tmp769 * (tmp769 * tmp770)));
+            float tmp776 = tmp763 * tmp775;
+            float tmp777 = tmp765 * tmp775;
+            float tmp780 = (tmp776 * tmp776) - (tmp777 * tmp777);
+            float tmp781 = tmp777 * tmp776;
+            float tmp782 = tmp781 + tmp781;
+            float tmp785 = (tmp780 * tmp700) + (tmp782 * tmp701);
+            float tmp791 = (tmp780 * tmp716) - (tmp782 * tmp709);
+            int tmp802 = (((-int((tmp702 * tmp702) >= 9.9999999600419720025001879548654e-13f)) != 0) ? (-1) : 0) & asint(tmp702);
+            float tmp803 = asfloat(tmp802);
+            float tmp806 = max(max(0.0f - tmp785, tmp785), 9.9999999600419720025001879548654e-13f);
+            int tmp808 = ((-int(tmp785 >= 0.0f)) != 0) ? (-1) : 0;
+            float tmp811 = (tmp806 * tmp806) + (tmp803 * tmp803);
+            float tmp812 = rsqrt(tmp811);
+            float tmp813 = tmp812 * 0.5f;
+            int tmp821 = ~tmp808;
+            int tmp823 = asint(tmp806 + (((tmp812 + tmp813) - (tmp811 * (tmp812 * (tmp812 * tmp813)))) * tmp811));
+            float tmp828 = asfloat((tmp808 & tmp823) | (tmp821 & tmp802));
+            float tmp830 = asfloat((tmp808 & tmp802) | (tmp821 & tmp823));
+            float tmp833 = (tmp828 * tmp828) + (tmp830 * tmp830);
+            float tmp834 = rsqrt(tmp833);
+            float tmp835 = tmp834 * 0.5f;
+            float tmp840 = (tmp834 + tmp835) - (tmp833 * (tmp834 * (tmp834 * tmp835)));
+            float tmp841 = tmp828 * tmp840;
+            float tmp842 = tmp830 * tmp840;
+            float tmp845 = (tmp841 * tmp841) - (tmp842 * tmp842);
+            float tmp846 = tmp842 * tmp841;
+            float tmp847 = tmp846 + tmp846;
+            float tmp853 = (tmp845 * asfloat(tmp719 ^ tmp721)) - (tmp847 * ((tmp780 * tmp709) + (tmp782 * tmp716)));
+            int tmp861 = (((-int((tmp853 * tmp853) >= 9.9999999600419720025001879548654e-13f)) != 0) ? (-1) : 0) & asint(tmp853);
+            float tmp862 = asfloat(tmp861);
+            float tmp865 = max(max(0.0f - tmp791, tmp791), 9.9999999600419720025001879548654e-13f);
+            int tmp867 = ((-int(tmp791 >= 0.0f)) != 0) ? (-1) : 0;
+            float tmp870 = (tmp865 * tmp865) + (tmp862 * tmp862);
+            float tmp871 = rsqrt(tmp870);
+            float tmp872 = tmp871 * 0.5f;
+            int tmp880 = ~tmp867;
+            int tmp882 = asint(tmp865 + (((tmp871 + tmp872) - (tmp870 * (tmp871 * (tmp871 * tmp872)))) * tmp870));
+            float tmp887 = asfloat((tmp867 & tmp882) | (tmp880 & tmp861));
+            float tmp889 = asfloat((tmp867 & tmp861) | (tmp880 & tmp882));
+            float tmp892 = (tmp887 * tmp887) + (tmp889 * tmp889);
+            float tmp893 = rsqrt(tmp892);
+            float tmp894 = tmp893 * 0.5f;
+            float tmp899 = (tmp893 + tmp894) - (tmp892 * (tmp893 * (tmp893 * tmp894)));
+            float tmp900 = tmp887 * tmp899;
+            float tmp901 = tmp889 * tmp899;
+            float tmp904 = (tmp900 * tmp900) - (tmp901 * tmp901);
+            float tmp905 = tmp901 * tmp900;
+            float tmp906 = tmp905 + tmp905;
+            root_buffer_0.Store(uint(int(tmp40563) >> int(2u)) * 4 + 0, uint(asint(tmp215)));
+            float tmp915 = (((tmp845 * tmp785) + (tmp847 * tmp702)) * ((tmp904 * tmp791) + (tmp906 * tmp853))) * ((tmp904 * ((tmp845 * (asfloat(tmp691 ^ tmp721) * tmp728)) - (tmp847 * ((tmp780 * tmp729) + (tmp782 * tmp730))))) - (tmp906 * ((tmp780 * tmp730) - (tmp782 * tmp729))));
+            root_buffer_0.Store(uint(int(tmp40473) >> int(2u)) * 4 + 0, uint(asint(tmp915)));
+            root_buffer_0.Store(uint(int(tmp40503) >> int(2u)) * 4 + 0, uint(asint(0.0f)));
+            root_buffer_0.Store(uint(int(tmp40533) >> int(2u)) * 4 + 0, uint(asint(0.0f)));
+            root_buffer_0.Store(uint(int(tmp40483) >> int(2u)) * 4 + 0, uint(asint(0.0f)));
+            root_buffer_0.Store(uint(int(tmp40513) >> int(2u)) * 4 + 0, uint(asint(1.0f)));
+            root_buffer_0.Store(uint(int(tmp40543) >> int(2u)) * 4 + 0, uint(asint(0.0f)));
+            root_buffer_0.Store(uint(int(tmp40493) >> int(2u)) * 4 + 0, uint(asint(0.0f)));
+            root_buffer_0.Store(uint(int(tmp40523) >> int(2u)) * 4 + 0, uint(asint(0.0f)));
+            root_buffer_0.Store(uint(int(tmp40553) >> int(2u)) * 4 + 0, uint(asint(1.0f)));
+            float tmp931 = (((exp((1.0f - tmp215) * 10.0f) * 277.77777099609375f) * tmp915) * (tmp915 - 1.0f)) * (-0.00020808000408578664064407348632812f);
+            float tmp934 = tmp125 * 6.350097828544676303863525390625e-05f;
+            float tmp935 = tmp128 * 6.350097828544676303863525390625e-05f;
+            float tmp936 = tmp131 * 6.350097828544676303863525390625e-05f;
+            float tmp938 = tmp137 * 6.350097828544676303863525390625e-05f;
+            float tmp939 = tmp140 * 6.350097828544676303863525390625e-05f;
+            float tmp940 = tmp143 * 6.350097828544676303863525390625e-05f;
+            float tmp942 = tmp931 + (tmp121 * 6.350097828544676303863525390625e-05f);
+            float tmp943 = tmp931 + (tmp134 * 6.350097828544676303863525390625e-05f);
+            float tmp944 = tmp931 + (tmp146 * 6.350097828544676303863525390625e-05f);
+            float tmp949 = (0.0f - tmp87) * 0.015625f;
+            float tmp950 = (0.0f - tmp89) * 0.015625f;
+            float tmp951 = (0.0f - tmp91) * 0.015625f;
+            float tmp952 = (tmp93 * tmp93) * 0.5f;
+            float tmp953 = tmp952 * tmp99;
+            float tmp954 = tmp953 * tmp100;
+            uint tmp40672 = (tmp40334 + 3145728u) + (uint(tmp44394) * 12u);
+            int _1154 = int(root_buffer_0.Load(uint(int(tmp40672 + 0u) >> int(2u)) * 4 + 0));
+            float tmp957 = asfloat(_1154) * 6.350097828544676303863525390625e-05f;
+            int _1160 = int(root_buffer_0.Load(uint(int(tmp40672 + 4u) >> int(2u)) * 4 + 0));
+            float tmp960 = asfloat(_1160) * 6.350097828544676303863525390625e-05f;
+            int _1166 = int(root_buffer_0.Load(uint(int(tmp40672 + 8u) >> int(2u)) * 4 + 0));
+            float tmp963 = asfloat(_1166) * 6.350097828544676303863525390625e-05f;
+            float tmp964 = tmp942 * tmp949;
+            float tmp965 = tmp934 * tmp950;
+            float tmp966 = tmp964 + tmp965;
+            float tmp967 = tmp935 * tmp951;
+            float tmp969 = tmp936 * tmp949;
+            float tmp970 = tmp943 * tmp950;
+            float tmp971 = tmp969 + tmp970;
+            float tmp972 = tmp938 * tmp951;
+            float tmp974 = tmp939 * tmp949;
+            float tmp975 = tmp940 * tmp950;
+            float tmp976 = tmp974 + tmp975;
+            float tmp977 = tmp944 * tmp951;
+            float tmp982 = tmp954 * (tmp957 + (tmp966 + tmp967));
+            float tmp983 = tmp954 * (tmp960 + (tmp971 + tmp972));
+            float tmp984 = tmp954 * (tmp963 + (tmp976 + tmp977));
+            uint tmp40701 = tmp40334 + 30408704u;
+            int tmp44558 = tmp79 & 63;
+            int tmp50592 = (tmp78 & 63) << 6;
+            int tmp47779 = tmp44558 + tmp50592;
+            int tmp50594 = (tmp77 & 63) << 12;
+            int tmp47782 = tmp47779 + tmp50594;
+            uint tmp40706 = tmp40701 + (uint(tmp47782) * 12u);
+            uint _1203 = uint(int(tmp40706 + 0u) >> int(2u));
+            for (;;)
+            {
+                int _1213 = int(root_buffer_0.Load(_1203 * 4 + 0));
+                int _1217;
+                root_buffer_0.InterlockedCompareExchange(_1203 * 4 + 0, _1213, asint(asfloat(_1213) + tmp982), _1217);
+                _1206 = int(_1217);
+                if (int(_1217) == _1213)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _1222 = uint(int(tmp40706 + 4u) >> int(2u));
+            for (;;)
+            {
+                int _1231 = int(root_buffer_0.Load(_1222 * 4 + 0));
+                int _1235;
+                root_buffer_0.InterlockedCompareExchange(_1222 * 4 + 0, _1231, asint(asfloat(_1231) + tmp983), _1235);
+                _1224 = int(_1235);
+                if (int(_1235) == _1231)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _1240 = uint(int(tmp40706 + 8u) >> int(2u));
+            for (;;)
+            {
+                int _1249 = int(root_buffer_0.Load(_1240 * 4 + 0));
+                int _1253;
+                root_buffer_0.InterlockedCompareExchange(_1240 * 4 + 0, _1249, asint(asfloat(_1249) + tmp984), _1253);
+                _1242 = int(_1253);
+                if (int(_1253) == _1249)
+                {
+                    break;
+                }
+                continue;
+            }
+            float tmp991 = tmp954 * 6.350097828544676303863525390625e-05f;
+            uint tmp40743 = tmp40334 + 33554432u;
+            uint _1264 = uint(int((tmp40743 + (uint(tmp47782) * 4u)) + 0u) >> int(2u));
+            for (;;)
+            {
+                int _1273 = int(root_buffer_0.Load(_1264 * 4 + 0));
+                int _1277;
+                root_buffer_0.InterlockedCompareExchange(_1264 * 4 + 0, _1273, asint(asfloat(_1273) + tmp991), _1277);
+                _1266 = int(_1277);
+                if (int(_1277) == _1273)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint tmp40757 = tmp40334 + 34603008u;
+            uint _1287 = uint(int((tmp40757 + (uint(tmp47782) * 4u)) + 0u) >> int(2u));
+            for (;;)
+            {
+                int _1296 = int(root_buffer_0.Load(_1287 * 4 + 0));
+                int _1300;
+                root_buffer_0.InterlockedCompareExchange(_1287 * 4 + 0, _1296, asint(asfloat(_1296) + 1.0f), _1300);
+                _1289 = int(_1300);
+                if (int(_1300) == _1296)
+                {
+                    break;
+                }
+                continue;
+            }
+            float tmp997 = (1.0f - tmp91) * 0.015625f;
+            float tmp998 = tmp953 * tmp111;
+            float tmp1000 = tmp935 * tmp997;
+            float tmp1002 = tmp938 * tmp997;
+            float tmp1004 = tmp944 * tmp997;
+            float tmp1009 = tmp998 * (tmp957 + (tmp966 + tmp1000));
+            float tmp1010 = tmp998 * (tmp960 + (tmp971 + tmp1002));
+            float tmp1011 = tmp998 * (tmp963 + (tmp976 + tmp1004));
+            int tmp44618 = (tmp79 + 1) & 63;
+            int tmp47834 = tmp44618 + tmp50592;
+            int tmp47837 = tmp47834 + tmp50594;
+            uint tmp40776 = tmp40701 + (uint(tmp47837) * 12u);
+            uint _1327 = uint(int(tmp40776 + 0u) >> int(2u));
+            for (;;)
+            {
+                int _1336 = int(root_buffer_0.Load(_1327 * 4 + 0));
+                int _1340;
+                root_buffer_0.InterlockedCompareExchange(_1327 * 4 + 0, _1336, asint(asfloat(_1336) + tmp1009), _1340);
+                _1329 = int(_1340);
+                if (int(_1340) == _1336)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _1345 = uint(int(tmp40776 + 4u) >> int(2u));
+            for (;;)
+            {
+                int _1354 = int(root_buffer_0.Load(_1345 * 4 + 0));
+                int _1358;
+                root_buffer_0.InterlockedCompareExchange(_1345 * 4 + 0, _1354, asint(asfloat(_1354) + tmp1010), _1358);
+                _1347 = int(_1358);
+                if (int(_1358) == _1354)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _1363 = uint(int(tmp40776 + 8u) >> int(2u));
+            for (;;)
+            {
+                int _1372 = int(root_buffer_0.Load(_1363 * 4 + 0));
+                int _1376;
+                root_buffer_0.InterlockedCompareExchange(_1363 * 4 + 0, _1372, asint(asfloat(_1372) + tmp1011), _1376);
+                _1365 = int(_1376);
+                if (int(_1376) == _1372)
+                {
+                    break;
+                }
+                continue;
+            }
+            float tmp1018 = tmp998 * 6.350097828544676303863525390625e-05f;
+            uint _1385 = uint(int((tmp40743 + (uint(tmp47837) * 4u)) + 0u) >> int(2u));
+            for (;;)
+            {
+                int _1394 = int(root_buffer_0.Load(_1385 * 4 + 0));
+                int _1398;
+                root_buffer_0.InterlockedCompareExchange(_1385 * 4 + 0, _1394, asint(asfloat(_1394) + tmp1018), _1398);
+                _1387 = int(_1398);
+                if (int(_1398) == _1394)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _1406 = uint(int((tmp40757 + (uint(tmp47837) * 4u)) + 0u) >> int(2u));
+            for (;;)
+            {
+                int _1415 = int(root_buffer_0.Load(_1406 * 4 + 0));
+                int _1419;
+                root_buffer_0.InterlockedCompareExchange(_1406 * 4 + 0, _1415, asint(asfloat(_1415) + 1.0f), _1419);
+                _1408 = int(_1419);
+                if (int(_1419) == _1415)
+                {
+                    break;
+                }
+                continue;
+            }
+            float tmp1025 = (2.0f - tmp91) * 0.015625f;
+            float tmp1026 = tmp953 * tmp119;
+            float tmp1029 = tmp935 * tmp1025;
+            float tmp1031 = tmp938 * tmp1025;
+            float tmp1033 = tmp944 * tmp1025;
+            float tmp1038 = tmp1026 * (tmp957 + (tmp966 + tmp1029));
+            float tmp1039 = tmp1026 * (tmp960 + (tmp971 + tmp1031));
+            float tmp1040 = tmp1026 * (tmp963 + (tmp976 + tmp1033));
+            int tmp44678 = (tmp79 + 2) & 63;
+            int tmp47889 = tmp44678 + tmp50592;
+            int tmp47892 = tmp47889 + tmp50594;
+            uint tmp40846 = tmp40701 + (uint(tmp47892) * 12u);
+            uint _1446 = uint(int(tmp40846 + 0u) >> int(2u));
+            for (;;)
+            {
+                int _1455 = int(root_buffer_0.Load(_1446 * 4 + 0));
+                int _1459;
+                root_buffer_0.InterlockedCompareExchange(_1446 * 4 + 0, _1455, asint(asfloat(_1455) + tmp1038), _1459);
+                _1448 = int(_1459);
+                if (int(_1459) == _1455)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _1464 = uint(int(tmp40846 + 4u) >> int(2u));
+            for (;;)
+            {
+                int _1473 = int(root_buffer_0.Load(_1464 * 4 + 0));
+                int _1477;
+                root_buffer_0.InterlockedCompareExchange(_1464 * 4 + 0, _1473, asint(asfloat(_1473) + tmp1039), _1477);
+                _1466 = int(_1477);
+                if (int(_1477) == _1473)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _1482 = uint(int(tmp40846 + 8u) >> int(2u));
+            for (;;)
+            {
+                int _1491 = int(root_buffer_0.Load(_1482 * 4 + 0));
+                int _1495;
+                root_buffer_0.InterlockedCompareExchange(_1482 * 4 + 0, _1491, asint(asfloat(_1491) + tmp1040), _1495);
+                _1484 = int(_1495);
+                if (int(_1495) == _1491)
+                {
+                    break;
+                }
+                continue;
+            }
+            float tmp1047 = tmp1026 * 6.350097828544676303863525390625e-05f;
+            uint _1504 = uint(int((tmp40743 + (uint(tmp47892) * 4u)) + 0u) >> int(2u));
+            for (;;)
+            {
+                int _1513 = int(root_buffer_0.Load(_1504 * 4 + 0));
+                int _1517;
+                root_buffer_0.InterlockedCompareExchange(_1504 * 4 + 0, _1513, asint(asfloat(_1513) + tmp1047), _1517);
+                _1506 = int(_1517);
+                if (int(_1517) == _1513)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _1525 = uint(int((tmp40757 + (uint(tmp47892) * 4u)) + 0u) >> int(2u));
+            for (;;)
+            {
+                int _1534 = int(root_buffer_0.Load(_1525 * 4 + 0));
+                int _1538;
+                root_buffer_0.InterlockedCompareExchange(_1525 * 4 + 0, _1534, asint(asfloat(_1534) + 1.0f), _1538);
+                _1527 = int(_1538);
+                if (int(_1538) == _1534)
+                {
+                    break;
+                }
+                continue;
+            }
+            float tmp1053 = (1.0f - tmp89) * 0.015625f;
+            float tmp1054 = tmp952 * tmp110;
+            float tmp1055 = tmp1054 * tmp100;
+            float tmp1057 = tmp934 * tmp1053;
+            float tmp1058 = tmp964 + tmp1057;
+            float tmp1060 = tmp943 * tmp1053;
+            float tmp1061 = tmp969 + tmp1060;
+            float tmp1063 = tmp940 * tmp1053;
+            float tmp1064 = tmp974 + tmp1063;
+            float tmp1069 = tmp1055 * (tmp957 + (tmp1058 + tmp967));
+            float tmp1070 = tmp1055 * (tmp960 + (tmp1061 + tmp972));
+            float tmp1071 = tmp1055 * (tmp963 + (tmp1064 + tmp977));
+            int tmp50596 = ((tmp78 + 1) & 63) << 6;
+            int tmp47944 = tmp44558 + tmp50596;
+            int tmp47947 = tmp47944 + tmp50594;
+            uint tmp40916 = tmp40701 + (uint(tmp47947) * 12u);
+            uint _1570 = uint(int(tmp40916 + 0u) >> int(2u));
+            for (;;)
+            {
+                int _1579 = int(root_buffer_0.Load(_1570 * 4 + 0));
+                int _1583;
+                root_buffer_0.InterlockedCompareExchange(_1570 * 4 + 0, _1579, asint(asfloat(_1579) + tmp1069), _1583);
+                _1572 = int(_1583);
+                if (int(_1583) == _1579)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _1588 = uint(int(tmp40916 + 4u) >> int(2u));
+            for (;;)
+            {
+                int _1597 = int(root_buffer_0.Load(_1588 * 4 + 0));
+                int _1601;
+                root_buffer_0.InterlockedCompareExchange(_1588 * 4 + 0, _1597, asint(asfloat(_1597) + tmp1070), _1601);
+                _1590 = int(_1601);
+                if (int(_1601) == _1597)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _1606 = uint(int(tmp40916 + 8u) >> int(2u));
+            for (;;)
+            {
+                int _1615 = int(root_buffer_0.Load(_1606 * 4 + 0));
+                int _1619;
+                root_buffer_0.InterlockedCompareExchange(_1606 * 4 + 0, _1615, asint(asfloat(_1615) + tmp1071), _1619);
+                _1608 = int(_1619);
+                if (int(_1619) == _1615)
+                {
+                    break;
+                }
+                continue;
+            }
+            float tmp1078 = tmp1055 * 6.350097828544676303863525390625e-05f;
+            uint _1628 = uint(int((tmp40743 + (uint(tmp47947) * 4u)) + 0u) >> int(2u));
+            for (;;)
+            {
+                int _1637 = int(root_buffer_0.Load(_1628 * 4 + 0));
+                int _1641;
+                root_buffer_0.InterlockedCompareExchange(_1628 * 4 + 0, _1637, asint(asfloat(_1637) + tmp1078), _1641);
+                _1630 = int(_1641);
+                if (int(_1641) == _1637)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _1649 = uint(int((tmp40757 + (uint(tmp47947) * 4u)) + 0u) >> int(2u));
+            for (;;)
+            {
+                int _1658 = int(root_buffer_0.Load(_1649 * 4 + 0));
+                int _1662;
+                root_buffer_0.InterlockedCompareExchange(_1649 * 4 + 0, _1658, asint(asfloat(_1658) + 1.0f), _1662);
+                _1651 = int(_1662);
+                if (int(_1662) == _1658)
+                {
+                    break;
+                }
+                continue;
+            }
+            float tmp1083 = tmp1054 * tmp111;
+            float tmp1090 = tmp1083 * (tmp957 + (tmp1058 + tmp1000));
+            float tmp1091 = tmp1083 * (tmp960 + (tmp1061 + tmp1002));
+            float tmp1092 = tmp1083 * (tmp963 + (tmp1064 + tmp1004));
+            int tmp47999 = tmp44618 + tmp50596;
+            int tmp48002 = tmp47999 + tmp50594;
+            uint tmp40986 = tmp40701 + (uint(tmp48002) * 12u);
+            uint _1682 = uint(int(tmp40986 + 0u) >> int(2u));
+            for (;;)
+            {
+                int _1691 = int(root_buffer_0.Load(_1682 * 4 + 0));
+                int _1695;
+                root_buffer_0.InterlockedCompareExchange(_1682 * 4 + 0, _1691, asint(asfloat(_1691) + tmp1090), _1695);
+                _1684 = int(_1695);
+                if (int(_1695) == _1691)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _1700 = uint(int(tmp40986 + 4u) >> int(2u));
+            for (;;)
+            {
+                int _1709 = int(root_buffer_0.Load(_1700 * 4 + 0));
+                int _1713;
+                root_buffer_0.InterlockedCompareExchange(_1700 * 4 + 0, _1709, asint(asfloat(_1709) + tmp1091), _1713);
+                _1702 = int(_1713);
+                if (int(_1713) == _1709)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _1718 = uint(int(tmp40986 + 8u) >> int(2u));
+            for (;;)
+            {
+                int _1727 = int(root_buffer_0.Load(_1718 * 4 + 0));
+                int _1731;
+                root_buffer_0.InterlockedCompareExchange(_1718 * 4 + 0, _1727, asint(asfloat(_1727) + tmp1092), _1731);
+                _1720 = int(_1731);
+                if (int(_1731) == _1727)
+                {
+                    break;
+                }
+                continue;
+            }
+            float tmp1099 = tmp1083 * 6.350097828544676303863525390625e-05f;
+            uint _1740 = uint(int((tmp40743 + (uint(tmp48002) * 4u)) + 0u) >> int(2u));
+            for (;;)
+            {
+                int _1749 = int(root_buffer_0.Load(_1740 * 4 + 0));
+                int _1753;
+                root_buffer_0.InterlockedCompareExchange(_1740 * 4 + 0, _1749, asint(asfloat(_1749) + tmp1099), _1753);
+                _1742 = int(_1753);
+                if (int(_1753) == _1749)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _1761 = uint(int((tmp40757 + (uint(tmp48002) * 4u)) + 0u) >> int(2u));
+            for (;;)
+            {
+                int _1770 = int(root_buffer_0.Load(_1761 * 4 + 0));
+                int _1774;
+                root_buffer_0.InterlockedCompareExchange(_1761 * 4 + 0, _1770, asint(asfloat(_1770) + 1.0f), _1774);
+                _1763 = int(_1774);
+                if (int(_1774) == _1770)
+                {
+                    break;
+                }
+                continue;
+            }
+            float tmp1104 = tmp1054 * tmp119;
+            float tmp1111 = tmp1104 * (tmp957 + (tmp1058 + tmp1029));
+            float tmp1112 = tmp1104 * (tmp960 + (tmp1061 + tmp1031));
+            float tmp1113 = tmp1104 * (tmp963 + (tmp1064 + tmp1033));
+            int tmp48054 = tmp44678 + tmp50596;
+            int tmp48057 = tmp48054 + tmp50594;
+            uint tmp41056 = tmp40701 + (uint(tmp48057) * 12u);
+            uint _1794 = uint(int(tmp41056 + 0u) >> int(2u));
+            for (;;)
+            {
+                int _1803 = int(root_buffer_0.Load(_1794 * 4 + 0));
+                int _1807;
+                root_buffer_0.InterlockedCompareExchange(_1794 * 4 + 0, _1803, asint(asfloat(_1803) + tmp1111), _1807);
+                _1796 = int(_1807);
+                if (int(_1807) == _1803)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _1812 = uint(int(tmp41056 + 4u) >> int(2u));
+            for (;;)
+            {
+                int _1821 = int(root_buffer_0.Load(_1812 * 4 + 0));
+                int _1825;
+                root_buffer_0.InterlockedCompareExchange(_1812 * 4 + 0, _1821, asint(asfloat(_1821) + tmp1112), _1825);
+                _1814 = int(_1825);
+                if (int(_1825) == _1821)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _1830 = uint(int(tmp41056 + 8u) >> int(2u));
+            for (;;)
+            {
+                int _1839 = int(root_buffer_0.Load(_1830 * 4 + 0));
+                int _1843;
+                root_buffer_0.InterlockedCompareExchange(_1830 * 4 + 0, _1839, asint(asfloat(_1839) + tmp1113), _1843);
+                _1832 = int(_1843);
+                if (int(_1843) == _1839)
+                {
+                    break;
+                }
+                continue;
+            }
+            float tmp1120 = tmp1104 * 6.350097828544676303863525390625e-05f;
+            uint _1852 = uint(int((tmp40743 + (uint(tmp48057) * 4u)) + 0u) >> int(2u));
+            for (;;)
+            {
+                int _1861 = int(root_buffer_0.Load(_1852 * 4 + 0));
+                int _1865;
+                root_buffer_0.InterlockedCompareExchange(_1852 * 4 + 0, _1861, asint(asfloat(_1861) + tmp1120), _1865);
+                _1854 = int(_1865);
+                if (int(_1865) == _1861)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _1873 = uint(int((tmp40757 + (uint(tmp48057) * 4u)) + 0u) >> int(2u));
+            for (;;)
+            {
+                int _1882 = int(root_buffer_0.Load(_1873 * 4 + 0));
+                int _1886;
+                root_buffer_0.InterlockedCompareExchange(_1873 * 4 + 0, _1882, asint(asfloat(_1882) + 1.0f), _1886);
+                _1875 = int(_1886);
+                if (int(_1886) == _1882)
+                {
+                    break;
+                }
+                continue;
+            }
+            float tmp1126 = (2.0f - tmp89) * 0.015625f;
+            float tmp1127 = tmp952 * tmp118;
+            float tmp1128 = tmp1127 * tmp100;
+            float tmp1130 = tmp934 * tmp1126;
+            float tmp1131 = tmp964 + tmp1130;
+            float tmp1133 = tmp943 * tmp1126;
+            float tmp1134 = tmp969 + tmp1133;
+            float tmp1136 = tmp940 * tmp1126;
+            float tmp1137 = tmp974 + tmp1136;
+            float tmp1142 = tmp1128 * (tmp957 + (tmp1131 + tmp967));
+            float tmp1143 = tmp1128 * (tmp960 + (tmp1134 + tmp972));
+            float tmp1144 = tmp1128 * (tmp963 + (tmp1137 + tmp977));
+            int tmp50598 = ((tmp78 + 2) & 63) << 6;
+            int tmp48109 = tmp44558 + tmp50598;
+            int tmp48112 = tmp48109 + tmp50594;
+            uint tmp41126 = tmp40701 + (uint(tmp48112) * 12u);
+            uint _1918 = uint(int(tmp41126 + 0u) >> int(2u));
+            for (;;)
+            {
+                int _1927 = int(root_buffer_0.Load(_1918 * 4 + 0));
+                int _1931;
+                root_buffer_0.InterlockedCompareExchange(_1918 * 4 + 0, _1927, asint(asfloat(_1927) + tmp1142), _1931);
+                _1920 = int(_1931);
+                if (int(_1931) == _1927)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _1936 = uint(int(tmp41126 + 4u) >> int(2u));
+            for (;;)
+            {
+                int _1945 = int(root_buffer_0.Load(_1936 * 4 + 0));
+                int _1949;
+                root_buffer_0.InterlockedCompareExchange(_1936 * 4 + 0, _1945, asint(asfloat(_1945) + tmp1143), _1949);
+                _1938 = int(_1949);
+                if (int(_1949) == _1945)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _1954 = uint(int(tmp41126 + 8u) >> int(2u));
+            for (;;)
+            {
+                int _1963 = int(root_buffer_0.Load(_1954 * 4 + 0));
+                int _1967;
+                root_buffer_0.InterlockedCompareExchange(_1954 * 4 + 0, _1963, asint(asfloat(_1963) + tmp1144), _1967);
+                _1956 = int(_1967);
+                if (int(_1967) == _1963)
+                {
+                    break;
+                }
+                continue;
+            }
+            float tmp1151 = tmp1128 * 6.350097828544676303863525390625e-05f;
+            uint _1976 = uint(int((tmp40743 + (uint(tmp48112) * 4u)) + 0u) >> int(2u));
+            for (;;)
+            {
+                int _1985 = int(root_buffer_0.Load(_1976 * 4 + 0));
+                int _1989;
+                root_buffer_0.InterlockedCompareExchange(_1976 * 4 + 0, _1985, asint(asfloat(_1985) + tmp1151), _1989);
+                _1978 = int(_1989);
+                if (int(_1989) == _1985)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _1997 = uint(int((tmp40757 + (uint(tmp48112) * 4u)) + 0u) >> int(2u));
+            for (;;)
+            {
+                int _2006 = int(root_buffer_0.Load(_1997 * 4 + 0));
+                int _2010;
+                root_buffer_0.InterlockedCompareExchange(_1997 * 4 + 0, _2006, asint(asfloat(_2006) + 1.0f), _2010);
+                _1999 = int(_2010);
+                if (int(_2010) == _2006)
+                {
+                    break;
+                }
+                continue;
+            }
+            float tmp1156 = tmp1127 * tmp111;
+            float tmp1163 = tmp1156 * (tmp957 + (tmp1131 + tmp1000));
+            float tmp1164 = tmp1156 * (tmp960 + (tmp1134 + tmp1002));
+            float tmp1165 = tmp1156 * (tmp963 + (tmp1137 + tmp1004));
+            int tmp48164 = tmp44618 + tmp50598;
+            int tmp48167 = tmp48164 + tmp50594;
+            uint tmp41196 = tmp40701 + (uint(tmp48167) * 12u);
+            uint _2030 = uint(int(tmp41196 + 0u) >> int(2u));
+            for (;;)
+            {
+                int _2039 = int(root_buffer_0.Load(_2030 * 4 + 0));
+                int _2043;
+                root_buffer_0.InterlockedCompareExchange(_2030 * 4 + 0, _2039, asint(asfloat(_2039) + tmp1163), _2043);
+                _2032 = int(_2043);
+                if (int(_2043) == _2039)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _2048 = uint(int(tmp41196 + 4u) >> int(2u));
+            for (;;)
+            {
+                int _2057 = int(root_buffer_0.Load(_2048 * 4 + 0));
+                int _2061;
+                root_buffer_0.InterlockedCompareExchange(_2048 * 4 + 0, _2057, asint(asfloat(_2057) + tmp1164), _2061);
+                _2050 = int(_2061);
+                if (int(_2061) == _2057)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _2066 = uint(int(tmp41196 + 8u) >> int(2u));
+            for (;;)
+            {
+                int _2075 = int(root_buffer_0.Load(_2066 * 4 + 0));
+                int _2079;
+                root_buffer_0.InterlockedCompareExchange(_2066 * 4 + 0, _2075, asint(asfloat(_2075) + tmp1165), _2079);
+                _2068 = int(_2079);
+                if (int(_2079) == _2075)
+                {
+                    break;
+                }
+                continue;
+            }
+            float tmp1172 = tmp1156 * 6.350097828544676303863525390625e-05f;
+            uint _2088 = uint(int((tmp40743 + (uint(tmp48167) * 4u)) + 0u) >> int(2u));
+            for (;;)
+            {
+                int _2097 = int(root_buffer_0.Load(_2088 * 4 + 0));
+                int _2101;
+                root_buffer_0.InterlockedCompareExchange(_2088 * 4 + 0, _2097, asint(asfloat(_2097) + tmp1172), _2101);
+                _2090 = int(_2101);
+                if (int(_2101) == _2097)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _2109 = uint(int((tmp40757 + (uint(tmp48167) * 4u)) + 0u) >> int(2u));
+            for (;;)
+            {
+                int _2118 = int(root_buffer_0.Load(_2109 * 4 + 0));
+                int _2122;
+                root_buffer_0.InterlockedCompareExchange(_2109 * 4 + 0, _2118, asint(asfloat(_2118) + 1.0f), _2122);
+                _2111 = int(_2122);
+                if (int(_2122) == _2118)
+                {
+                    break;
+                }
+                continue;
+            }
+            float tmp1177 = tmp1127 * tmp119;
+            float tmp1184 = tmp1177 * (tmp957 + (tmp1131 + tmp1029));
+            float tmp1185 = tmp1177 * (tmp960 + (tmp1134 + tmp1031));
+            float tmp1186 = tmp1177 * (tmp963 + (tmp1137 + tmp1033));
+            int tmp48219 = tmp44678 + tmp50598;
+            int tmp48222 = tmp48219 + tmp50594;
+            uint tmp41266 = tmp40701 + (uint(tmp48222) * 12u);
+            uint _2142 = uint(int(tmp41266 + 0u) >> int(2u));
+            for (;;)
+            {
+                int _2151 = int(root_buffer_0.Load(_2142 * 4 + 0));
+                int _2155;
+                root_buffer_0.InterlockedCompareExchange(_2142 * 4 + 0, _2151, asint(asfloat(_2151) + tmp1184), _2155);
+                _2144 = int(_2155);
+                if (int(_2155) == _2151)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _2160 = uint(int(tmp41266 + 4u) >> int(2u));
+            for (;;)
+            {
+                int _2169 = int(root_buffer_0.Load(_2160 * 4 + 0));
+                int _2173;
+                root_buffer_0.InterlockedCompareExchange(_2160 * 4 + 0, _2169, asint(asfloat(_2169) + tmp1185), _2173);
+                _2162 = int(_2173);
+                if (int(_2173) == _2169)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _2178 = uint(int(tmp41266 + 8u) >> int(2u));
+            for (;;)
+            {
+                int _2187 = int(root_buffer_0.Load(_2178 * 4 + 0));
+                int _2191;
+                root_buffer_0.InterlockedCompareExchange(_2178 * 4 + 0, _2187, asint(asfloat(_2187) + tmp1186), _2191);
+                _2180 = int(_2191);
+                if (int(_2191) == _2187)
+                {
+                    break;
+                }
+                continue;
+            }
+            float tmp1193 = tmp1177 * 6.350097828544676303863525390625e-05f;
+            uint _2200 = uint(int((tmp40743 + (uint(tmp48222) * 4u)) + 0u) >> int(2u));
+            for (;;)
+            {
+                int _2209 = int(root_buffer_0.Load(_2200 * 4 + 0));
+                int _2213;
+                root_buffer_0.InterlockedCompareExchange(_2200 * 4 + 0, _2209, asint(asfloat(_2209) + tmp1193), _2213);
+                _2202 = int(_2213);
+                if (int(_2213) == _2209)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _2221 = uint(int((tmp40757 + (uint(tmp48222) * 4u)) + 0u) >> int(2u));
+            for (;;)
+            {
+                int _2230 = int(root_buffer_0.Load(_2221 * 4 + 0));
+                int _2234;
+                root_buffer_0.InterlockedCompareExchange(_2221 * 4 + 0, _2230, asint(asfloat(_2230) + 1.0f), _2234);
+                _2223 = int(_2234);
+                if (int(_2234) == _2230)
+                {
+                    break;
+                }
+                continue;
+            }
+            float tmp1199 = (1.0f - tmp87) * 0.015625f;
+            float tmp1200 = tmp109 * tmp99;
+            float tmp1201 = tmp1200 * tmp100;
+            float tmp1203 = tmp942 * tmp1199;
+            float tmp1204 = tmp1203 + tmp965;
+            float tmp1206 = tmp936 * tmp1199;
+            float tmp1207 = tmp1206 + tmp970;
+            float tmp1209 = tmp939 * tmp1199;
+            float tmp1210 = tmp1209 + tmp975;
+            float tmp1215 = tmp1201 * (tmp957 + (tmp1204 + tmp967));
+            float tmp1216 = tmp1201 * (tmp960 + (tmp1207 + tmp972));
+            float tmp1217 = tmp1201 * (tmp963 + (tmp1210 + tmp977));
+            int tmp50600 = ((tmp77 + 1) & 63) << 12;
+            int tmp48277 = tmp47779 + tmp50600;
+            uint tmp41336 = tmp40701 + (uint(tmp48277) * 12u);
+            uint _2265 = uint(int(tmp41336 + 0u) >> int(2u));
+            for (;;)
+            {
+                int _2274 = int(root_buffer_0.Load(_2265 * 4 + 0));
+                int _2278;
+                root_buffer_0.InterlockedCompareExchange(_2265 * 4 + 0, _2274, asint(asfloat(_2274) + tmp1215), _2278);
+                _2267 = int(_2278);
+                if (int(_2278) == _2274)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _2283 = uint(int(tmp41336 + 4u) >> int(2u));
+            for (;;)
+            {
+                int _2292 = int(root_buffer_0.Load(_2283 * 4 + 0));
+                int _2296;
+                root_buffer_0.InterlockedCompareExchange(_2283 * 4 + 0, _2292, asint(asfloat(_2292) + tmp1216), _2296);
+                _2285 = int(_2296);
+                if (int(_2296) == _2292)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _2301 = uint(int(tmp41336 + 8u) >> int(2u));
+            for (;;)
+            {
+                int _2310 = int(root_buffer_0.Load(_2301 * 4 + 0));
+                int _2314;
+                root_buffer_0.InterlockedCompareExchange(_2301 * 4 + 0, _2310, asint(asfloat(_2310) + tmp1217), _2314);
+                _2303 = int(_2314);
+                if (int(_2314) == _2310)
+                {
+                    break;
+                }
+                continue;
+            }
+            float tmp1224 = tmp1201 * 6.350097828544676303863525390625e-05f;
+            uint _2323 = uint(int((tmp40743 + (uint(tmp48277) * 4u)) + 0u) >> int(2u));
+            for (;;)
+            {
+                int _2332 = int(root_buffer_0.Load(_2323 * 4 + 0));
+                int _2336;
+                root_buffer_0.InterlockedCompareExchange(_2323 * 4 + 0, _2332, asint(asfloat(_2332) + tmp1224), _2336);
+                _2325 = int(_2336);
+                if (int(_2336) == _2332)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _2344 = uint(int((tmp40757 + (uint(tmp48277) * 4u)) + 0u) >> int(2u));
+            for (;;)
+            {
+                int _2353 = int(root_buffer_0.Load(_2344 * 4 + 0));
+                int _2357;
+                root_buffer_0.InterlockedCompareExchange(_2344 * 4 + 0, _2353, asint(asfloat(_2353) + 1.0f), _2357);
+                _2346 = int(_2357);
+                if (int(_2357) == _2353)
+                {
+                    break;
+                }
+                continue;
+            }
+            float tmp1229 = tmp1200 * tmp111;
+            float tmp1236 = tmp1229 * (tmp957 + (tmp1204 + tmp1000));
+            float tmp1237 = tmp1229 * (tmp960 + (tmp1207 + tmp1002));
+            float tmp1238 = tmp1229 * (tmp963 + (tmp1210 + tmp1004));
+            int tmp48332 = tmp47834 + tmp50600;
+            uint tmp41406 = tmp40701 + (uint(tmp48332) * 12u);
+            uint _2376 = uint(int(tmp41406 + 0u) >> int(2u));
+            for (;;)
+            {
+                int _2385 = int(root_buffer_0.Load(_2376 * 4 + 0));
+                int _2389;
+                root_buffer_0.InterlockedCompareExchange(_2376 * 4 + 0, _2385, asint(asfloat(_2385) + tmp1236), _2389);
+                _2378 = int(_2389);
+                if (int(_2389) == _2385)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _2394 = uint(int(tmp41406 + 4u) >> int(2u));
+            for (;;)
+            {
+                int _2403 = int(root_buffer_0.Load(_2394 * 4 + 0));
+                int _2407;
+                root_buffer_0.InterlockedCompareExchange(_2394 * 4 + 0, _2403, asint(asfloat(_2403) + tmp1237), _2407);
+                _2396 = int(_2407);
+                if (int(_2407) == _2403)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _2412 = uint(int(tmp41406 + 8u) >> int(2u));
+            for (;;)
+            {
+                int _2421 = int(root_buffer_0.Load(_2412 * 4 + 0));
+                int _2425;
+                root_buffer_0.InterlockedCompareExchange(_2412 * 4 + 0, _2421, asint(asfloat(_2421) + tmp1238), _2425);
+                _2414 = int(_2425);
+                if (int(_2425) == _2421)
+                {
+                    break;
+                }
+                continue;
+            }
+            float tmp1245 = tmp1229 * 6.350097828544676303863525390625e-05f;
+            uint _2434 = uint(int((tmp40743 + (uint(tmp48332) * 4u)) + 0u) >> int(2u));
+            for (;;)
+            {
+                int _2443 = int(root_buffer_0.Load(_2434 * 4 + 0));
+                int _2447;
+                root_buffer_0.InterlockedCompareExchange(_2434 * 4 + 0, _2443, asint(asfloat(_2443) + tmp1245), _2447);
+                _2436 = int(_2447);
+                if (int(_2447) == _2443)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _2455 = uint(int((tmp40757 + (uint(tmp48332) * 4u)) + 0u) >> int(2u));
+            for (;;)
+            {
+                int _2464 = int(root_buffer_0.Load(_2455 * 4 + 0));
+                int _2468;
+                root_buffer_0.InterlockedCompareExchange(_2455 * 4 + 0, _2464, asint(asfloat(_2464) + 1.0f), _2468);
+                _2457 = int(_2468);
+                if (int(_2468) == _2464)
+                {
+                    break;
+                }
+                continue;
+            }
+            float tmp1250 = tmp1200 * tmp119;
+            float tmp1257 = tmp1250 * (tmp957 + (tmp1204 + tmp1029));
+            float tmp1258 = tmp1250 * (tmp960 + (tmp1207 + tmp1031));
+            float tmp1259 = tmp1250 * (tmp963 + (tmp1210 + tmp1033));
+            int tmp48387 = tmp47889 + tmp50600;
+            uint tmp41476 = tmp40701 + (uint(tmp48387) * 12u);
+            uint _2487 = uint(int(tmp41476 + 0u) >> int(2u));
+            for (;;)
+            {
+                int _2496 = int(root_buffer_0.Load(_2487 * 4 + 0));
+                int _2500;
+                root_buffer_0.InterlockedCompareExchange(_2487 * 4 + 0, _2496, asint(asfloat(_2496) + tmp1257), _2500);
+                _2489 = int(_2500);
+                if (int(_2500) == _2496)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _2505 = uint(int(tmp41476 + 4u) >> int(2u));
+            for (;;)
+            {
+                int _2514 = int(root_buffer_0.Load(_2505 * 4 + 0));
+                int _2518;
+                root_buffer_0.InterlockedCompareExchange(_2505 * 4 + 0, _2514, asint(asfloat(_2514) + tmp1258), _2518);
+                _2507 = int(_2518);
+                if (int(_2518) == _2514)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _2523 = uint(int(tmp41476 + 8u) >> int(2u));
+            for (;;)
+            {
+                int _2532 = int(root_buffer_0.Load(_2523 * 4 + 0));
+                int _2536;
+                root_buffer_0.InterlockedCompareExchange(_2523 * 4 + 0, _2532, asint(asfloat(_2532) + tmp1259), _2536);
+                _2525 = int(_2536);
+                if (int(_2536) == _2532)
+                {
+                    break;
+                }
+                continue;
+            }
+            float tmp1266 = tmp1250 * 6.350097828544676303863525390625e-05f;
+            uint _2545 = uint(int((tmp40743 + (uint(tmp48387) * 4u)) + 0u) >> int(2u));
+            for (;;)
+            {
+                int _2554 = int(root_buffer_0.Load(_2545 * 4 + 0));
+                int _2558;
+                root_buffer_0.InterlockedCompareExchange(_2545 * 4 + 0, _2554, asint(asfloat(_2554) + tmp1266), _2558);
+                _2547 = int(_2558);
+                if (int(_2558) == _2554)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _2566 = uint(int((tmp40757 + (uint(tmp48387) * 4u)) + 0u) >> int(2u));
+            for (;;)
+            {
+                int _2575 = int(root_buffer_0.Load(_2566 * 4 + 0));
+                int _2579;
+                root_buffer_0.InterlockedCompareExchange(_2566 * 4 + 0, _2575, asint(asfloat(_2575) + 1.0f), _2579);
+                _2568 = int(_2579);
+                if (int(_2579) == _2575)
+                {
+                    break;
+                }
+                continue;
+            }
+            float tmp1271 = tmp109 * tmp110;
+            float tmp1272 = tmp1271 * tmp100;
+            float tmp1273 = tmp1203 + tmp1057;
+            float tmp1275 = tmp1206 + tmp1060;
+            float tmp1277 = tmp1209 + tmp1063;
+            float tmp1282 = tmp1272 * (tmp957 + (tmp1273 + tmp967));
+            float tmp1283 = tmp1272 * (tmp960 + (tmp1275 + tmp972));
+            float tmp1284 = tmp1272 * (tmp963 + (tmp1277 + tmp977));
+            int tmp48442 = tmp47944 + tmp50600;
+            uint tmp41546 = tmp40701 + (uint(tmp48442) * 12u);
+            uint _2602 = uint(int(tmp41546 + 0u) >> int(2u));
+            for (;;)
+            {
+                int _2611 = int(root_buffer_0.Load(_2602 * 4 + 0));
+                int _2615;
+                root_buffer_0.InterlockedCompareExchange(_2602 * 4 + 0, _2611, asint(asfloat(_2611) + tmp1282), _2615);
+                _2604 = int(_2615);
+                if (int(_2615) == _2611)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _2620 = uint(int(tmp41546 + 4u) >> int(2u));
+            for (;;)
+            {
+                int _2629 = int(root_buffer_0.Load(_2620 * 4 + 0));
+                int _2633;
+                root_buffer_0.InterlockedCompareExchange(_2620 * 4 + 0, _2629, asint(asfloat(_2629) + tmp1283), _2633);
+                _2622 = int(_2633);
+                if (int(_2633) == _2629)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _2638 = uint(int(tmp41546 + 8u) >> int(2u));
+            for (;;)
+            {
+                int _2647 = int(root_buffer_0.Load(_2638 * 4 + 0));
+                int _2651;
+                root_buffer_0.InterlockedCompareExchange(_2638 * 4 + 0, _2647, asint(asfloat(_2647) + tmp1284), _2651);
+                _2640 = int(_2651);
+                if (int(_2651) == _2647)
+                {
+                    break;
+                }
+                continue;
+            }
+            float tmp1291 = tmp1272 * 6.350097828544676303863525390625e-05f;
+            uint _2660 = uint(int((tmp40743 + (uint(tmp48442) * 4u)) + 0u) >> int(2u));
+            for (;;)
+            {
+                int _2669 = int(root_buffer_0.Load(_2660 * 4 + 0));
+                int _2673;
+                root_buffer_0.InterlockedCompareExchange(_2660 * 4 + 0, _2669, asint(asfloat(_2669) + tmp1291), _2673);
+                _2662 = int(_2673);
+                if (int(_2673) == _2669)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _2681 = uint(int((tmp40757 + (uint(tmp48442) * 4u)) + 0u) >> int(2u));
+            for (;;)
+            {
+                int _2690 = int(root_buffer_0.Load(_2681 * 4 + 0));
+                int _2694;
+                root_buffer_0.InterlockedCompareExchange(_2681 * 4 + 0, _2690, asint(asfloat(_2690) + 1.0f), _2694);
+                _2683 = int(_2694);
+                if (int(_2694) == _2690)
+                {
+                    break;
+                }
+                continue;
+            }
+            float tmp1296 = tmp1271 * tmp111;
+            float tmp1303 = tmp1296 * (tmp957 + (tmp1273 + tmp1000));
+            float tmp1304 = tmp1296 * (tmp960 + (tmp1275 + tmp1002));
+            float tmp1305 = tmp1296 * (tmp963 + (tmp1277 + tmp1004));
+            int tmp48497 = tmp47999 + tmp50600;
+            uint tmp41616 = tmp40701 + (uint(tmp48497) * 12u);
+            uint _2713 = uint(int(tmp41616 + 0u) >> int(2u));
+            for (;;)
+            {
+                int _2722 = int(root_buffer_0.Load(_2713 * 4 + 0));
+                int _2726;
+                root_buffer_0.InterlockedCompareExchange(_2713 * 4 + 0, _2722, asint(asfloat(_2722) + tmp1303), _2726);
+                _2715 = int(_2726);
+                if (int(_2726) == _2722)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _2731 = uint(int(tmp41616 + 4u) >> int(2u));
+            for (;;)
+            {
+                int _2740 = int(root_buffer_0.Load(_2731 * 4 + 0));
+                int _2744;
+                root_buffer_0.InterlockedCompareExchange(_2731 * 4 + 0, _2740, asint(asfloat(_2740) + tmp1304), _2744);
+                _2733 = int(_2744);
+                if (int(_2744) == _2740)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _2749 = uint(int(tmp41616 + 8u) >> int(2u));
+            for (;;)
+            {
+                int _2758 = int(root_buffer_0.Load(_2749 * 4 + 0));
+                int _2762;
+                root_buffer_0.InterlockedCompareExchange(_2749 * 4 + 0, _2758, asint(asfloat(_2758) + tmp1305), _2762);
+                _2751 = int(_2762);
+                if (int(_2762) == _2758)
+                {
+                    break;
+                }
+                continue;
+            }
+            float tmp1312 = tmp1296 * 6.350097828544676303863525390625e-05f;
+            uint _2771 = uint(int((tmp40743 + (uint(tmp48497) * 4u)) + 0u) >> int(2u));
+            for (;;)
+            {
+                int _2780 = int(root_buffer_0.Load(_2771 * 4 + 0));
+                int _2784;
+                root_buffer_0.InterlockedCompareExchange(_2771 * 4 + 0, _2780, asint(asfloat(_2780) + tmp1312), _2784);
+                _2773 = int(_2784);
+                if (int(_2784) == _2780)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _2792 = uint(int((tmp40757 + (uint(tmp48497) * 4u)) + 0u) >> int(2u));
+            for (;;)
+            {
+                int _2801 = int(root_buffer_0.Load(_2792 * 4 + 0));
+                int _2805;
+                root_buffer_0.InterlockedCompareExchange(_2792 * 4 + 0, _2801, asint(asfloat(_2801) + 1.0f), _2805);
+                _2794 = int(_2805);
+                if (int(_2805) == _2801)
+                {
+                    break;
+                }
+                continue;
+            }
+            float tmp1317 = tmp1271 * tmp119;
+            float tmp1324 = tmp1317 * (tmp957 + (tmp1273 + tmp1029));
+            float tmp1325 = tmp1317 * (tmp960 + (tmp1275 + tmp1031));
+            float tmp1326 = tmp1317 * (tmp963 + (tmp1277 + tmp1033));
+            int tmp48552 = tmp48054 + tmp50600;
+            uint tmp41686 = tmp40701 + (uint(tmp48552) * 12u);
+            uint _2824 = uint(int(tmp41686 + 0u) >> int(2u));
+            for (;;)
+            {
+                int _2833 = int(root_buffer_0.Load(_2824 * 4 + 0));
+                int _2837;
+                root_buffer_0.InterlockedCompareExchange(_2824 * 4 + 0, _2833, asint(asfloat(_2833) + tmp1324), _2837);
+                _2826 = int(_2837);
+                if (int(_2837) == _2833)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _2842 = uint(int(tmp41686 + 4u) >> int(2u));
+            for (;;)
+            {
+                int _2851 = int(root_buffer_0.Load(_2842 * 4 + 0));
+                int _2855;
+                root_buffer_0.InterlockedCompareExchange(_2842 * 4 + 0, _2851, asint(asfloat(_2851) + tmp1325), _2855);
+                _2844 = int(_2855);
+                if (int(_2855) == _2851)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _2860 = uint(int(tmp41686 + 8u) >> int(2u));
+            for (;;)
+            {
+                int _2869 = int(root_buffer_0.Load(_2860 * 4 + 0));
+                int _2873;
+                root_buffer_0.InterlockedCompareExchange(_2860 * 4 + 0, _2869, asint(asfloat(_2869) + tmp1326), _2873);
+                _2862 = int(_2873);
+                if (int(_2873) == _2869)
+                {
+                    break;
+                }
+                continue;
+            }
+            float tmp1333 = tmp1317 * 6.350097828544676303863525390625e-05f;
+            uint _2882 = uint(int((tmp40743 + (uint(tmp48552) * 4u)) + 0u) >> int(2u));
+            for (;;)
+            {
+                int _2891 = int(root_buffer_0.Load(_2882 * 4 + 0));
+                int _2895;
+                root_buffer_0.InterlockedCompareExchange(_2882 * 4 + 0, _2891, asint(asfloat(_2891) + tmp1333), _2895);
+                _2884 = int(_2895);
+                if (int(_2895) == _2891)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _2903 = uint(int((tmp40757 + (uint(tmp48552) * 4u)) + 0u) >> int(2u));
+            for (;;)
+            {
+                int _2912 = int(root_buffer_0.Load(_2903 * 4 + 0));
+                int _2916;
+                root_buffer_0.InterlockedCompareExchange(_2903 * 4 + 0, _2912, asint(asfloat(_2912) + 1.0f), _2916);
+                _2905 = int(_2916);
+                if (int(_2916) == _2912)
+                {
+                    break;
+                }
+                continue;
+            }
+            float tmp1338 = tmp109 * tmp118;
+            float tmp1339 = tmp1338 * tmp100;
+            float tmp1340 = tmp1203 + tmp1130;
+            float tmp1342 = tmp1206 + tmp1133;
+            float tmp1344 = tmp1209 + tmp1136;
+            float tmp1349 = tmp1339 * (tmp957 + (tmp1340 + tmp967));
+            float tmp1350 = tmp1339 * (tmp960 + (tmp1342 + tmp972));
+            float tmp1351 = tmp1339 * (tmp963 + (tmp1344 + tmp977));
+            int tmp48607 = tmp48109 + tmp50600;
+            uint tmp41756 = tmp40701 + (uint(tmp48607) * 12u);
+            uint _2939 = uint(int(tmp41756 + 0u) >> int(2u));
+            for (;;)
+            {
+                int _2948 = int(root_buffer_0.Load(_2939 * 4 + 0));
+                int _2952;
+                root_buffer_0.InterlockedCompareExchange(_2939 * 4 + 0, _2948, asint(asfloat(_2948) + tmp1349), _2952);
+                _2941 = int(_2952);
+                if (int(_2952) == _2948)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _2957 = uint(int(tmp41756 + 4u) >> int(2u));
+            for (;;)
+            {
+                int _2966 = int(root_buffer_0.Load(_2957 * 4 + 0));
+                int _2970;
+                root_buffer_0.InterlockedCompareExchange(_2957 * 4 + 0, _2966, asint(asfloat(_2966) + tmp1350), _2970);
+                _2959 = int(_2970);
+                if (int(_2970) == _2966)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _2975 = uint(int(tmp41756 + 8u) >> int(2u));
+            for (;;)
+            {
+                int _2984 = int(root_buffer_0.Load(_2975 * 4 + 0));
+                int _2988;
+                root_buffer_0.InterlockedCompareExchange(_2975 * 4 + 0, _2984, asint(asfloat(_2984) + tmp1351), _2988);
+                _2977 = int(_2988);
+                if (int(_2988) == _2984)
+                {
+                    break;
+                }
+                continue;
+            }
+            float tmp1358 = tmp1339 * 6.350097828544676303863525390625e-05f;
+            uint _2997 = uint(int((tmp40743 + (uint(tmp48607) * 4u)) + 0u) >> int(2u));
+            for (;;)
+            {
+                int _3006 = int(root_buffer_0.Load(_2997 * 4 + 0));
+                int _3010;
+                root_buffer_0.InterlockedCompareExchange(_2997 * 4 + 0, _3006, asint(asfloat(_3006) + tmp1358), _3010);
+                _2999 = int(_3010);
+                if (int(_3010) == _3006)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _3018 = uint(int((tmp40757 + (uint(tmp48607) * 4u)) + 0u) >> int(2u));
+            for (;;)
+            {
+                int _3027 = int(root_buffer_0.Load(_3018 * 4 + 0));
+                int _3031;
+                root_buffer_0.InterlockedCompareExchange(_3018 * 4 + 0, _3027, asint(asfloat(_3027) + 1.0f), _3031);
+                _3020 = int(_3031);
+                if (int(_3031) == _3027)
+                {
+                    break;
+                }
+                continue;
+            }
+            float tmp1363 = tmp1338 * tmp111;
+            float tmp1370 = tmp1363 * (tmp957 + (tmp1340 + tmp1000));
+            float tmp1371 = tmp1363 * (tmp960 + (tmp1342 + tmp1002));
+            float tmp1372 = tmp1363 * (tmp963 + (tmp1344 + tmp1004));
+            int tmp48662 = tmp48164 + tmp50600;
+            uint tmp41826 = tmp40701 + (uint(tmp48662) * 12u);
+            uint _3050 = uint(int(tmp41826 + 0u) >> int(2u));
+            for (;;)
+            {
+                int _3059 = int(root_buffer_0.Load(_3050 * 4 + 0));
+                int _3063;
+                root_buffer_0.InterlockedCompareExchange(_3050 * 4 + 0, _3059, asint(asfloat(_3059) + tmp1370), _3063);
+                _3052 = int(_3063);
+                if (int(_3063) == _3059)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _3068 = uint(int(tmp41826 + 4u) >> int(2u));
+            for (;;)
+            {
+                int _3077 = int(root_buffer_0.Load(_3068 * 4 + 0));
+                int _3081;
+                root_buffer_0.InterlockedCompareExchange(_3068 * 4 + 0, _3077, asint(asfloat(_3077) + tmp1371), _3081);
+                _3070 = int(_3081);
+                if (int(_3081) == _3077)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _3086 = uint(int(tmp41826 + 8u) >> int(2u));
+            for (;;)
+            {
+                int _3095 = int(root_buffer_0.Load(_3086 * 4 + 0));
+                int _3099;
+                root_buffer_0.InterlockedCompareExchange(_3086 * 4 + 0, _3095, asint(asfloat(_3095) + tmp1372), _3099);
+                _3088 = int(_3099);
+                if (int(_3099) == _3095)
+                {
+                    break;
+                }
+                continue;
+            }
+            float tmp1379 = tmp1363 * 6.350097828544676303863525390625e-05f;
+            uint _3108 = uint(int((tmp40743 + (uint(tmp48662) * 4u)) + 0u) >> int(2u));
+            for (;;)
+            {
+                int _3117 = int(root_buffer_0.Load(_3108 * 4 + 0));
+                int _3121;
+                root_buffer_0.InterlockedCompareExchange(_3108 * 4 + 0, _3117, asint(asfloat(_3117) + tmp1379), _3121);
+                _3110 = int(_3121);
+                if (int(_3121) == _3117)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _3129 = uint(int((tmp40757 + (uint(tmp48662) * 4u)) + 0u) >> int(2u));
+            for (;;)
+            {
+                int _3138 = int(root_buffer_0.Load(_3129 * 4 + 0));
+                int _3142;
+                root_buffer_0.InterlockedCompareExchange(_3129 * 4 + 0, _3138, asint(asfloat(_3138) + 1.0f), _3142);
+                _3131 = int(_3142);
+                if (int(_3142) == _3138)
+                {
+                    break;
+                }
+                continue;
+            }
+            float tmp1384 = tmp1338 * tmp119;
+            float tmp1391 = tmp1384 * (tmp957 + (tmp1340 + tmp1029));
+            float tmp1392 = tmp1384 * (tmp960 + (tmp1342 + tmp1031));
+            float tmp1393 = tmp1384 * (tmp963 + (tmp1344 + tmp1033));
+            int tmp48717 = tmp48219 + tmp50600;
+            uint tmp41896 = tmp40701 + (uint(tmp48717) * 12u);
+            uint _3161 = uint(int(tmp41896 + 0u) >> int(2u));
+            for (;;)
+            {
+                int _3170 = int(root_buffer_0.Load(_3161 * 4 + 0));
+                int _3174;
+                root_buffer_0.InterlockedCompareExchange(_3161 * 4 + 0, _3170, asint(asfloat(_3170) + tmp1391), _3174);
+                _3163 = int(_3174);
+                if (int(_3174) == _3170)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _3179 = uint(int(tmp41896 + 4u) >> int(2u));
+            for (;;)
+            {
+                int _3188 = int(root_buffer_0.Load(_3179 * 4 + 0));
+                int _3192;
+                root_buffer_0.InterlockedCompareExchange(_3179 * 4 + 0, _3188, asint(asfloat(_3188) + tmp1392), _3192);
+                _3181 = int(_3192);
+                if (int(_3192) == _3188)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _3197 = uint(int(tmp41896 + 8u) >> int(2u));
+            for (;;)
+            {
+                int _3206 = int(root_buffer_0.Load(_3197 * 4 + 0));
+                int _3210;
+                root_buffer_0.InterlockedCompareExchange(_3197 * 4 + 0, _3206, asint(asfloat(_3206) + tmp1393), _3210);
+                _3199 = int(_3210);
+                if (int(_3210) == _3206)
+                {
+                    break;
+                }
+                continue;
+            }
+            float tmp1400 = tmp1384 * 6.350097828544676303863525390625e-05f;
+            uint _3219 = uint(int((tmp40743 + (uint(tmp48717) * 4u)) + 0u) >> int(2u));
+            for (;;)
+            {
+                int _3228 = int(root_buffer_0.Load(_3219 * 4 + 0));
+                int _3232;
+                root_buffer_0.InterlockedCompareExchange(_3219 * 4 + 0, _3228, asint(asfloat(_3228) + tmp1400), _3232);
+                _3221 = int(_3232);
+                if (int(_3232) == _3228)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _3240 = uint(int((tmp40757 + (uint(tmp48717) * 4u)) + 0u) >> int(2u));
+            for (;;)
+            {
+                int _3249 = int(root_buffer_0.Load(_3240 * 4 + 0));
+                int _3253;
+                root_buffer_0.InterlockedCompareExchange(_3240 * 4 + 0, _3249, asint(asfloat(_3249) + 1.0f), _3253);
+                _3242 = int(_3253);
+                if (int(_3253) == _3249)
+                {
+                    break;
+                }
+                continue;
+            }
+            float tmp1406 = (2.0f - tmp87) * 0.015625f;
+            float tmp1407 = (tmp112 * tmp112) * 0.5f;
+            float tmp1408 = tmp1407 * tmp99;
+            float tmp1409 = tmp1408 * tmp100;
+            float tmp1411 = tmp942 * tmp1406;
+            float tmp1412 = tmp1411 + tmp965;
+            float tmp1414 = tmp936 * tmp1406;
+            float tmp1415 = tmp1414 + tmp970;
+            float tmp1417 = tmp939 * tmp1406;
+            float tmp1418 = tmp1417 + tmp975;
+            float tmp1423 = tmp1409 * (tmp957 + (tmp1412 + tmp967));
+            float tmp1424 = tmp1409 * (tmp960 + (tmp1415 + tmp972));
+            float tmp1425 = tmp1409 * (tmp963 + (tmp1418 + tmp977));
+            int tmp50602 = ((tmp77 + 2) & 63) << 12;
+            int tmp48772 = tmp47779 + tmp50602;
+            uint tmp41966 = tmp40701 + (uint(tmp48772) * 12u);
+            uint _3285 = uint(int(tmp41966 + 0u) >> int(2u));
+            for (;;)
+            {
+                int _3294 = int(root_buffer_0.Load(_3285 * 4 + 0));
+                int _3298;
+                root_buffer_0.InterlockedCompareExchange(_3285 * 4 + 0, _3294, asint(asfloat(_3294) + tmp1423), _3298);
+                _3287 = int(_3298);
+                if (int(_3298) == _3294)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _3303 = uint(int(tmp41966 + 4u) >> int(2u));
+            for (;;)
+            {
+                int _3312 = int(root_buffer_0.Load(_3303 * 4 + 0));
+                int _3316;
+                root_buffer_0.InterlockedCompareExchange(_3303 * 4 + 0, _3312, asint(asfloat(_3312) + tmp1424), _3316);
+                _3305 = int(_3316);
+                if (int(_3316) == _3312)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _3321 = uint(int(tmp41966 + 8u) >> int(2u));
+            for (;;)
+            {
+                int _3330 = int(root_buffer_0.Load(_3321 * 4 + 0));
+                int _3334;
+                root_buffer_0.InterlockedCompareExchange(_3321 * 4 + 0, _3330, asint(asfloat(_3330) + tmp1425), _3334);
+                _3323 = int(_3334);
+                if (int(_3334) == _3330)
+                {
+                    break;
+                }
+                continue;
+            }
+            float tmp1432 = tmp1409 * 6.350097828544676303863525390625e-05f;
+            uint _3343 = uint(int((tmp40743 + (uint(tmp48772) * 4u)) + 0u) >> int(2u));
+            for (;;)
+            {
+                int _3352 = int(root_buffer_0.Load(_3343 * 4 + 0));
+                int _3356;
+                root_buffer_0.InterlockedCompareExchange(_3343 * 4 + 0, _3352, asint(asfloat(_3352) + tmp1432), _3356);
+                _3345 = int(_3356);
+                if (int(_3356) == _3352)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _3364 = uint(int((tmp40757 + (uint(tmp48772) * 4u)) + 0u) >> int(2u));
+            for (;;)
+            {
+                int _3373 = int(root_buffer_0.Load(_3364 * 4 + 0));
+                int _3377;
+                root_buffer_0.InterlockedCompareExchange(_3364 * 4 + 0, _3373, asint(asfloat(_3373) + 1.0f), _3377);
+                _3366 = int(_3377);
+                if (int(_3377) == _3373)
+                {
+                    break;
+                }
+                continue;
+            }
+            float tmp1437 = tmp1408 * tmp111;
+            float tmp1444 = tmp1437 * (tmp957 + (tmp1412 + tmp1000));
+            float tmp1445 = tmp1437 * (tmp960 + (tmp1415 + tmp1002));
+            float tmp1446 = tmp1437 * (tmp963 + (tmp1418 + tmp1004));
+            int tmp48827 = tmp47834 + tmp50602;
+            uint tmp42036 = tmp40701 + (uint(tmp48827) * 12u);
+            uint _3396 = uint(int(tmp42036 + 0u) >> int(2u));
+            for (;;)
+            {
+                int _3405 = int(root_buffer_0.Load(_3396 * 4 + 0));
+                int _3409;
+                root_buffer_0.InterlockedCompareExchange(_3396 * 4 + 0, _3405, asint(asfloat(_3405) + tmp1444), _3409);
+                _3398 = int(_3409);
+                if (int(_3409) == _3405)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _3414 = uint(int(tmp42036 + 4u) >> int(2u));
+            for (;;)
+            {
+                int _3423 = int(root_buffer_0.Load(_3414 * 4 + 0));
+                int _3427;
+                root_buffer_0.InterlockedCompareExchange(_3414 * 4 + 0, _3423, asint(asfloat(_3423) + tmp1445), _3427);
+                _3416 = int(_3427);
+                if (int(_3427) == _3423)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _3432 = uint(int(tmp42036 + 8u) >> int(2u));
+            for (;;)
+            {
+                int _3441 = int(root_buffer_0.Load(_3432 * 4 + 0));
+                int _3445;
+                root_buffer_0.InterlockedCompareExchange(_3432 * 4 + 0, _3441, asint(asfloat(_3441) + tmp1446), _3445);
+                _3434 = int(_3445);
+                if (int(_3445) == _3441)
+                {
+                    break;
+                }
+                continue;
+            }
+            float tmp1453 = tmp1437 * 6.350097828544676303863525390625e-05f;
+            uint _3454 = uint(int((tmp40743 + (uint(tmp48827) * 4u)) + 0u) >> int(2u));
+            for (;;)
+            {
+                int _3463 = int(root_buffer_0.Load(_3454 * 4 + 0));
+                int _3467;
+                root_buffer_0.InterlockedCompareExchange(_3454 * 4 + 0, _3463, asint(asfloat(_3463) + tmp1453), _3467);
+                _3456 = int(_3467);
+                if (int(_3467) == _3463)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _3475 = uint(int((tmp40757 + (uint(tmp48827) * 4u)) + 0u) >> int(2u));
+            for (;;)
+            {
+                int _3484 = int(root_buffer_0.Load(_3475 * 4 + 0));
+                int _3488;
+                root_buffer_0.InterlockedCompareExchange(_3475 * 4 + 0, _3484, asint(asfloat(_3484) + 1.0f), _3488);
+                _3477 = int(_3488);
+                if (int(_3488) == _3484)
+                {
+                    break;
+                }
+                continue;
+            }
+            float tmp1458 = tmp1408 * tmp119;
+            float tmp1465 = tmp1458 * (tmp957 + (tmp1412 + tmp1029));
+            float tmp1466 = tmp1458 * (tmp960 + (tmp1415 + tmp1031));
+            float tmp1467 = tmp1458 * (tmp963 + (tmp1418 + tmp1033));
+            int tmp48882 = tmp47889 + tmp50602;
+            uint tmp42106 = tmp40701 + (uint(tmp48882) * 12u);
+            uint _3507 = uint(int(tmp42106 + 0u) >> int(2u));
+            for (;;)
+            {
+                int _3516 = int(root_buffer_0.Load(_3507 * 4 + 0));
+                int _3520;
+                root_buffer_0.InterlockedCompareExchange(_3507 * 4 + 0, _3516, asint(asfloat(_3516) + tmp1465), _3520);
+                _3509 = int(_3520);
+                if (int(_3520) == _3516)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _3525 = uint(int(tmp42106 + 4u) >> int(2u));
+            for (;;)
+            {
+                int _3534 = int(root_buffer_0.Load(_3525 * 4 + 0));
+                int _3538;
+                root_buffer_0.InterlockedCompareExchange(_3525 * 4 + 0, _3534, asint(asfloat(_3534) + tmp1466), _3538);
+                _3527 = int(_3538);
+                if (int(_3538) == _3534)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _3543 = uint(int(tmp42106 + 8u) >> int(2u));
+            for (;;)
+            {
+                int _3552 = int(root_buffer_0.Load(_3543 * 4 + 0));
+                int _3556;
+                root_buffer_0.InterlockedCompareExchange(_3543 * 4 + 0, _3552, asint(asfloat(_3552) + tmp1467), _3556);
+                _3545 = int(_3556);
+                if (int(_3556) == _3552)
+                {
+                    break;
+                }
+                continue;
+            }
+            float tmp1474 = tmp1458 * 6.350097828544676303863525390625e-05f;
+            uint _3565 = uint(int((tmp40743 + (uint(tmp48882) * 4u)) + 0u) >> int(2u));
+            for (;;)
+            {
+                int _3574 = int(root_buffer_0.Load(_3565 * 4 + 0));
+                int _3578;
+                root_buffer_0.InterlockedCompareExchange(_3565 * 4 + 0, _3574, asint(asfloat(_3574) + tmp1474), _3578);
+                _3567 = int(_3578);
+                if (int(_3578) == _3574)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _3586 = uint(int((tmp40757 + (uint(tmp48882) * 4u)) + 0u) >> int(2u));
+            for (;;)
+            {
+                int _3595 = int(root_buffer_0.Load(_3586 * 4 + 0));
+                int _3599;
+                root_buffer_0.InterlockedCompareExchange(_3586 * 4 + 0, _3595, asint(asfloat(_3595) + 1.0f), _3599);
+                _3588 = int(_3599);
+                if (int(_3599) == _3595)
+                {
+                    break;
+                }
+                continue;
+            }
+            float tmp1479 = tmp1407 * tmp110;
+            float tmp1480 = tmp1479 * tmp100;
+            float tmp1481 = tmp1411 + tmp1057;
+            float tmp1483 = tmp1414 + tmp1060;
+            float tmp1485 = tmp1417 + tmp1063;
+            float tmp1490 = tmp1480 * (tmp957 + (tmp1481 + tmp967));
+            float tmp1491 = tmp1480 * (tmp960 + (tmp1483 + tmp972));
+            float tmp1492 = tmp1480 * (tmp963 + (tmp1485 + tmp977));
+            int tmp48937 = tmp47944 + tmp50602;
+            uint tmp42176 = tmp40701 + (uint(tmp48937) * 12u);
+            uint _3622 = uint(int(tmp42176 + 0u) >> int(2u));
+            for (;;)
+            {
+                int _3631 = int(root_buffer_0.Load(_3622 * 4 + 0));
+                int _3635;
+                root_buffer_0.InterlockedCompareExchange(_3622 * 4 + 0, _3631, asint(asfloat(_3631) + tmp1490), _3635);
+                _3624 = int(_3635);
+                if (int(_3635) == _3631)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _3640 = uint(int(tmp42176 + 4u) >> int(2u));
+            for (;;)
+            {
+                int _3649 = int(root_buffer_0.Load(_3640 * 4 + 0));
+                int _3653;
+                root_buffer_0.InterlockedCompareExchange(_3640 * 4 + 0, _3649, asint(asfloat(_3649) + tmp1491), _3653);
+                _3642 = int(_3653);
+                if (int(_3653) == _3649)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _3658 = uint(int(tmp42176 + 8u) >> int(2u));
+            for (;;)
+            {
+                int _3667 = int(root_buffer_0.Load(_3658 * 4 + 0));
+                int _3671;
+                root_buffer_0.InterlockedCompareExchange(_3658 * 4 + 0, _3667, asint(asfloat(_3667) + tmp1492), _3671);
+                _3660 = int(_3671);
+                if (int(_3671) == _3667)
+                {
+                    break;
+                }
+                continue;
+            }
+            float tmp1499 = tmp1480 * 6.350097828544676303863525390625e-05f;
+            uint _3680 = uint(int((tmp40743 + (uint(tmp48937) * 4u)) + 0u) >> int(2u));
+            for (;;)
+            {
+                int _3689 = int(root_buffer_0.Load(_3680 * 4 + 0));
+                int _3693;
+                root_buffer_0.InterlockedCompareExchange(_3680 * 4 + 0, _3689, asint(asfloat(_3689) + tmp1499), _3693);
+                _3682 = int(_3693);
+                if (int(_3693) == _3689)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _3701 = uint(int((tmp40757 + (uint(tmp48937) * 4u)) + 0u) >> int(2u));
+            for (;;)
+            {
+                int _3710 = int(root_buffer_0.Load(_3701 * 4 + 0));
+                int _3714;
+                root_buffer_0.InterlockedCompareExchange(_3701 * 4 + 0, _3710, asint(asfloat(_3710) + 1.0f), _3714);
+                _3703 = int(_3714);
+                if (int(_3714) == _3710)
+                {
+                    break;
+                }
+                continue;
+            }
+            float tmp1504 = tmp1479 * tmp111;
+            float tmp1511 = tmp1504 * (tmp957 + (tmp1481 + tmp1000));
+            float tmp1512 = tmp1504 * (tmp960 + (tmp1483 + tmp1002));
+            float tmp1513 = tmp1504 * (tmp963 + (tmp1485 + tmp1004));
+            int tmp48992 = tmp47999 + tmp50602;
+            uint tmp42246 = tmp40701 + (uint(tmp48992) * 12u);
+            uint _3733 = uint(int(tmp42246 + 0u) >> int(2u));
+            for (;;)
+            {
+                int _3742 = int(root_buffer_0.Load(_3733 * 4 + 0));
+                int _3746;
+                root_buffer_0.InterlockedCompareExchange(_3733 * 4 + 0, _3742, asint(asfloat(_3742) + tmp1511), _3746);
+                _3735 = int(_3746);
+                if (int(_3746) == _3742)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _3751 = uint(int(tmp42246 + 4u) >> int(2u));
+            for (;;)
+            {
+                int _3760 = int(root_buffer_0.Load(_3751 * 4 + 0));
+                int _3764;
+                root_buffer_0.InterlockedCompareExchange(_3751 * 4 + 0, _3760, asint(asfloat(_3760) + tmp1512), _3764);
+                _3753 = int(_3764);
+                if (int(_3764) == _3760)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _3769 = uint(int(tmp42246 + 8u) >> int(2u));
+            for (;;)
+            {
+                int _3778 = int(root_buffer_0.Load(_3769 * 4 + 0));
+                int _3782;
+                root_buffer_0.InterlockedCompareExchange(_3769 * 4 + 0, _3778, asint(asfloat(_3778) + tmp1513), _3782);
+                _3771 = int(_3782);
+                if (int(_3782) == _3778)
+                {
+                    break;
+                }
+                continue;
+            }
+            float tmp1520 = tmp1504 * 6.350097828544676303863525390625e-05f;
+            uint _3791 = uint(int((tmp40743 + (uint(tmp48992) * 4u)) + 0u) >> int(2u));
+            for (;;)
+            {
+                int _3800 = int(root_buffer_0.Load(_3791 * 4 + 0));
+                int _3804;
+                root_buffer_0.InterlockedCompareExchange(_3791 * 4 + 0, _3800, asint(asfloat(_3800) + tmp1520), _3804);
+                _3793 = int(_3804);
+                if (int(_3804) == _3800)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _3812 = uint(int((tmp40757 + (uint(tmp48992) * 4u)) + 0u) >> int(2u));
+            for (;;)
+            {
+                int _3821 = int(root_buffer_0.Load(_3812 * 4 + 0));
+                int _3825;
+                root_buffer_0.InterlockedCompareExchange(_3812 * 4 + 0, _3821, asint(asfloat(_3821) + 1.0f), _3825);
+                _3814 = int(_3825);
+                if (int(_3825) == _3821)
+                {
+                    break;
+                }
+                continue;
+            }
+            float tmp1525 = tmp1479 * tmp119;
+            float tmp1532 = tmp1525 * (tmp957 + (tmp1481 + tmp1029));
+            float tmp1533 = tmp1525 * (tmp960 + (tmp1483 + tmp1031));
+            float tmp1534 = tmp1525 * (tmp963 + (tmp1485 + tmp1033));
+            int tmp49047 = tmp48054 + tmp50602;
+            uint tmp42316 = tmp40701 + (uint(tmp49047) * 12u);
+            uint _3844 = uint(int(tmp42316 + 0u) >> int(2u));
+            for (;;)
+            {
+                int _3853 = int(root_buffer_0.Load(_3844 * 4 + 0));
+                int _3857;
+                root_buffer_0.InterlockedCompareExchange(_3844 * 4 + 0, _3853, asint(asfloat(_3853) + tmp1532), _3857);
+                _3846 = int(_3857);
+                if (int(_3857) == _3853)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _3862 = uint(int(tmp42316 + 4u) >> int(2u));
+            for (;;)
+            {
+                int _3871 = int(root_buffer_0.Load(_3862 * 4 + 0));
+                int _3875;
+                root_buffer_0.InterlockedCompareExchange(_3862 * 4 + 0, _3871, asint(asfloat(_3871) + tmp1533), _3875);
+                _3864 = int(_3875);
+                if (int(_3875) == _3871)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _3880 = uint(int(tmp42316 + 8u) >> int(2u));
+            for (;;)
+            {
+                int _3889 = int(root_buffer_0.Load(_3880 * 4 + 0));
+                int _3893;
+                root_buffer_0.InterlockedCompareExchange(_3880 * 4 + 0, _3889, asint(asfloat(_3889) + tmp1534), _3893);
+                _3882 = int(_3893);
+                if (int(_3893) == _3889)
+                {
+                    break;
+                }
+                continue;
+            }
+            float tmp1541 = tmp1525 * 6.350097828544676303863525390625e-05f;
+            uint _3902 = uint(int((tmp40743 + (uint(tmp49047) * 4u)) + 0u) >> int(2u));
+            for (;;)
+            {
+                int _3911 = int(root_buffer_0.Load(_3902 * 4 + 0));
+                int _3915;
+                root_buffer_0.InterlockedCompareExchange(_3902 * 4 + 0, _3911, asint(asfloat(_3911) + tmp1541), _3915);
+                _3904 = int(_3915);
+                if (int(_3915) == _3911)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _3923 = uint(int((tmp40757 + (uint(tmp49047) * 4u)) + 0u) >> int(2u));
+            for (;;)
+            {
+                int _3932 = int(root_buffer_0.Load(_3923 * 4 + 0));
+                int _3936;
+                root_buffer_0.InterlockedCompareExchange(_3923 * 4 + 0, _3932, asint(asfloat(_3932) + 1.0f), _3936);
+                _3925 = int(_3936);
+                if (int(_3936) == _3932)
+                {
+                    break;
+                }
+                continue;
+            }
+            float tmp1546 = tmp1407 * tmp118;
+            float tmp1547 = tmp1546 * tmp100;
+            float tmp1548 = tmp1411 + tmp1130;
+            float tmp1550 = tmp1414 + tmp1133;
+            float tmp1552 = tmp1417 + tmp1136;
+            float tmp1557 = tmp1547 * (tmp957 + (tmp1548 + tmp967));
+            float tmp1558 = tmp1547 * (tmp960 + (tmp1550 + tmp972));
+            float tmp1559 = tmp1547 * (tmp963 + (tmp1552 + tmp977));
+            int tmp49102 = tmp48109 + tmp50602;
+            uint tmp42386 = tmp40701 + (uint(tmp49102) * 12u);
+            uint _3959 = uint(int(tmp42386 + 0u) >> int(2u));
+            for (;;)
+            {
+                int _3968 = int(root_buffer_0.Load(_3959 * 4 + 0));
+                int _3972;
+                root_buffer_0.InterlockedCompareExchange(_3959 * 4 + 0, _3968, asint(asfloat(_3968) + tmp1557), _3972);
+                _3961 = int(_3972);
+                if (int(_3972) == _3968)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _3977 = uint(int(tmp42386 + 4u) >> int(2u));
+            for (;;)
+            {
+                int _3986 = int(root_buffer_0.Load(_3977 * 4 + 0));
+                int _3990;
+                root_buffer_0.InterlockedCompareExchange(_3977 * 4 + 0, _3986, asint(asfloat(_3986) + tmp1558), _3990);
+                _3979 = int(_3990);
+                if (int(_3990) == _3986)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _3995 = uint(int(tmp42386 + 8u) >> int(2u));
+            for (;;)
+            {
+                int _4004 = int(root_buffer_0.Load(_3995 * 4 + 0));
+                int _4008;
+                root_buffer_0.InterlockedCompareExchange(_3995 * 4 + 0, _4004, asint(asfloat(_4004) + tmp1559), _4008);
+                _3997 = int(_4008);
+                if (int(_4008) == _4004)
+                {
+                    break;
+                }
+                continue;
+            }
+            float tmp1566 = tmp1547 * 6.350097828544676303863525390625e-05f;
+            uint _4017 = uint(int((tmp40743 + (uint(tmp49102) * 4u)) + 0u) >> int(2u));
+            for (;;)
+            {
+                int _4026 = int(root_buffer_0.Load(_4017 * 4 + 0));
+                int _4030;
+                root_buffer_0.InterlockedCompareExchange(_4017 * 4 + 0, _4026, asint(asfloat(_4026) + tmp1566), _4030);
+                _4019 = int(_4030);
+                if (int(_4030) == _4026)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _4038 = uint(int((tmp40757 + (uint(tmp49102) * 4u)) + 0u) >> int(2u));
+            for (;;)
+            {
+                int _4047 = int(root_buffer_0.Load(_4038 * 4 + 0));
+                int _4051;
+                root_buffer_0.InterlockedCompareExchange(_4038 * 4 + 0, _4047, asint(asfloat(_4047) + 1.0f), _4051);
+                _4040 = int(_4051);
+                if (int(_4051) == _4047)
+                {
+                    break;
+                }
+                continue;
+            }
+            float tmp1571 = tmp1546 * tmp111;
+            float tmp1578 = tmp1571 * (tmp957 + (tmp1548 + tmp1000));
+            float tmp1579 = tmp1571 * (tmp960 + (tmp1550 + tmp1002));
+            float tmp1580 = tmp1571 * (tmp963 + (tmp1552 + tmp1004));
+            int tmp49157 = tmp48164 + tmp50602;
+            uint tmp42456 = tmp40701 + (uint(tmp49157) * 12u);
+            uint _4070 = uint(int(tmp42456 + 0u) >> int(2u));
+            for (;;)
+            {
+                int _4079 = int(root_buffer_0.Load(_4070 * 4 + 0));
+                int _4083;
+                root_buffer_0.InterlockedCompareExchange(_4070 * 4 + 0, _4079, asint(asfloat(_4079) + tmp1578), _4083);
+                _4072 = int(_4083);
+                if (int(_4083) == _4079)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _4088 = uint(int(tmp42456 + 4u) >> int(2u));
+            for (;;)
+            {
+                int _4097 = int(root_buffer_0.Load(_4088 * 4 + 0));
+                int _4101;
+                root_buffer_0.InterlockedCompareExchange(_4088 * 4 + 0, _4097, asint(asfloat(_4097) + tmp1579), _4101);
+                _4090 = int(_4101);
+                if (int(_4101) == _4097)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _4106 = uint(int(tmp42456 + 8u) >> int(2u));
+            for (;;)
+            {
+                int _4115 = int(root_buffer_0.Load(_4106 * 4 + 0));
+                int _4119;
+                root_buffer_0.InterlockedCompareExchange(_4106 * 4 + 0, _4115, asint(asfloat(_4115) + tmp1580), _4119);
+                _4108 = int(_4119);
+                if (int(_4119) == _4115)
+                {
+                    break;
+                }
+                continue;
+            }
+            float tmp1587 = tmp1571 * 6.350097828544676303863525390625e-05f;
+            uint _4128 = uint(int((tmp40743 + (uint(tmp49157) * 4u)) + 0u) >> int(2u));
+            for (;;)
+            {
+                int _4137 = int(root_buffer_0.Load(_4128 * 4 + 0));
+                int _4141;
+                root_buffer_0.InterlockedCompareExchange(_4128 * 4 + 0, _4137, asint(asfloat(_4137) + tmp1587), _4141);
+                _4130 = int(_4141);
+                if (int(_4141) == _4137)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _4149 = uint(int((tmp40757 + (uint(tmp49157) * 4u)) + 0u) >> int(2u));
+            for (;;)
+            {
+                int _4158 = int(root_buffer_0.Load(_4149 * 4 + 0));
+                int _4162;
+                root_buffer_0.InterlockedCompareExchange(_4149 * 4 + 0, _4158, asint(asfloat(_4158) + 1.0f), _4162);
+                _4151 = int(_4162);
+                if (int(_4162) == _4158)
+                {
+                    break;
+                }
+                continue;
+            }
+            float tmp1592 = tmp1546 * tmp119;
+            float tmp1599 = tmp1592 * (tmp957 + (tmp1548 + tmp1029));
+            float tmp1600 = tmp1592 * (tmp960 + (tmp1550 + tmp1031));
+            float tmp1601 = tmp1592 * (tmp963 + (tmp1552 + tmp1033));
+            int tmp49212 = tmp48219 + tmp50602;
+            uint tmp42526 = tmp40701 + (uint(tmp49212) * 12u);
+            uint _4181 = uint(int(tmp42526 + 0u) >> int(2u));
+            for (;;)
+            {
+                int _4190 = int(root_buffer_0.Load(_4181 * 4 + 0));
+                int _4194;
+                root_buffer_0.InterlockedCompareExchange(_4181 * 4 + 0, _4190, asint(asfloat(_4190) + tmp1599), _4194);
+                _4183 = int(_4194);
+                if (int(_4194) == _4190)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _4199 = uint(int(tmp42526 + 4u) >> int(2u));
+            for (;;)
+            {
+                int _4208 = int(root_buffer_0.Load(_4199 * 4 + 0));
+                int _4212;
+                root_buffer_0.InterlockedCompareExchange(_4199 * 4 + 0, _4208, asint(asfloat(_4208) + tmp1600), _4212);
+                _4201 = int(_4212);
+                if (int(_4212) == _4208)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _4217 = uint(int(tmp42526 + 8u) >> int(2u));
+            for (;;)
+            {
+                int _4226 = int(root_buffer_0.Load(_4217 * 4 + 0));
+                int _4230;
+                root_buffer_0.InterlockedCompareExchange(_4217 * 4 + 0, _4226, asint(asfloat(_4226) + tmp1601), _4230);
+                _4219 = int(_4230);
+                if (int(_4230) == _4226)
+                {
+                    break;
+                }
+                continue;
+            }
+            float tmp1608 = tmp1592 * 6.350097828544676303863525390625e-05f;
+            uint _4239 = uint(int((tmp40743 + (uint(tmp49212) * 4u)) + 0u) >> int(2u));
+            for (;;)
+            {
+                int _4248 = int(root_buffer_0.Load(_4239 * 4 + 0));
+                int _4252;
+                root_buffer_0.InterlockedCompareExchange(_4239 * 4 + 0, _4248, asint(asfloat(_4248) + tmp1608), _4252);
+                _4241 = int(_4252);
+                if (int(_4252) == _4248)
+                {
+                    break;
+                }
+                continue;
+            }
+            uint _4260 = uint(int((tmp40757 + (uint(tmp49212) * 4u)) + 0u) >> int(2u));
+            for (;;)
+            {
+                int _4269 = int(root_buffer_0.Load(_4260 * 4 + 0));
+                int _4273;
+                root_buffer_0.InterlockedCompareExchange(_4260 * 4 + 0, _4269, asint(asfloat(_4269) + 1.0f), _4273);
+                _4262 = int(_4273);
+                if (int(_4273) == _4269)
+                {
+                    break;
+                }
+                continue;
+            }
+        }
+        else
+        {
+        }
+    }
+}
+
+[numthreads(64, 1, 1)]
+void main(SPIRV_Cross_Input stage_input)
+{
+    gl_GlobalInvocationID = stage_input.gl_GlobalInvocationID;
+    comp_main();
+}

@@ -1,0 +1,587 @@
+
+float slip = 0.96;
+#pragma kernel ClearGrid
+#pragma kernel P2G
+#pragma kernel GridUpdate
+#pragma kernel G2P
+#pragma kernel GridToRenderParticles
+#pragma kernel ProbeGrid
+
+RWStructuredBuffer<float3> x;
+RWStructuredBuffer<float3> v;
+StructuredBuffer<float3> x_ro;
+StructuredBuffer<float3> v_ro;
+
+RWStructuredBuffer<float3> C0;
+RWStructuredBuffer<float3> C1;
+RWStructuredBuffer<float3> C2;
+StructuredBuffer<float3> C0_ro;
+StructuredBuffer<float3> C1_ro;
+StructuredBuffer<float3> C2_ro;
+
+RWStructuredBuffer<int> gridMassI_rw;
+RWStructuredBuffer<int> gridMomX_rw;
+RWStructuredBuffer<int> gridMomY_rw;
+RWStructuredBuffer<int> gridMomZ_rw;
+RWStructuredBuffer<float4> gridRenderParticles;
+
+StructuredBuffer<int> gridMassI;
+StructuredBuffer<int> gridMomX;
+StructuredBuffer<int> gridMomY;
+StructuredBuffer<int> gridMomZ;
+
+struct Particle {
+    float4 position;
+    float4 color;
+    float4 velocity;
+};
+RWStructuredBuffer<Particle> _particlesBuffer;
+
+uint n_grid;
+uint particle_num;
+float dt;
+float3 boundsMin;
+float3 boundsMax;
+float restDensity;
+float particleMass;
+float viscosity;
+float3 gravity;
+
+float eosGamma;
+float soundSpeed;
+float ratioClampMin;
+float ratioClampMax;
+float gridSmoothWeight;
+float boundaryFriction;
+float smoothingStrength;
+float smoothingThreshold;
+
+float4 renderTint;
+float pressureWeight;
+float maxSpeed;
+float4 colliderSphere; // xyz = position, w = radius
+float3 colliderVelocity; // Velocity of the collider
+
+float4 stirrerSphere; // xyz = position, w = radius
+float3 stirrerVelocity; // Velocity of the stirrer
+
+struct HullSphere {
+    float4 sphere;
+    float3 velocity;
+    float padding;
+};
+StructuredBuffer<HullSphere> boatSpheres;
+int boatSphereCount;
+
+static const float FP_SCALE = 100000.0;
+
+inline float3 clamp3(float3 p, float3 mn, float3 mx) {
+    return clamp(p, mn, mx);
+}
+
+inline float3 gridIndexToPos(uint3 gi, float3 bmin, float3 cell) {
+    return bmin + (float3)gi * cell + 0.5 * cell;
+}
+
+inline float w_qbs(float x) {
+    x = abs(x);
+    if (x < 0.5) return 0.75 - x * x;
+    else if (x < 1.5) { float t = 1.5 - x; return 0.5 * t * t; }
+    else return 0.0;
+}
+
+inline void weight3(float3 rel, float3 invCell, out float w[3][3], out int baseIdx[3]) {
+    float3 gx = rel * invCell - 0.5;
+    baseIdx[0] = (int)floor(gx.x);
+    baseIdx[1] = (int)floor(gx.y);
+    baseIdx[2] = (int)floor(gx.z);
+    for (int i = 0; i < 3; ++i) {
+        float px = (i - (gx.x - floor(gx.x)));
+        float py = (i - (gx.y - floor(gx.y)));
+        float pz = (i - (gx.z - floor(gx.z)));
+        w[i][0] = w_qbs(px);
+        w[i][1] = w_qbs(py);
+        w[i][2] = w_qbs(pz);
+    }
+}
+
+inline uint flatten(uint3 g, uint n) { return g.x + g.y * n + g.z * n * n; }
+
+[numthreads(128, 1, 1)]
+void ClearGrid(uint3 id : SV_DispatchThreadID) {
+    uint gridCount = n_grid * n_grid * n_grid;
+    uint idx = id.x;
+    if (idx >= gridCount) return;
+    gridMassI_rw[idx] = 0;
+    gridMomX_rw[idx] = 0;
+    gridMomY_rw[idx] = 0;
+    gridMomZ_rw[idx] = 0;
+}
+
+[numthreads(128, 1, 1)]
+void P2G(uint3 id : SV_DispatchThreadID) {
+    uint i = id.x;
+    if (i >= particle_num) return;
+    float3 pi = x_ro[i];
+    float3 vi = v_ro[i];
+    float3 c0 = C0_ro[i];
+    float3 c1 = C1_ro[i];
+    float3 c2 = C2_ro[i];
+
+    float3 size = boundsMax - boundsMin;
+    float3 cell = size / max(1.0, (float)n_grid);
+    float3 invCell = 1.0 / cell;
+
+    float wxyz[3][3];
+    int base[3];
+    weight3(pi - boundsMin, invCell, wxyz, base);
+
+    for (int dz = 0; dz < 3; ++dz) {
+        int gz = clamp(base[2] + dz, 0, (int)n_grid - 1);
+        float wz = wxyz[dz][2];
+        for (int dy = 0; dy < 3; ++dy) {
+            int gy = clamp(base[1] + dy, 0, (int)n_grid - 1);
+            float wy = wxyz[dy][1];
+            for (int dx = 0; dx < 3; ++dx) {
+                int gx = clamp(base[0] + dx, 0, (int)n_grid - 1);
+                float wx = wxyz[dx][0];
+                float w = wx * wy * wz;
+                uint3 g = (uint3)int3(gx, gy, gz);
+                uint gi = flatten(g, n_grid);
+                float3 gpos = gridIndexToPos(g, boundsMin, cell);
+                float3 r = gpos - pi;
+                float3 apicVel = vi + float3(
+                    dot(c0, r),
+                    dot(c1, r),
+                    dot(c2, r)
+                );
+                int mI = (int)round(particleMass * w * FP_SCALE);
+                InterlockedAdd(gridMassI_rw[gi], mI);
+                float3 mom = particleMass * apicVel * w;
+                int mx = (int)round(mom.x * FP_SCALE);
+                int my = (int)round(mom.y * FP_SCALE);
+                int mz = (int)round(mom.z * FP_SCALE);
+                InterlockedAdd(gridMomX_rw[gi], mx);
+                InterlockedAdd(gridMomY_rw[gi], my);
+                InterlockedAdd(gridMomZ_rw[gi], mz);
+            }
+        }
+    }
+}
+
+[numthreads(128, 1, 1)]
+void GridUpdate(uint3 id : SV_DispatchThreadID) {
+    uint gridCount = n_grid * n_grid * n_grid;
+    uint gi = id.x;
+    if (gi >= gridCount) return;
+    float m = (float)gridMassI_rw[gi] / FP_SCALE;
+    if (m > 0.0) {
+        float3 vel;
+        vel.x = (float)gridMomX_rw[gi] / FP_SCALE / m;
+        vel.y = (float)gridMomY_rw[gi] / FP_SCALE / m;
+        vel.z = (float)gridMomZ_rw[gi] / FP_SCALE / m;
+        float3 size = boundsMax - boundsMin;
+        float3 cell = size / max(1.0, (float)n_grid);
+        float vol = max(cell.x * cell.y * cell.z, 1e-6);
+        float rho = m / vol;
+        float eosK = restDensity * soundSpeed * soundSpeed;
+        float ratio = rho / max(restDensity, 1e-6);
+        ratio = clamp(ratio, ratioClampMin, ratioClampMax);
+        float pC = eosK * (pow(max(ratio, 1.0), eosGamma) - 1.0);
+        uint n = n_grid;
+        uint zStride = n * n;
+        uint yStride = n;
+        uint gz = gi / zStride;
+        uint rest = gi % zStride;
+        uint gy = rest / yStride;
+        uint gx = rest % yStride;
+        uint lx = (gx == 0) ? 1 : gx - 1;
+        uint rx = (gx == n - 1) ? n - 2 : gx + 1;
+        uint ly = (gy == 0) ? 1 : gy - 1;
+        uint ry = (gy == n - 1) ? n - 2 : gy + 1;
+        uint lz = (gz == 0) ? 1 : gz - 1;
+        uint rz = (gz == n - 1) ? n - 2 : gz + 1;
+        uint3 gL = uint3(lx, gy, gz);
+        uint3 gR = uint3(rx, gy, gz);
+        uint3 gD = uint3(gx, ly, gz);
+        uint3 gU = uint3(gx, ry, gz);
+        uint3 gB = uint3(gx, gy, lz);
+        uint3 gF = uint3(gx, gy, rz);
+        uint iL = flatten(gL, n);
+        uint iR = flatten(gR, n);
+        uint iD = flatten(gD, n);
+        uint iU = flatten(gU, n);
+        uint iB = flatten(gB, n);
+        uint iF = flatten(gF, n);
+        float mL = (float)gridMassI_rw[iL] / FP_SCALE;
+        float mR = (float)gridMassI_rw[iR] / FP_SCALE;
+        float mD = (float)gridMassI_rw[iD] / FP_SCALE;
+        float mU = (float)gridMassI_rw[iU] / FP_SCALE;
+        float mB = (float)gridMassI_rw[iB] / FP_SCALE;
+        float mF = (float)gridMassI_rw[iF] / FP_SCALE;
+        float rhoL = mL / vol;
+        float rhoR = mR / vol;
+        float rhoD = mD / vol;
+        float rhoU = mU / vol;
+        float rhoB = mB / vol;
+        float rhoF = mF / vol;
+        float pL = eosK * (pow(max(rhoL / max(restDensity, 1e-6), 1.0), eosGamma) - 1.0);
+        float pR = eosK * (pow(max(rhoR / max(restDensity, 1e-6), 1.0), eosGamma) - 1.0);
+        float pD = eosK * (pow(max(rhoD / max(restDensity, 1e-6), 1.0), eosGamma) - 1.0);
+        float pU = eosK * (pow(max(rhoU / max(restDensity, 1e-6), 1.0), eosGamma) - 1.0);
+        float pB = eosK * (pow(max(rhoB / max(restDensity, 1e-6), 1.0), eosGamma) - 1.0);
+        float pF = eosK * (pow(max(rhoF / max(restDensity, 1e-6), 1.0), eosGamma) - 1.0);
+        float3 gradP;
+        gradP.x = (pR - pL) / max(2.0 * cell.x, 1e-6);
+        gradP.y = (pU - pD) / max(2.0 * cell.y, 1e-6);
+        gradP.z = (pF - pB) / max(2.0 * cell.z, 1e-6);
+        float invRho = 1.0 / max(rho, 1e-6);
+        vel += (-gradP * invRho) * dt * pressureWeight;
+        vel += gravity * dt;
+        vel *= (1.0 - saturate(viscosity * dt));
+
+        if (gridSmoothWeight > 0.0) {
+            float3 vSum = 0;
+            float wSum = 0;
+            if (mL > 0.0) { float3 vL; vL.x = (float)gridMomX_rw[iL] / FP_SCALE / mL; vL.y = (float)gridMomY_rw[iL] / FP_SCALE / mL; vL.z = (float)gridMomZ_rw[iL] / FP_SCALE / mL; vSum += vL; wSum += 1.0; }
+            if (mR > 0.0) { float3 vR; vR.x = (float)gridMomX_rw[iR] / FP_SCALE / mR; vR.y = (float)gridMomY_rw[iR] / FP_SCALE / mR; vR.z = (float)gridMomZ_rw[iR] / FP_SCALE / mR; vSum += vR; wSum += 1.0; }
+            if (mD > 0.0) { float3 vD; vD.x = (float)gridMomX_rw[iD] / FP_SCALE / mD; vD.y = (float)gridMomY_rw[iD] / FP_SCALE / mD; vD.z = (float)gridMomZ_rw[iD] / FP_SCALE / mD; vSum += vD; wSum += 1.0; }
+            if (mU > 0.0) { float3 vU; vU.x = (float)gridMomX_rw[iU] / FP_SCALE / mU; vU.y = (float)gridMomY_rw[iU] / FP_SCALE / mU; vU.z = (float)gridMomZ_rw[iU] / FP_SCALE / mU; vSum += vU; wSum += 1.0; }
+            if (mB > 0.0) { float3 vB; vB.x = (float)gridMomX_rw[iB] / FP_SCALE / mB; vB.y = (float)gridMomY_rw[iB] / FP_SCALE / mB; vB.z = (float)gridMomZ_rw[iB] / FP_SCALE / mB; vSum += vB; wSum += 1.0; }
+            if (mF > 0.0) { float3 vF; vF.x = (float)gridMomX_rw[iF] / FP_SCALE / mF; vF.y = (float)gridMomY_rw[iF] / FP_SCALE / mF; vF.z = (float)gridMomZ_rw[iF] / FP_SCALE / mF; vSum += vF; wSum += 1.0; }
+            if (wSum > 0.0) {
+                float3 vAvg = vSum / wSum;
+                vel = lerp(vel, vAvg, saturate(gridSmoothWeight));
+            }
+        }
+
+        float slip = 1.0 - saturate(boundaryFriction);
+        if (gx == 0 && vel.x < 0) { vel.x = 0; vel.y *= slip; vel.z *= slip; }
+        if (gx == n - 1 && vel.x > 0) { vel.x = 0; vel.y *= slip; vel.z *= slip; }
+        if (gy == 0 && vel.y < 0) { vel.y = 0; vel.x *= slip; vel.z *= slip; }
+        if (gy == n - 1 && vel.y > 0) { vel.y = 0; vel.x *= slip; vel.z *= slip; }
+        if (gz == 0 && vel.z < 0) { vel.z = 0; vel.x *= slip; vel.y *= slip; }
+        if (gz == n - 1 && vel.z > 0) { vel.z = 0; vel.x *= slip; vel.y *= slip; }
+
+        // Sphere Collision (Boat - Compound)
+        for (int i = 0; i < boatSphereCount; i++) {
+            HullSphere hs = boatSpheres[i];
+            if (hs.sphere.w > 0) {
+                float3 gpos = gridIndexToPos(uint3(gx, gy, gz), boundsMin, cell);
+                float3 relPos = gpos - hs.sphere.xyz;
+                float dist = length(relPos);
+                if (dist < hs.sphere.w) {
+                    float3 normal = normalize(relPos);
+                    // Use a stronger velocity interaction for wake
+                    float3 relVel = vel - hs.velocity; 
+                    float vProj = dot(relVel, normal);
+                    if (vProj < 0) {
+                        vel -= vProj * normal;
+                        float3 tang = relVel - vProj * normal;
+                        vel -= tang * boundaryFriction;
+                        vel += hs.velocity;
+                    }
+                    // Force push out
+                     float penetration = hs.sphere.w - dist;
+                     if (penetration > 0) {
+                        // Apply position correction as velocity impulse
+                        // vel += normal * (penetration / dt) * 0.5;
+                     }
+                }
+            }
+        }
+
+        // Sphere Collision (Boat - Single Legacy)
+        if (colliderSphere.w > 0) {
+            float3 gpos = gridIndexToPos(uint3(gx, gy, gz), boundsMin, cell);
+            float3 relPos = gpos - colliderSphere.xyz;
+            float dist = length(relPos);
+            if (dist < colliderSphere.w) {
+                float3 normal = normalize(relPos);
+                float3 relVel = vel - colliderVelocity;
+                float vProj = dot(relVel, normal);
+                if (vProj < 0) {
+                     // Remove normal component
+                     vel -= vProj * normal;
+                     // Apply friction
+                     float3 tang = relVel - vProj * normal;
+                     vel -= tang * boundaryFriction;
+                     vel += colliderVelocity;
+                }
+            }
+        }
+
+        // Sphere Collision (Stirrer)
+        if (stirrerSphere.w > 0) {
+            float3 gpos = gridIndexToPos(uint3(gx, gy, gz), boundsMin, cell);
+            float3 relPos = gpos - stirrerSphere.xyz;
+            float dist = length(relPos);
+            if (dist < stirrerSphere.w) {
+                float3 normal = normalize(relPos);
+                float3 relVel = vel - stirrerVelocity;
+                float vProj = dot(relVel, normal);
+                if (vProj < 0) {
+                     // Remove normal component
+                     vel -= vProj * normal;
+                     // Apply friction
+                     float3 tang = relVel - vProj * normal;
+                     vel -= tang * boundaryFriction;
+                     vel += stirrerVelocity;
+                }
+            }
+        }
+
+        float vmag = length(vel);
+        if (vmag > maxSpeed) vel = vel * (maxSpeed / vmag);
+        float3 mom = vel * m;
+        gridMomX_rw[gi] = (int)round(mom.x * FP_SCALE);
+        gridMomY_rw[gi] = (int)round(mom.y * FP_SCALE);
+        gridMomZ_rw[gi] = (int)round(mom.z * FP_SCALE);
+    }
+}
+
+[numthreads(128, 1, 1)]
+void G2P(uint3 id : SV_DispatchThreadID) {
+    uint i = id.x;
+    if (i >= particle_num) return;
+    float3 pi = x[i];
+
+    float3 size = boundsMax - boundsMin;
+    float3 cell = size / max(1.0, (float)n_grid);
+    float3 invCell = 1.0 / cell;
+
+    float wxyz[3][3];
+    int base[3];
+    weight3(pi - boundsMin, invCell, wxyz, base);
+
+    float3 newVel = 0;
+    float3 newC0 = 0;
+    float3 newC1 = 0;
+    float3 newC2 = 0;
+    float totalW = 0;
+
+    for (int dz = 0; dz < 3; ++dz) {
+        int gz = clamp(base[2] + dz, 0, (int)n_grid - 1);
+        float wz = wxyz[dz][2];
+        for (int dy = 0; dy < 3; ++dy) {
+            int gy = clamp(base[1] + dy, 0, (int)n_grid - 1);
+            float wy = wxyz[dy][1];
+            for (int dx = 0; dx < 3; ++dx) {
+                int gx = clamp(base[0] + dx, 0, (int)n_grid - 1);
+                float wx = wxyz[dx][0];
+                float w = wx * wy * wz;
+                uint3 g = (uint3)int3(gx, gy, gz);
+                uint gi = flatten(g, n_grid);
+                float m = (float)gridMassI[gi] / FP_SCALE;
+                if (m <= 0.0) continue;
+                float3 vel;
+                vel.x = (float)gridMomX[gi] / FP_SCALE / m;
+                vel.y = (float)gridMomY[gi] / FP_SCALE / m;
+                vel.z = (float)gridMomZ[gi] / FP_SCALE / m;
+                float3 gpos = gridIndexToPos(g, boundsMin, cell);
+                float3 r = gpos - pi;
+                newVel += vel * w;
+                float s = 4.0 / max(cell.x + cell.y + cell.z, 1e-6);
+                newC0 += (vel.x * r) * (w * s);
+                newC1 += (vel.y * r) * (w * s);
+                newC2 += (vel.z * r) * (w * s);
+                totalW += w;
+            }
+        }
+    }
+    if (totalW > 0.0) {
+        float invW = 1.0 / max(totalW, 1e-6);
+        newVel *= invW;
+        newC0 *= invW;
+        newC1 *= invW;
+        newC2 *= invW;
+        C0[i] = newC0;
+        C1[i] = newC1;
+        C2[i] = newC2;
+    }
+    float3 xi = pi + newVel * dt;
+    float eps = 1e-5;
+    float tangSlip = 0.99;
+    if (xi.x <= boundsMin.x + eps && newVel.x < 0) { newVel.x = 0; newVel.y *= tangSlip; newVel.z *= tangSlip; }
+    if (xi.x >= boundsMax.x - eps && newVel.x > 0) { newVel.x = 0; newVel.y *= tangSlip; newVel.z *= tangSlip; }
+    if (xi.y <= boundsMin.y + eps && newVel.y < 0) { newVel.y = 0; newVel.x *= tangSlip; newVel.z *= tangSlip; }
+    if (xi.y >= boundsMax.y - eps && newVel.y > 0) { newVel.y = 0; newVel.x *= tangSlip; newVel.z *= tangSlip; }
+    if (xi.z <= boundsMin.z + eps && newVel.z < 0) { newVel.z = 0; newVel.x *= tangSlip; newVel.y *= tangSlip; }
+    if (xi.z >= boundsMax.z - eps && newVel.z > 0) { newVel.z = 0; newVel.x *= tangSlip; newVel.y *= tangSlip; }
+    xi = clamp3(pi + newVel * dt, boundsMin, boundsMax);
+    v[i] = newVel;
+    x[i] = xi;
+
+    // Default visualization (raw)
+    // Particle pOut;
+    // pOut.position = xi;
+    // pOut.color = renderTint;
+    // _particlesBuffer[i] = pOut;
+}
+
+[numthreads(128, 1, 1)]
+void GridToRenderParticles(uint3 id : SV_DispatchThreadID) {
+    uint i = id.x;
+    if (i >= particle_num) return;
+    float3 pi = x[i];
+
+    float3 size = boundsMax - boundsMin;
+    float3 cell = size / max(1.0, (float)n_grid);
+    float3 invCell = 1.0 / cell;
+
+    float wxyz[3][3];
+    int base[3];
+    weight3(pi - boundsMin, invCell, wxyz, base);
+
+    float3 avgPos = 0;
+    float3 avgVel = 0;
+    float totalW = 0;
+    float massW = 0;
+    float wSum = 0;
+
+    for (int dz = 0; dz < 3; ++dz) {
+        int gz = clamp(base[2] + dz, 0, (int)n_grid - 1);
+        float wz = wxyz[dz][2];
+        for (int dy = 0; dy < 3; ++dy) {
+            int gy = clamp(base[1] + dy, 0, (int)n_grid - 1);
+            float wy = wxyz[dy][1];
+            for (int dx = 0; dx < 3; ++dx) {
+                int gx = clamp(base[0] + dx, 0, (int)n_grid - 1);
+                float wx = wxyz[dx][0];
+                float w = wx * wy * wz;
+                uint3 g = (uint3)int3(gx, gy, gz);
+                uint gi = flatten(g, n_grid);
+                
+                float m = (float)gridMassI[gi] / FP_SCALE;
+                if (m > 1e-6) {
+                    // Taichi-style smoothing: Pull towards Grid Node Center weighted by Density
+                    // This creates a more regular "neat" arrangement than pulling towards neighbor particle average
+                    float3 nodePos = gridIndexToPos(g, boundsMin, cell);
+                    
+                    avgPos += nodePos * (w * m); // Weighted by kernel(w) * mass(m)
+                    
+                    // Also smooth velocity
+                    float3 gridV;
+                    gridV.x = (float)gridMomX[gi] / FP_SCALE; // gridMom is momentum (v*m)
+                    gridV.y = (float)gridMomY[gi] / FP_SCALE;
+                    gridV.z = (float)gridMomZ[gi] / FP_SCALE;
+                    // gridV is already momentum (mass * velocity), so just weight by kernel w
+                    // Wait, gridMom is sum(v * m * w). 
+                    // To get average velocity field, we want Sum(v_grid * w)? 
+                    // Actually let's use the momentum directly as it contains density info.
+                    avgVel += gridV * w;
+
+                    totalW += w * m; // Accumulate weight * mass
+                    massW += m * w;
+                    wSum += w;
+                }
+            }
+        }
+    }
+
+    float3 finalPos = pi;
+    float3 finalVel = v[i];
+    float densityVal = 0.0;
+    if (totalW > 0.0) {
+        float3 size2 = boundsMax - boundsMin;
+        float3 cell2 = size2 / max(1.0, (float)n_grid);
+        float vol = max(cell2.x * cell2.y * cell2.z, 1e-6);
+        float localMass = massW / max(wSum, 1e-6);
+        float rhoAvg = localMass / vol;
+        float densRatio = rhoAvg / max(restDensity, 1e-6);
+        densityVal = densRatio;
+
+        // Smoother transition for clumping correction
+        float alpha = saturate(smoothstep(0.05, 0.8, densRatio)); 
+        
+        // Increase smoothing strength to fix "clumpy" look
+        // Moving particles closer to grid weighted center makes them look more like a continuum volume
+        float kMin = 0.2; 
+        float kMax = 0.85; 
+        float k = lerp(kMin, kMax, alpha);
+        
+        finalPos = lerp(pi, avgPos / totalW, k);
+        
+        // Use grid smoothed velocity for rendering anisotropy to reduce jitter
+        // avgVel is Sum(Momentum * w). totalW is Sum(Mass * w).
+        // So avgVel / totalW is roughly Average Velocity.
+        finalVel = avgVel / totalW;
+    }
+
+    Particle pOut;
+    pOut.position = float4(finalPos, 0);
+    pOut.color = renderTint;
+    // Store density ratio in velocity.w for adaptive anisotropy in shader
+    // Low density (splash) -> Isotropic (Sphere)
+    // High density (bulk) -> Anisotropic (Stretched)
+    pOut.velocity = float4(finalVel, densityVal);
+    _particlesBuffer[i] = pOut;
+}
+
+struct ProbeData {
+    float3 position;
+    float3 velocity;
+    float density;
+};
+RWStructuredBuffer<ProbeData> _probeBuffer;
+uint _probeCount;
+
+[numthreads(64, 1, 1)]
+void ProbeGrid(uint id : SV_DispatchThreadID) {
+    if (id >= _probeCount) return;
+    
+    ProbeData p = _probeBuffer[id];
+    float3 pos = p.position;
+    
+    float3 size = boundsMax - boundsMin;
+    float3 cell = size / max(1.0, (float)n_grid);
+    float3 invCell = 1.0 / cell;
+    
+    float wxyz[3][3];
+    int base[3];
+    weight3(pos - boundsMin, invCell, wxyz, base);
+    
+    float3 avgVel = 0;
+    float avgRho = 0;
+    float totalW = 0;
+    
+    for (int dz = 0; dz < 3; ++dz) {
+        int gz = clamp(base[2] + dz, 0, (int)n_grid - 1);
+        float wz = wxyz[dz][2];
+        for (int dy = 0; dy < 3; ++dy) {
+            int gy = clamp(base[1] + dy, 0, (int)n_grid - 1);
+            float wy = wxyz[dy][1];
+            for (int dx = 0; dx < 3; ++dx) {
+                int gx = clamp(base[0] + dx, 0, (int)n_grid - 1);
+                float wx = wxyz[dx][0];
+                float w = wx * wy * wz;
+                uint3 g = (uint3)int3(gx, gy, gz);
+                uint gi = flatten(g, n_grid);
+                
+                float m = (float)gridMassI[gi] / FP_SCALE;
+                if (m > 0) {
+                    float3 v;
+                    v.x = (float)gridMomX[gi] / FP_SCALE / m;
+                    v.y = (float)gridMomY[gi] / FP_SCALE / m;
+                    v.z = (float)gridMomZ[gi] / FP_SCALE / m;
+                    
+                    float vol = max(cell.x * cell.y * cell.z, 1e-6);
+                    float rho = m / vol;
+                    
+                    avgVel += v * w;
+                    avgRho += rho * w;
+                    totalW += w;
+                }
+            }
+        }
+    }
+    
+    if (totalW > 0) {
+        p.velocity = avgVel / totalW;
+        p.density = avgRho / totalW;
+    } else {
+        p.velocity = 0;
+        p.density = 0;
+    }
+    _probeBuffer[id] = p;
+}

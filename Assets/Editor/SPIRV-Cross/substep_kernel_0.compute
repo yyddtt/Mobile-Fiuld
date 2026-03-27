@@ -1,0 +1,64 @@
+static const uint3 gl_WorkGroupSize = uint3(128u, 1u, 1u);
+
+RWByteAddressBuffer _106 : register(u0);
+cbuffer SPIRV_Cross_NumWorkgroups
+{
+    uint3 SPIRV_Cross_NumWorkgroups_1_count : packoffset(c0);
+};
+
+
+static uint3 gl_GlobalInvocationID;
+struct SPIRV_Cross_Input
+{
+    uint3 gl_GlobalInvocationID : SV_DispatchThreadID;
+};
+
+void substep_c58_00()
+{
+    int _sid0 = int(gl_GlobalInvocationID.x);
+    for (int _sid = _sid0; _sid < 262144; _sid += int(128u * SPIRV_Cross_NumWorkgroups_1_count.x))
+    {
+        int _itv = 0 + _sid;
+        int E = _itv;
+        int L3d = 12;
+        int L3e = E >> L3d;
+        int L3h = 6;
+        int L3i = E >> L3h;
+        float V = 0.0f;
+        int K6m = 0;
+        int LNl = 0;
+        int K6o = K6m + (74711048 * LNl);
+        int K6p = K6o + 8650760;
+        int Mv7 = 63;
+        int MuK = L3e & Mv7;
+        int MuM = L3i & Mv7;
+        int MuO = E & Mv7;
+        int Mvv = MuM << L3h;
+        int LNs = MuO + Mvv;
+        int Mvx = MuK << L3d;
+        int LNv = LNs + Mvx;
+        int K6u = K6p + (12 * LNv);
+        int K6v = K6u + 0;
+        _106.Store((K6v >> 2) * 4 + 0, asuint(V));
+        int K6J = K6u + 4;
+        _106.Store((K6J >> 2) * 4 + 0, asuint(V));
+        int K6X = K6u + 8;
+        _106.Store((K6X >> 2) * 4 + 0, asuint(V));
+        int K75 = K6o + 2883592;
+        int K7a = K75 + (4 * LNv);
+        int K7b = K7a + 0;
+        _106.Store((K7b >> 2) * 4 + 0, asuint(V));
+    }
+}
+
+void comp_main()
+{
+    substep_c58_00();
+}
+
+[numthreads(128, 1, 1)]
+void main(SPIRV_Cross_Input stage_input)
+{
+    gl_GlobalInvocationID = stage_input.gl_GlobalInvocationID;
+    comp_main();
+}

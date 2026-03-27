@@ -1,0 +1,2107 @@
+#version 450
+layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
+
+layout(binding = 0, std430) buffer root_buffer_0
+{
+    int _m0[];
+} root_buffer_0_1;
+
+void main()
+{
+    int begin_ = int(gl_GlobalInvocationID.x) + 0;
+    int end_ = 65536 + 0;
+    int _1153;
+    int _1171;
+    int _1189;
+    int _1213;
+    int _1253;
+    int _1271;
+    int _1289;
+    int _1311;
+    int _1353;
+    int _1371;
+    int _1389;
+    int _1411;
+    int _1456;
+    int _1474;
+    int _1492;
+    int _1514;
+    int _1547;
+    int _1565;
+    int _1583;
+    int _1605;
+    int _1638;
+    int _1656;
+    int _1674;
+    int _1696;
+    int _1741;
+    int _1759;
+    int _1777;
+    int _1799;
+    int _1832;
+    int _1850;
+    int _1868;
+    int _1890;
+    int _1923;
+    int _1941;
+    int _1959;
+    int _1981;
+    int _2025;
+    int _2043;
+    int _2061;
+    int _2083;
+    int _2115;
+    int _2133;
+    int _2151;
+    int _2173;
+    int _2205;
+    int _2223;
+    int _2241;
+    int _2263;
+    int _2299;
+    int _2317;
+    int _2335;
+    int _2357;
+    int _2389;
+    int _2407;
+    int _2425;
+    int _2447;
+    int _2479;
+    int _2497;
+    int _2515;
+    int _2537;
+    int _2573;
+    int _2591;
+    int _2609;
+    int _2631;
+    int _2663;
+    int _2681;
+    int _2699;
+    int _2721;
+    int _2753;
+    int _2771;
+    int _2789;
+    int _2811;
+    int _2856;
+    int _2874;
+    int _2892;
+    int _2914;
+    int _2946;
+    int _2964;
+    int _2982;
+    int _3004;
+    int _3036;
+    int _3054;
+    int _3072;
+    int _3094;
+    int _3130;
+    int _3148;
+    int _3166;
+    int _3188;
+    int _3220;
+    int _3238;
+    int _3256;
+    int _3278;
+    int _3310;
+    int _3328;
+    int _3346;
+    int _3368;
+    int _3404;
+    int _3422;
+    int _3440;
+    int _3462;
+    int _3494;
+    int _3512;
+    int _3530;
+    int _3552;
+    int _3584;
+    int _3602;
+    int _3620;
+    int _3642;
+    for (int ii = begin_; ii < end_; ii += 65536)
+    {
+        uint tmp38770 = 0u + (uint(0) * 40370176u);
+        int tmp47707 = (ii + 0) & 65535;
+        uint tmp38774 = (tmp38770 + 0u) + (uint(tmp47707) * 12u);
+        int _61 = root_buffer_0_1._m0[uint(int(tmp38774 + 0u) >> int(2u))];
+        float tmp46 = intBitsToFloat(_61) * 64.0;
+        int _69 = root_buffer_0_1._m0[uint(int(tmp38774 + 4u) >> int(2u))];
+        float tmp49 = intBitsToFloat(_69) * 64.0;
+        int _76 = root_buffer_0_1._m0[uint(int(tmp38774 + 8u) >> int(2u))];
+        float tmp52 = intBitsToFloat(_76) * 64.0;
+        int tmp56 = int(tmp46 - 0.5);
+        int tmp57 = int(tmp49 - 0.5);
+        int tmp58 = int(tmp52 - 0.5);
+        float tmp60 = tmp46 - float(tmp56);
+        float tmp62 = tmp49 - float(tmp57);
+        float tmp64 = tmp52 - float(tmp58);
+        float tmp66 = 1.5 - tmp60;
+        float tmp67 = 1.5 - tmp62;
+        float tmp68 = 1.5 - tmp64;
+        float tmp72 = (tmp67 * tmp67) * 0.5;
+        float tmp73 = (tmp68 * tmp68) * 0.5;
+        float tmp75 = tmp60 - 1.0;
+        float tmp76 = tmp62 - 1.0;
+        float tmp77 = tmp64 - 1.0;
+        float tmp82 = 0.75 - (tmp75 * tmp75);
+        float tmp83 = 0.75 - (tmp76 * tmp76);
+        float tmp84 = 0.75 - (tmp77 * tmp77);
+        float tmp85 = tmp60 - 0.5;
+        float tmp86 = tmp62 - 0.5;
+        float tmp87 = tmp64 - 0.5;
+        float tmp91 = (tmp86 * tmp86) * 0.5;
+        float tmp92 = (tmp87 * tmp87) * 0.5;
+        uint tmp38804 = (tmp38770 + 1572864u) + (uint(tmp47707) * 36u);
+        int _128 = root_buffer_0_1._m0[uint(int(tmp38804 + 0u) >> int(2u))];
+        float tmp94 = intBitsToFloat(_128);
+        int _135 = root_buffer_0_1._m0[uint(int(tmp38804 + 4u) >> int(2u))];
+        float tmp98 = intBitsToFloat(_135);
+        float tmp99 = tmp98 * 0.00019999999494757503271102905273438;
+        int _141 = root_buffer_0_1._m0[uint(int(tmp38804 + 8u) >> int(2u))];
+        float tmp101 = intBitsToFloat(_141);
+        float tmp102 = tmp101 * 0.00019999999494757503271102905273438;
+        int _147 = root_buffer_0_1._m0[uint(int(tmp38804 + 12u) >> int(2u))];
+        float tmp104 = intBitsToFloat(_147);
+        float tmp105 = tmp104 * 0.00019999999494757503271102905273438;
+        int _154 = root_buffer_0_1._m0[uint(int(tmp38804 + 16u) >> int(2u))];
+        float tmp107 = intBitsToFloat(_154);
+        int _161 = root_buffer_0_1._m0[uint(int(tmp38804 + 20u) >> int(2u))];
+        float tmp110 = intBitsToFloat(_161);
+        float tmp111 = tmp110 * 0.00019999999494757503271102905273438;
+        int _168 = root_buffer_0_1._m0[uint(int(tmp38804 + 24u) >> int(2u))];
+        float tmp113 = intBitsToFloat(_168);
+        float tmp114 = tmp113 * 0.00019999999494757503271102905273438;
+        int _175 = root_buffer_0_1._m0[uint(int(tmp38804 + 28u) >> int(2u))];
+        float tmp116 = intBitsToFloat(_175);
+        float tmp117 = tmp116 * 0.00019999999494757503271102905273438;
+        int _182 = root_buffer_0_1._m0[uint(int(tmp38804 + 32u) >> int(2u))];
+        float tmp119 = intBitsToFloat(_182);
+        float tmp121 = (tmp94 * 0.00019999999494757503271102905273438) + 1.0;
+        float tmp122 = (tmp107 * 0.00019999999494757503271102905273438) + 1.0;
+        float tmp123 = (tmp119 * 0.00019999999494757503271102905273438) + 1.0;
+        uint tmp38894 = (tmp38770 + 3932160u) + (uint(tmp47707) * 36u);
+        uint tmp38895 = tmp38894 + 0u;
+        int _196 = root_buffer_0_1._m0[uint(int(tmp38895) >> int(2u))];
+        float tmp125 = intBitsToFloat(_196);
+        uint tmp38905 = tmp38894 + 12u;
+        int _202 = root_buffer_0_1._m0[uint(int(tmp38905) >> int(2u))];
+        float tmp128 = intBitsToFloat(_202);
+        uint tmp38915 = tmp38894 + 24u;
+        int _209 = root_buffer_0_1._m0[uint(int(tmp38915) >> int(2u))];
+        float tmp132 = intBitsToFloat(_209);
+        float tmp134 = ((tmp121 * tmp125) + (tmp99 * tmp128)) + (tmp102 * tmp132);
+        uint tmp38925 = tmp38894 + 4u;
+        int _216 = root_buffer_0_1._m0[uint(int(tmp38925) >> int(2u))];
+        float tmp136 = intBitsToFloat(_216);
+        uint tmp38935 = tmp38894 + 16u;
+        int _222 = root_buffer_0_1._m0[uint(int(tmp38935) >> int(2u))];
+        float tmp139 = intBitsToFloat(_222);
+        uint tmp38945 = tmp38894 + 28u;
+        int _229 = root_buffer_0_1._m0[uint(int(tmp38945) >> int(2u))];
+        float tmp143 = intBitsToFloat(_229);
+        float tmp145 = ((tmp121 * tmp136) + (tmp99 * tmp139)) + (tmp102 * tmp143);
+        uint tmp38955 = tmp38894 + 8u;
+        int _236 = root_buffer_0_1._m0[uint(int(tmp38955) >> int(2u))];
+        float tmp147 = intBitsToFloat(_236);
+        uint tmp38965 = tmp38894 + 20u;
+        int _242 = root_buffer_0_1._m0[uint(int(tmp38965) >> int(2u))];
+        float tmp150 = intBitsToFloat(_242);
+        uint tmp38975 = tmp38894 + 32u;
+        int _249 = root_buffer_0_1._m0[uint(int(tmp38975) >> int(2u))];
+        float tmp154 = intBitsToFloat(_249);
+        float tmp156 = ((tmp121 * tmp147) + (tmp99 * tmp150)) + (tmp102 * tmp154);
+        float tmp161 = ((tmp105 * tmp125) + (tmp122 * tmp128)) + (tmp111 * tmp132);
+        float tmp166 = ((tmp105 * tmp136) + (tmp122 * tmp139)) + (tmp111 * tmp143);
+        float tmp171 = ((tmp105 * tmp147) + (tmp122 * tmp150)) + (tmp111 * tmp154);
+        float tmp176 = ((tmp114 * tmp125) + (tmp117 * tmp128)) + (tmp123 * tmp132);
+        float tmp181 = ((tmp114 * tmp136) + (tmp117 * tmp139)) + (tmp123 * tmp143);
+        float tmp186 = ((tmp114 * tmp147) + (tmp117 * tmp150)) + (tmp123 * tmp154);
+        uint tmp38985 = ((tmp38770 + 6291456u) + (uint(tmp47707) * 4u)) + 0u;
+        int _291 = root_buffer_0_1._m0[uint(int(tmp38985) >> int(2u))];
+        float tmp188 = intBitsToFloat(_291);
+        float tmp193 = 0.0;
+        float tmp194 = 0.0;
+        float tmp195 = 0.0;
+        float tmp196 = 0.0;
+        float tmp197 = 0.0;
+        float tmp198 = 0.0;
+        float tmp199 = 0.0;
+        float tmp200 = 0.0;
+        float tmp201 = 0.0;
+        float tmp202 = 0.0;
+        tmp193 = 1.0;
+        tmp197 = (tmp176 * tmp176) + ((tmp161 * tmp161) + (tmp134 * tmp134));
+        tmp198 = (tmp181 * tmp176) + ((tmp166 * tmp161) + (tmp145 * tmp134));
+        tmp199 = (tmp186 * tmp176) + ((tmp171 * tmp161) + (tmp156 * tmp134));
+        tmp200 = (tmp181 * tmp181) + ((tmp166 * tmp166) + (tmp145 * tmp145));
+        tmp201 = (tmp186 * tmp181) + ((tmp171 * tmp166) + (tmp156 * tmp145));
+        tmp202 = (tmp186 * tmp186) + ((tmp171 * tmp171) + (tmp156 * tmp156));
+        for (int tmp241 = 0; tmp241 < 5; tmp241++)
+        {
+            float tmp242 = tmp198;
+            float tmp243 = tmp242 * 0.5;
+            float tmp244 = tmp197;
+            float tmp245 = tmp200;
+            float tmp246 = tmp244 - tmp245;
+            int tmp249 = ((-int((tmp243 * tmp243) >= 9.9999996826552253889678874634872e-21)) != 0) ? (-1) : 0;
+            float tmp252 = intBitsToFloat(tmp249 & floatBitsToInt(tmp243));
+            float tmp258 = intBitsToFloat((tmp249 & floatBitsToInt(tmp246)) | ((~tmp249) & 1065353216));
+            float tmp259 = tmp252 * tmp252;
+            float tmp260 = tmp258 * tmp258;
+            float tmp262 = inversesqrt(tmp259 + tmp260);
+            int tmp267 = ((-int(tmp260 <= (tmp259 * 5.82842731475830078125))) != 0) ? (-1) : 0;
+            int tmp269 = ~tmp267;
+            float tmp273 = intBitsToFloat((tmp269 & floatBitsToInt(tmp262 * tmp252)) | (tmp267 & 1053028117));
+            float tmp278 = intBitsToFloat((tmp269 & floatBitsToInt(tmp262 * tmp258)) | (tmp267 & 1064076126));
+            float tmp279 = tmp273 * tmp273;
+            float tmp280 = tmp278 * tmp278;
+            float tmp281 = tmp280 - tmp279;
+            float tmp282 = tmp278 * tmp273;
+            float tmp283 = tmp282 + tmp282;
+            float tmp284 = tmp279 + tmp280;
+            float tmp285 = tmp202;
+            float tmp287 = tmp199;
+            float tmp288 = tmp287 * tmp284;
+            float tmp289 = tmp201;
+            float tmp290 = tmp289 * tmp284;
+            float tmp291 = (tmp285 * tmp284) * tmp284;
+            float tmp297 = (tmp281 * tmp290) - (tmp283 * tmp288);
+            float tmp298 = tmp283 * tmp283;
+            float tmp301 = tmp281 * tmp281;
+            float tmp309 = tmp281 * tmp283;
+            float tmp310 = (tmp242 + tmp242) * tmp309;
+            float tmp314 = ((tmp245 * tmp301) + (tmp244 * tmp298)) - tmp310;
+            float tmp317 = tmp195;
+            float tmp319 = tmp196;
+            float tmp321 = tmp193;
+            float tmp327 = (tmp278 * tmp319) + (tmp273 * tmp321);
+            float tmp328 = (tmp278 * tmp321) - (tmp273 * tmp319);
+            float tmp329 = (tmp278 * tmp194) + (tmp273 * tmp317);
+            float tmp330 = (tmp278 * tmp317) - (tmp273 * tmp194);
+            float tmp331 = tmp297 * 0.5;
+            float tmp332 = tmp314 - tmp291;
+            int tmp335 = ((-int((tmp331 * tmp331) >= 9.9999996826552253889678874634872e-21)) != 0) ? (-1) : 0;
+            float tmp338 = intBitsToFloat(tmp335 & floatBitsToInt(tmp331));
+            float tmp344 = intBitsToFloat((tmp335 & floatBitsToInt(tmp332)) | ((~tmp335) & 1065353216));
+            float tmp345 = tmp338 * tmp338;
+            float tmp346 = tmp344 * tmp344;
+            float tmp348 = inversesqrt(tmp345 + tmp346);
+            int tmp353 = ((-int(tmp346 <= (tmp345 * 5.82842731475830078125))) != 0) ? (-1) : 0;
+            int tmp355 = ~tmp353;
+            float tmp359 = intBitsToFloat((tmp355 & floatBitsToInt(tmp348 * tmp338)) | (tmp353 & 1053028117));
+            float tmp364 = intBitsToFloat((tmp355 & floatBitsToInt(tmp348 * tmp344)) | (tmp353 & 1064076126));
+            float tmp365 = tmp359 * tmp359;
+            float tmp366 = tmp364 * tmp364;
+            float tmp367 = tmp366 - tmp365;
+            float tmp368 = tmp364 * tmp359;
+            float tmp369 = tmp368 + tmp368;
+            float tmp370 = tmp365 + tmp366;
+            float tmp372 = ((tmp242 * (tmp301 - tmp298)) - (tmp246 * tmp309)) * tmp370;
+            float tmp373 = ((tmp283 * tmp290) + (tmp281 * tmp288)) * tmp370;
+            float tmp374 = ((((tmp244 * tmp301) + (tmp245 * tmp298)) + tmp310) * tmp370) * tmp370;
+            float tmp380 = (tmp367 * tmp373) - (tmp369 * tmp372);
+            float tmp381 = tmp369 * tmp369;
+            float tmp384 = tmp367 * tmp367;
+            float tmp392 = tmp367 * tmp369;
+            float tmp393 = (tmp297 + tmp297) * tmp392;
+            float tmp397 = ((tmp291 * tmp384) + (tmp314 * tmp381)) - tmp393;
+            float tmp406 = (tmp364 * tmp329) + (tmp359 * tmp328);
+            float tmp407 = (tmp364 * tmp328) - (tmp359 * tmp329);
+            float tmp408 = (tmp364 * tmp330) + (tmp359 * tmp327);
+            float tmp409 = (tmp364 * tmp327) - (tmp359 * tmp330);
+            float tmp410 = tmp380 * 0.5;
+            float tmp411 = tmp397 - tmp374;
+            int tmp414 = ((-int((tmp410 * tmp410) >= 9.9999996826552253889678874634872e-21)) != 0) ? (-1) : 0;
+            float tmp417 = intBitsToFloat(tmp414 & floatBitsToInt(tmp410));
+            float tmp423 = intBitsToFloat((tmp414 & floatBitsToInt(tmp411)) | ((~tmp414) & 1065353216));
+            float tmp424 = tmp417 * tmp417;
+            float tmp425 = tmp423 * tmp423;
+            float tmp427 = inversesqrt(tmp424 + tmp425);
+            int tmp432 = ((-int(tmp425 <= (tmp424 * 5.82842731475830078125))) != 0) ? (-1) : 0;
+            int tmp434 = ~tmp432;
+            float tmp438 = intBitsToFloat((tmp434 & floatBitsToInt(tmp427 * tmp417)) | (tmp432 & 1053028117));
+            float tmp443 = intBitsToFloat((tmp434 & floatBitsToInt(tmp427 * tmp423)) | (tmp432 & 1064076126));
+            float tmp444 = tmp438 * tmp438;
+            float tmp445 = tmp443 * tmp443;
+            float tmp446 = tmp445 - tmp444;
+            float tmp447 = tmp443 * tmp438;
+            float tmp448 = tmp447 + tmp447;
+            float tmp449 = tmp444 + tmp445;
+            float tmp451 = ((tmp297 * (tmp384 - tmp381)) - (tmp332 * tmp392)) * tmp449;
+            float tmp452 = ((tmp369 * tmp373) + (tmp367 * tmp372)) * tmp449;
+            tmp200 = ((((tmp314 * tmp384) + (tmp291 * tmp381)) + tmp393) * tmp449) * tmp449;
+            tmp201 = (tmp448 * tmp452) + (tmp446 * tmp451);
+            tmp198 = (tmp446 * tmp452) - (tmp448 * tmp451);
+            float tmp463 = tmp448 * tmp448;
+            float tmp466 = tmp446 * tmp446;
+            float tmp474 = tmp446 * tmp448;
+            float tmp475 = (tmp380 + tmp380) * tmp474;
+            tmp202 = ((tmp397 * tmp466) + (tmp374 * tmp463)) + tmp475;
+            tmp199 = (tmp380 * (tmp466 - tmp463)) - (tmp411 * tmp474);
+            tmp197 = ((tmp374 * tmp466) + (tmp397 * tmp463)) - tmp475;
+            tmp195 = (tmp443 * tmp408) + (tmp438 * tmp407);
+            tmp193 = (tmp443 * tmp407) - (tmp438 * tmp408);
+            tmp196 = (tmp443 * tmp409) + (tmp438 * tmp406);
+            tmp194 = (tmp443 * tmp406) - (tmp438 * tmp409);
+        }
+        float tmp509 = (tmp196 * tmp196) + ((tmp195 * tmp195) + ((tmp194 * tmp194) + (tmp193 * tmp193)));
+        float tmp510 = inversesqrt(tmp509);
+        float tmp511 = tmp510 * 0.5;
+        float tmp516 = (tmp510 + tmp511) - (tmp509 * (tmp510 * (tmp510 * tmp511)));
+        float tmp517 = tmp193 * tmp516;
+        float tmp518 = tmp194 * tmp516;
+        float tmp519 = tmp195 * tmp516;
+        float tmp520 = tmp196 * tmp516;
+        float tmp521 = tmp518 * tmp518;
+        float tmp522 = tmp519 * tmp519;
+        float tmp523 = tmp520 * tmp520;
+        float tmp524 = tmp517 * tmp517;
+        float tmp525 = tmp524 - tmp521;
+        float tmp527 = (tmp525 - tmp522) + tmp523;
+        float tmp529 = (tmp525 + tmp522) - tmp523;
+        float tmp532 = ((tmp524 + tmp521) - tmp522) - tmp523;
+        float tmp533 = tmp518 + tmp518;
+        float tmp534 = tmp519 + tmp519;
+        float tmp535 = tmp520 + tmp520;
+        float tmp536 = tmp517 * tmp533;
+        float tmp537 = tmp517 * tmp534;
+        float tmp538 = tmp517 * tmp535;
+        float tmp539 = tmp519 * tmp533;
+        float tmp540 = tmp520 * tmp534;
+        float tmp541 = tmp518 * tmp535;
+        float tmp542 = tmp539 - tmp538;
+        float tmp543 = tmp540 - tmp536;
+        float tmp544 = tmp541 - tmp537;
+        float tmp545 = tmp539 + tmp538;
+        float tmp546 = tmp540 + tmp536;
+        float tmp547 = tmp541 + tmp537;
+        float tmp554 = ((tmp532 * tmp134) + (tmp545 * tmp145)) + (tmp544 * tmp156);
+        float tmp558 = ((tmp542 * tmp134) + (tmp529 * tmp145)) + (tmp546 * tmp156);
+        float tmp562 = ((tmp547 * tmp134) + (tmp543 * tmp145)) + (tmp527 * tmp156);
+        float tmp569 = ((tmp532 * tmp161) + (tmp545 * tmp166)) + (tmp544 * tmp171);
+        float tmp573 = ((tmp542 * tmp161) + (tmp529 * tmp166)) + (tmp546 * tmp171);
+        float tmp577 = ((tmp547 * tmp161) + (tmp543 * tmp166)) + (tmp527 * tmp171);
+        float tmp584 = ((tmp532 * tmp176) + (tmp545 * tmp181)) + (tmp544 * tmp186);
+        float tmp588 = ((tmp542 * tmp176) + (tmp529 * tmp181)) + (tmp546 * tmp186);
+        float tmp592 = ((tmp547 * tmp176) + (tmp543 * tmp181)) + (tmp527 * tmp186);
+        float tmp597 = ((tmp554 * tmp554) + (tmp569 * tmp569)) + (tmp584 * tmp584);
+        float tmp602 = ((tmp558 * tmp558) + (tmp573 * tmp573)) + (tmp588 * tmp588);
+        float tmp607 = ((tmp562 * tmp562) + (tmp577 * tmp577)) + (tmp592 * tmp592);
+        int tmp609 = ((-int(tmp597 < tmp602)) != 0) ? (-1) : 0;
+        int tmp610 = floatBitsToInt(tmp554);
+        int tmp611 = floatBitsToInt(tmp558);
+        int tmp613 = (tmp610 ^ tmp611) & tmp609;
+        int tmp614 = tmp610 ^ tmp613;
+        int tmp617 = floatBitsToInt(tmp569);
+        int tmp618 = floatBitsToInt(tmp573);
+        int tmp620 = (tmp617 ^ tmp618) & tmp609;
+        int tmp621 = tmp617 ^ tmp620;
+        int tmp624 = floatBitsToInt(tmp584);
+        int tmp625 = floatBitsToInt(tmp588);
+        int tmp627 = (tmp624 ^ tmp625) & tmp609;
+        int tmp628 = tmp624 ^ tmp627;
+        int tmp631 = floatBitsToInt(tmp597);
+        int tmp632 = floatBitsToInt(tmp602);
+        int tmp634 = (tmp631 ^ tmp632) & tmp609;
+        int tmp635 = tmp631 ^ tmp634;
+        float tmp642 = intBitsToFloat(tmp609 & (-1073741824)) + 1.0;
+        int tmp647 = ((-int(intBitsToFloat(tmp635) < tmp607)) != 0) ? (-1) : 0;
+        int tmp648 = floatBitsToInt(tmp562);
+        int tmp650 = (tmp614 ^ tmp648) & tmp647;
+        int tmp653 = tmp648 ^ tmp650;
+        int tmp654 = floatBitsToInt(tmp577);
+        int tmp656 = (tmp621 ^ tmp654) & tmp647;
+        int tmp659 = tmp654 ^ tmp656;
+        int tmp660 = floatBitsToInt(tmp592);
+        int tmp662 = (tmp628 ^ tmp660) & tmp647;
+        int tmp665 = tmp660 ^ tmp662;
+        int tmp666 = floatBitsToInt(tmp607);
+        float tmp673 = intBitsToFloat(tmp647 & (-1073741824)) + 1.0;
+        float tmp674 = intBitsToFloat(tmp614 ^ tmp650) * tmp673;
+        float tmp675 = intBitsToFloat(tmp621 ^ tmp656) * tmp673;
+        float tmp676 = intBitsToFloat(tmp628 ^ tmp662) * tmp673;
+        int tmp678 = ((-int(intBitsToFloat(tmp632 ^ tmp634) < intBitsToFloat(tmp666 ^ ((tmp635 ^ tmp666) & tmp647)))) != 0) ? (-1) : 0;
+        int tmp679 = floatBitsToInt(intBitsToFloat(tmp611 ^ tmp613) * tmp642);
+        int tmp681 = (tmp679 ^ tmp653) & tmp678;
+        float tmp683 = intBitsToFloat(tmp679 ^ tmp681);
+        int tmp686 = floatBitsToInt(intBitsToFloat(tmp618 ^ tmp620) * tmp642);
+        int tmp688 = (tmp686 ^ tmp659) & tmp678;
+        float tmp690 = intBitsToFloat(tmp686 ^ tmp688);
+        int tmp693 = floatBitsToInt(intBitsToFloat(tmp625 ^ tmp627) * tmp642);
+        int tmp695 = (tmp693 ^ tmp665) & tmp678;
+        float tmp702 = intBitsToFloat(tmp678 & (-1073741824)) + 1.0;
+        float tmp703 = intBitsToFloat(tmp653 ^ tmp681) * tmp702;
+        float tmp704 = intBitsToFloat(tmp659 ^ tmp688) * tmp702;
+        int tmp711 = (((-int((tmp675 * tmp675) >= 9.9999999600419720025001879548654e-13)) != 0) ? (-1) : 0) & floatBitsToInt(tmp675);
+        float tmp712 = intBitsToFloat(tmp711);
+        float tmp716 = max(max(0.0 - tmp674, tmp674), 9.9999999600419720025001879548654e-13);
+        int tmp718 = ((-int(tmp674 >= 0.0)) != 0) ? (-1) : 0;
+        float tmp721 = (tmp716 * tmp716) + (tmp712 * tmp712);
+        float tmp722 = inversesqrt(tmp721);
+        float tmp723 = tmp722 * 0.5;
+        int tmp731 = ~tmp718;
+        int tmp733 = floatBitsToInt(tmp716 + (((tmp722 + tmp723) - (tmp721 * (tmp722 * (tmp722 * tmp723)))) * tmp721));
+        float tmp738 = intBitsToFloat((tmp718 & tmp733) | (tmp731 & tmp711));
+        float tmp740 = intBitsToFloat((tmp718 & tmp711) | (tmp731 & tmp733));
+        float tmp743 = (tmp738 * tmp738) + (tmp740 * tmp740);
+        float tmp744 = inversesqrt(tmp743);
+        float tmp745 = tmp744 * 0.5;
+        float tmp750 = (tmp744 + tmp745) - (tmp743 * (tmp744 * (tmp744 * tmp745)));
+        float tmp751 = tmp738 * tmp750;
+        float tmp752 = tmp740 * tmp750;
+        float tmp755 = (tmp751 * tmp751) - (tmp752 * tmp752);
+        float tmp756 = tmp752 * tmp751;
+        float tmp757 = tmp756 + tmp756;
+        float tmp760 = (tmp755 * tmp674) + (tmp757 * tmp675);
+        float tmp766 = (tmp755 * tmp690) - (tmp757 * tmp683);
+        int tmp777 = (((-int((tmp676 * tmp676) >= 9.9999999600419720025001879548654e-13)) != 0) ? (-1) : 0) & floatBitsToInt(tmp676);
+        float tmp778 = intBitsToFloat(tmp777);
+        float tmp781 = max(max(0.0 - tmp760, tmp760), 9.9999999600419720025001879548654e-13);
+        int tmp783 = ((-int(tmp760 >= 0.0)) != 0) ? (-1) : 0;
+        float tmp786 = (tmp781 * tmp781) + (tmp778 * tmp778);
+        float tmp787 = inversesqrt(tmp786);
+        float tmp788 = tmp787 * 0.5;
+        int tmp796 = ~tmp783;
+        int tmp798 = floatBitsToInt(tmp781 + (((tmp787 + tmp788) - (tmp786 * (tmp787 * (tmp787 * tmp788)))) * tmp786));
+        float tmp803 = intBitsToFloat((tmp783 & tmp798) | (tmp796 & tmp777));
+        float tmp805 = intBitsToFloat((tmp783 & tmp777) | (tmp796 & tmp798));
+        float tmp808 = (tmp803 * tmp803) + (tmp805 * tmp805);
+        float tmp809 = inversesqrt(tmp808);
+        float tmp810 = tmp809 * 0.5;
+        float tmp815 = (tmp809 + tmp810) - (tmp808 * (tmp809 * (tmp809 * tmp810)));
+        float tmp816 = tmp803 * tmp815;
+        float tmp817 = tmp805 * tmp815;
+        float tmp820 = (tmp816 * tmp816) - (tmp817 * tmp817);
+        float tmp821 = tmp817 * tmp816;
+        float tmp822 = tmp821 + tmp821;
+        float tmp828 = (tmp820 * intBitsToFloat(tmp693 ^ tmp695)) - (tmp822 * ((tmp755 * tmp683) + (tmp757 * tmp690)));
+        int tmp836 = (((-int((tmp828 * tmp828) >= 9.9999999600419720025001879548654e-13)) != 0) ? (-1) : 0) & floatBitsToInt(tmp828);
+        float tmp837 = intBitsToFloat(tmp836);
+        float tmp840 = max(max(0.0 - tmp766, tmp766), 9.9999999600419720025001879548654e-13);
+        int tmp842 = ((-int(tmp766 >= 0.0)) != 0) ? (-1) : 0;
+        float tmp845 = (tmp840 * tmp840) + (tmp837 * tmp837);
+        float tmp846 = inversesqrt(tmp845);
+        float tmp847 = tmp846 * 0.5;
+        int tmp855 = ~tmp842;
+        int tmp857 = floatBitsToInt(tmp840 + (((tmp846 + tmp847) - (tmp845 * (tmp846 * (tmp846 * tmp847)))) * tmp845));
+        float tmp862 = intBitsToFloat((tmp842 & tmp857) | (tmp855 & tmp836));
+        float tmp864 = intBitsToFloat((tmp842 & tmp836) | (tmp855 & tmp857));
+        float tmp867 = (tmp862 * tmp862) + (tmp864 * tmp864);
+        float tmp868 = inversesqrt(tmp867);
+        float tmp869 = tmp868 * 0.5;
+        float tmp874 = (tmp868 + tmp869) - (tmp867 * (tmp868 * (tmp868 * tmp869)));
+        float tmp875 = tmp862 * tmp874;
+        float tmp876 = tmp864 * tmp874;
+        float tmp879 = (tmp875 * tmp875) - (tmp876 * tmp876);
+        float tmp880 = tmp876 * tmp875;
+        float tmp881 = tmp880 + tmp880;
+        root_buffer_0_1._m0[uint(int(tmp38985) >> int(2u))] = floatBitsToInt(tmp188);
+        float tmp890 = (((tmp820 * tmp760) + (tmp822 * tmp676)) * ((tmp879 * tmp766) + (tmp881 * tmp828))) * ((tmp879 * ((tmp820 * (intBitsToFloat(tmp665 ^ tmp695) * tmp702)) - (tmp822 * ((tmp755 * tmp703) + (tmp757 * tmp704))))) - (tmp881 * ((tmp755 * tmp704) - (tmp757 * tmp703))));
+        root_buffer_0_1._m0[uint(int(tmp38895) >> int(2u))] = floatBitsToInt(tmp890);
+        root_buffer_0_1._m0[uint(int(tmp38925) >> int(2u))] = floatBitsToInt(0.0);
+        root_buffer_0_1._m0[uint(int(tmp38955) >> int(2u))] = floatBitsToInt(0.0);
+        root_buffer_0_1._m0[uint(int(tmp38905) >> int(2u))] = floatBitsToInt(0.0);
+        root_buffer_0_1._m0[uint(int(tmp38935) >> int(2u))] = floatBitsToInt(1.0);
+        root_buffer_0_1._m0[uint(int(tmp38965) >> int(2u))] = floatBitsToInt(0.0);
+        root_buffer_0_1._m0[uint(int(tmp38915) >> int(2u))] = floatBitsToInt(0.0);
+        root_buffer_0_1._m0[uint(int(tmp38945) >> int(2u))] = floatBitsToInt(0.0);
+        root_buffer_0_1._m0[uint(int(tmp38975) >> int(2u))] = floatBitsToInt(1.0);
+        float tmp906 = (((exp((1.0 - tmp188) * 10.0) * 277.77777099609375) * tmp890) * (tmp890 - 1.0)) * (-0.00019999999494757503271102905273438);
+        float tmp909 = tmp98 * 6.103515625e-05;
+        float tmp910 = tmp101 * 6.103515625e-05;
+        float tmp911 = tmp104 * 6.103515625e-05;
+        float tmp913 = tmp110 * 6.103515625e-05;
+        float tmp914 = tmp113 * 6.103515625e-05;
+        float tmp915 = tmp116 * 6.103515625e-05;
+        float tmp917 = tmp906 + (tmp94 * 6.103515625e-05);
+        float tmp918 = tmp906 + (tmp107 * 6.103515625e-05);
+        float tmp919 = tmp906 + (tmp119 * 6.103515625e-05);
+        float tmp924 = (0.0 - tmp60) * 0.015625;
+        float tmp925 = (0.0 - tmp62) * 0.015625;
+        float tmp926 = (0.0 - tmp64) * 0.015625;
+        float tmp927 = (tmp66 * tmp66) * 0.5;
+        float tmp928 = tmp927 * tmp72;
+        float tmp929 = tmp928 * tmp73;
+        uint tmp39094 = (tmp38770 + 786432u) + (uint(tmp47707) * 12u);
+        int _1098 = root_buffer_0_1._m0[uint(int(tmp39094 + 0u) >> int(2u))];
+        float tmp932 = intBitsToFloat(_1098) * 6.103515625e-05;
+        int _1104 = root_buffer_0_1._m0[uint(int(tmp39094 + 4u) >> int(2u))];
+        float tmp935 = intBitsToFloat(_1104) * 6.103515625e-05;
+        int _1110 = root_buffer_0_1._m0[uint(int(tmp39094 + 8u) >> int(2u))];
+        float tmp938 = intBitsToFloat(_1110) * 6.103515625e-05;
+        float tmp939 = tmp917 * tmp924;
+        float tmp940 = tmp909 * tmp925;
+        float tmp941 = tmp939 + tmp940;
+        float tmp942 = tmp910 * tmp926;
+        float tmp944 = tmp911 * tmp924;
+        float tmp945 = tmp918 * tmp925;
+        float tmp946 = tmp944 + tmp945;
+        float tmp947 = tmp913 * tmp926;
+        float tmp949 = tmp914 * tmp924;
+        float tmp950 = tmp915 * tmp925;
+        float tmp951 = tmp949 + tmp950;
+        float tmp952 = tmp919 * tmp926;
+        float tmp957 = tmp929 * (tmp932 + (tmp941 + tmp942));
+        float tmp958 = tmp929 * (tmp935 + (tmp946 + tmp947));
+        float tmp959 = tmp929 * (tmp938 + (tmp951 + tmp952));
+        uint tmp39123 = tmp38770 + 6553600u;
+        int tmp42468 = tmp58 & 63;
+        int tmp47735 = (tmp57 & 63) << 6;
+        int tmp45291 = tmp42468 + tmp47735;
+        int tmp47737 = (tmp56 & 63) << 12;
+        int tmp45294 = tmp45291 + tmp47737;
+        uint tmp39128 = tmp39123 + (uint(tmp45294) * 12u);
+        uint _1150 = uint(int(tmp39128 + 0u) >> int(2u));
+        for (;;)
+        {
+            int _1160 = root_buffer_0_1._m0[_1150];
+            int _1164 = atomicCompSwap(root_buffer_0_1._m0[_1150], _1160, floatBitsToInt(intBitsToFloat(_1160) + tmp957));
+            _1153 = _1164;
+            if (_1164 == _1160)
+            {
+                break;
+            }
+            continue;
+        }
+        uint _1169 = uint(int(tmp39128 + 4u) >> int(2u));
+        for (;;)
+        {
+            int _1178 = root_buffer_0_1._m0[_1169];
+            int _1182 = atomicCompSwap(root_buffer_0_1._m0[_1169], _1178, floatBitsToInt(intBitsToFloat(_1178) + tmp958));
+            _1171 = _1182;
+            if (_1182 == _1178)
+            {
+                break;
+            }
+            continue;
+        }
+        uint _1187 = uint(int(tmp39128 + 8u) >> int(2u));
+        for (;;)
+        {
+            int _1196 = root_buffer_0_1._m0[_1187];
+            int _1200 = atomicCompSwap(root_buffer_0_1._m0[_1187], _1196, floatBitsToInt(intBitsToFloat(_1196) + tmp959));
+            _1189 = _1200;
+            if (_1200 == _1196)
+            {
+                break;
+            }
+            continue;
+        }
+        float tmp966 = tmp929 * 6.103515625e-05;
+        uint tmp39165 = tmp38770 + 9699328u;
+        uint _1211 = uint(int((tmp39165 + (uint(tmp45294) * 4u)) + 0u) >> int(2u));
+        for (;;)
+        {
+            int _1220 = root_buffer_0_1._m0[_1211];
+            int _1224 = atomicCompSwap(root_buffer_0_1._m0[_1211], _1220, floatBitsToInt(intBitsToFloat(_1220) + tmp966));
+            _1213 = _1224;
+            if (_1224 == _1220)
+            {
+                break;
+            }
+            continue;
+        }
+        float tmp970 = (1.0 - tmp64) * 0.015625;
+        float tmp971 = tmp928 * tmp84;
+        float tmp974 = tmp910 * tmp970;
+        float tmp976 = tmp913 * tmp970;
+        float tmp978 = tmp919 * tmp970;
+        float tmp983 = tmp971 * (tmp932 + (tmp941 + tmp974));
+        float tmp984 = tmp971 * (tmp935 + (tmp946 + tmp976));
+        float tmp985 = tmp971 * (tmp938 + (tmp951 + tmp978));
+        int tmp42516 = (tmp58 + 1) & 63;
+        int tmp45335 = tmp42516 + tmp47735;
+        int tmp45338 = tmp45335 + tmp47737;
+        uint tmp39184 = tmp39123 + (uint(tmp45338) * 12u);
+        uint _1251 = uint(int(tmp39184 + 0u) >> int(2u));
+        for (;;)
+        {
+            int _1260 = root_buffer_0_1._m0[_1251];
+            int _1264 = atomicCompSwap(root_buffer_0_1._m0[_1251], _1260, floatBitsToInt(intBitsToFloat(_1260) + tmp983));
+            _1253 = _1264;
+            if (_1264 == _1260)
+            {
+                break;
+            }
+            continue;
+        }
+        uint _1269 = uint(int(tmp39184 + 4u) >> int(2u));
+        for (;;)
+        {
+            int _1278 = root_buffer_0_1._m0[_1269];
+            int _1282 = atomicCompSwap(root_buffer_0_1._m0[_1269], _1278, floatBitsToInt(intBitsToFloat(_1278) + tmp984));
+            _1271 = _1282;
+            if (_1282 == _1278)
+            {
+                break;
+            }
+            continue;
+        }
+        uint _1287 = uint(int(tmp39184 + 8u) >> int(2u));
+        for (;;)
+        {
+            int _1296 = root_buffer_0_1._m0[_1287];
+            int _1300 = atomicCompSwap(root_buffer_0_1._m0[_1287], _1296, floatBitsToInt(intBitsToFloat(_1296) + tmp985));
+            _1289 = _1300;
+            if (_1300 == _1296)
+            {
+                break;
+            }
+            continue;
+        }
+        float tmp992 = tmp971 * 6.103515625e-05;
+        uint _1309 = uint(int((tmp39165 + (uint(tmp45338) * 4u)) + 0u) >> int(2u));
+        for (;;)
+        {
+            int _1318 = root_buffer_0_1._m0[_1309];
+            int _1322 = atomicCompSwap(root_buffer_0_1._m0[_1309], _1318, floatBitsToInt(intBitsToFloat(_1318) + tmp992));
+            _1311 = _1322;
+            if (_1322 == _1318)
+            {
+                break;
+            }
+            continue;
+        }
+        float tmp997 = (2.0 - tmp64) * 0.015625;
+        float tmp998 = tmp928 * tmp92;
+        float tmp1001 = tmp910 * tmp997;
+        float tmp1003 = tmp913 * tmp997;
+        float tmp1005 = tmp919 * tmp997;
+        float tmp1010 = tmp998 * (tmp932 + (tmp941 + tmp1001));
+        float tmp1011 = tmp998 * (tmp935 + (tmp946 + tmp1003));
+        float tmp1012 = tmp998 * (tmp938 + (tmp951 + tmp1005));
+        int tmp42564 = (tmp58 + 2) & 63;
+        int tmp45379 = tmp42564 + tmp47735;
+        int tmp45382 = tmp45379 + tmp47737;
+        uint tmp39240 = tmp39123 + (uint(tmp45382) * 12u);
+        uint _1351 = uint(int(tmp39240 + 0u) >> int(2u));
+        for (;;)
+        {
+            int _1360 = root_buffer_0_1._m0[_1351];
+            int _1364 = atomicCompSwap(root_buffer_0_1._m0[_1351], _1360, floatBitsToInt(intBitsToFloat(_1360) + tmp1010));
+            _1353 = _1364;
+            if (_1364 == _1360)
+            {
+                break;
+            }
+            continue;
+        }
+        uint _1369 = uint(int(tmp39240 + 4u) >> int(2u));
+        for (;;)
+        {
+            int _1378 = root_buffer_0_1._m0[_1369];
+            int _1382 = atomicCompSwap(root_buffer_0_1._m0[_1369], _1378, floatBitsToInt(intBitsToFloat(_1378) + tmp1011));
+            _1371 = _1382;
+            if (_1382 == _1378)
+            {
+                break;
+            }
+            continue;
+        }
+        uint _1387 = uint(int(tmp39240 + 8u) >> int(2u));
+        for (;;)
+        {
+            int _1396 = root_buffer_0_1._m0[_1387];
+            int _1400 = atomicCompSwap(root_buffer_0_1._m0[_1387], _1396, floatBitsToInt(intBitsToFloat(_1396) + tmp1012));
+            _1389 = _1400;
+            if (_1400 == _1396)
+            {
+                break;
+            }
+            continue;
+        }
+        float tmp1019 = tmp998 * 6.103515625e-05;
+        uint _1409 = uint(int((tmp39165 + (uint(tmp45382) * 4u)) + 0u) >> int(2u));
+        for (;;)
+        {
+            int _1418 = root_buffer_0_1._m0[_1409];
+            int _1422 = atomicCompSwap(root_buffer_0_1._m0[_1409], _1418, floatBitsToInt(intBitsToFloat(_1418) + tmp1019));
+            _1411 = _1422;
+            if (_1422 == _1418)
+            {
+                break;
+            }
+            continue;
+        }
+        float tmp1023 = (1.0 - tmp62) * 0.015625;
+        float tmp1024 = tmp927 * tmp83;
+        float tmp1025 = tmp1024 * tmp73;
+        float tmp1027 = tmp909 * tmp1023;
+        float tmp1028 = tmp939 + tmp1027;
+        float tmp1030 = tmp918 * tmp1023;
+        float tmp1031 = tmp944 + tmp1030;
+        float tmp1033 = tmp915 * tmp1023;
+        float tmp1034 = tmp949 + tmp1033;
+        float tmp1039 = tmp1025 * (tmp932 + (tmp1028 + tmp942));
+        float tmp1040 = tmp1025 * (tmp935 + (tmp1031 + tmp947));
+        float tmp1041 = tmp1025 * (tmp938 + (tmp1034 + tmp952));
+        int tmp47739 = ((tmp57 + 1) & 63) << 6;
+        int tmp45423 = tmp42468 + tmp47739;
+        int tmp45426 = tmp45423 + tmp47737;
+        uint tmp39296 = tmp39123 + (uint(tmp45426) * 12u);
+        uint _1454 = uint(int(tmp39296 + 0u) >> int(2u));
+        for (;;)
+        {
+            int _1463 = root_buffer_0_1._m0[_1454];
+            int _1467 = atomicCompSwap(root_buffer_0_1._m0[_1454], _1463, floatBitsToInt(intBitsToFloat(_1463) + tmp1039));
+            _1456 = _1467;
+            if (_1467 == _1463)
+            {
+                break;
+            }
+            continue;
+        }
+        uint _1472 = uint(int(tmp39296 + 4u) >> int(2u));
+        for (;;)
+        {
+            int _1481 = root_buffer_0_1._m0[_1472];
+            int _1485 = atomicCompSwap(root_buffer_0_1._m0[_1472], _1481, floatBitsToInt(intBitsToFloat(_1481) + tmp1040));
+            _1474 = _1485;
+            if (_1485 == _1481)
+            {
+                break;
+            }
+            continue;
+        }
+        uint _1490 = uint(int(tmp39296 + 8u) >> int(2u));
+        for (;;)
+        {
+            int _1499 = root_buffer_0_1._m0[_1490];
+            int _1503 = atomicCompSwap(root_buffer_0_1._m0[_1490], _1499, floatBitsToInt(intBitsToFloat(_1499) + tmp1041));
+            _1492 = _1503;
+            if (_1503 == _1499)
+            {
+                break;
+            }
+            continue;
+        }
+        float tmp1048 = tmp1025 * 6.103515625e-05;
+        uint _1512 = uint(int((tmp39165 + (uint(tmp45426) * 4u)) + 0u) >> int(2u));
+        for (;;)
+        {
+            int _1521 = root_buffer_0_1._m0[_1512];
+            int _1525 = atomicCompSwap(root_buffer_0_1._m0[_1512], _1521, floatBitsToInt(intBitsToFloat(_1521) + tmp1048));
+            _1514 = _1525;
+            if (_1525 == _1521)
+            {
+                break;
+            }
+            continue;
+        }
+        float tmp1051 = tmp1024 * tmp84;
+        float tmp1058 = tmp1051 * (tmp932 + (tmp1028 + tmp974));
+        float tmp1059 = tmp1051 * (tmp935 + (tmp1031 + tmp976));
+        float tmp1060 = tmp1051 * (tmp938 + (tmp1034 + tmp978));
+        int tmp45467 = tmp42516 + tmp47739;
+        int tmp45470 = tmp45467 + tmp47737;
+        uint tmp39352 = tmp39123 + (uint(tmp45470) * 12u);
+        uint _1545 = uint(int(tmp39352 + 0u) >> int(2u));
+        for (;;)
+        {
+            int _1554 = root_buffer_0_1._m0[_1545];
+            int _1558 = atomicCompSwap(root_buffer_0_1._m0[_1545], _1554, floatBitsToInt(intBitsToFloat(_1554) + tmp1058));
+            _1547 = _1558;
+            if (_1558 == _1554)
+            {
+                break;
+            }
+            continue;
+        }
+        uint _1563 = uint(int(tmp39352 + 4u) >> int(2u));
+        for (;;)
+        {
+            int _1572 = root_buffer_0_1._m0[_1563];
+            int _1576 = atomicCompSwap(root_buffer_0_1._m0[_1563], _1572, floatBitsToInt(intBitsToFloat(_1572) + tmp1059));
+            _1565 = _1576;
+            if (_1576 == _1572)
+            {
+                break;
+            }
+            continue;
+        }
+        uint _1581 = uint(int(tmp39352 + 8u) >> int(2u));
+        for (;;)
+        {
+            int _1590 = root_buffer_0_1._m0[_1581];
+            int _1594 = atomicCompSwap(root_buffer_0_1._m0[_1581], _1590, floatBitsToInt(intBitsToFloat(_1590) + tmp1060));
+            _1583 = _1594;
+            if (_1594 == _1590)
+            {
+                break;
+            }
+            continue;
+        }
+        float tmp1067 = tmp1051 * 6.103515625e-05;
+        uint _1603 = uint(int((tmp39165 + (uint(tmp45470) * 4u)) + 0u) >> int(2u));
+        for (;;)
+        {
+            int _1612 = root_buffer_0_1._m0[_1603];
+            int _1616 = atomicCompSwap(root_buffer_0_1._m0[_1603], _1612, floatBitsToInt(intBitsToFloat(_1612) + tmp1067));
+            _1605 = _1616;
+            if (_1616 == _1612)
+            {
+                break;
+            }
+            continue;
+        }
+        float tmp1070 = tmp1024 * tmp92;
+        float tmp1077 = tmp1070 * (tmp932 + (tmp1028 + tmp1001));
+        float tmp1078 = tmp1070 * (tmp935 + (tmp1031 + tmp1003));
+        float tmp1079 = tmp1070 * (tmp938 + (tmp1034 + tmp1005));
+        int tmp45511 = tmp42564 + tmp47739;
+        int tmp45514 = tmp45511 + tmp47737;
+        uint tmp39408 = tmp39123 + (uint(tmp45514) * 12u);
+        uint _1636 = uint(int(tmp39408 + 0u) >> int(2u));
+        for (;;)
+        {
+            int _1645 = root_buffer_0_1._m0[_1636];
+            int _1649 = atomicCompSwap(root_buffer_0_1._m0[_1636], _1645, floatBitsToInt(intBitsToFloat(_1645) + tmp1077));
+            _1638 = _1649;
+            if (_1649 == _1645)
+            {
+                break;
+            }
+            continue;
+        }
+        uint _1654 = uint(int(tmp39408 + 4u) >> int(2u));
+        for (;;)
+        {
+            int _1663 = root_buffer_0_1._m0[_1654];
+            int _1667 = atomicCompSwap(root_buffer_0_1._m0[_1654], _1663, floatBitsToInt(intBitsToFloat(_1663) + tmp1078));
+            _1656 = _1667;
+            if (_1667 == _1663)
+            {
+                break;
+            }
+            continue;
+        }
+        uint _1672 = uint(int(tmp39408 + 8u) >> int(2u));
+        for (;;)
+        {
+            int _1681 = root_buffer_0_1._m0[_1672];
+            int _1685 = atomicCompSwap(root_buffer_0_1._m0[_1672], _1681, floatBitsToInt(intBitsToFloat(_1681) + tmp1079));
+            _1674 = _1685;
+            if (_1685 == _1681)
+            {
+                break;
+            }
+            continue;
+        }
+        float tmp1086 = tmp1070 * 6.103515625e-05;
+        uint _1694 = uint(int((tmp39165 + (uint(tmp45514) * 4u)) + 0u) >> int(2u));
+        for (;;)
+        {
+            int _1703 = root_buffer_0_1._m0[_1694];
+            int _1707 = atomicCompSwap(root_buffer_0_1._m0[_1694], _1703, floatBitsToInt(intBitsToFloat(_1703) + tmp1086));
+            _1696 = _1707;
+            if (_1707 == _1703)
+            {
+                break;
+            }
+            continue;
+        }
+        float tmp1090 = (2.0 - tmp62) * 0.015625;
+        float tmp1091 = tmp927 * tmp91;
+        float tmp1092 = tmp1091 * tmp73;
+        float tmp1094 = tmp909 * tmp1090;
+        float tmp1095 = tmp939 + tmp1094;
+        float tmp1097 = tmp918 * tmp1090;
+        float tmp1098 = tmp944 + tmp1097;
+        float tmp1100 = tmp915 * tmp1090;
+        float tmp1101 = tmp949 + tmp1100;
+        float tmp1106 = tmp1092 * (tmp932 + (tmp1095 + tmp942));
+        float tmp1107 = tmp1092 * (tmp935 + (tmp1098 + tmp947));
+        float tmp1108 = tmp1092 * (tmp938 + (tmp1101 + tmp952));
+        int tmp47741 = ((tmp57 + 2) & 63) << 6;
+        int tmp45555 = tmp42468 + tmp47741;
+        int tmp45558 = tmp45555 + tmp47737;
+        uint tmp39464 = tmp39123 + (uint(tmp45558) * 12u);
+        uint _1739 = uint(int(tmp39464 + 0u) >> int(2u));
+        for (;;)
+        {
+            int _1748 = root_buffer_0_1._m0[_1739];
+            int _1752 = atomicCompSwap(root_buffer_0_1._m0[_1739], _1748, floatBitsToInt(intBitsToFloat(_1748) + tmp1106));
+            _1741 = _1752;
+            if (_1752 == _1748)
+            {
+                break;
+            }
+            continue;
+        }
+        uint _1757 = uint(int(tmp39464 + 4u) >> int(2u));
+        for (;;)
+        {
+            int _1766 = root_buffer_0_1._m0[_1757];
+            int _1770 = atomicCompSwap(root_buffer_0_1._m0[_1757], _1766, floatBitsToInt(intBitsToFloat(_1766) + tmp1107));
+            _1759 = _1770;
+            if (_1770 == _1766)
+            {
+                break;
+            }
+            continue;
+        }
+        uint _1775 = uint(int(tmp39464 + 8u) >> int(2u));
+        for (;;)
+        {
+            int _1784 = root_buffer_0_1._m0[_1775];
+            int _1788 = atomicCompSwap(root_buffer_0_1._m0[_1775], _1784, floatBitsToInt(intBitsToFloat(_1784) + tmp1108));
+            _1777 = _1788;
+            if (_1788 == _1784)
+            {
+                break;
+            }
+            continue;
+        }
+        float tmp1115 = tmp1092 * 6.103515625e-05;
+        uint _1797 = uint(int((tmp39165 + (uint(tmp45558) * 4u)) + 0u) >> int(2u));
+        for (;;)
+        {
+            int _1806 = root_buffer_0_1._m0[_1797];
+            int _1810 = atomicCompSwap(root_buffer_0_1._m0[_1797], _1806, floatBitsToInt(intBitsToFloat(_1806) + tmp1115));
+            _1799 = _1810;
+            if (_1810 == _1806)
+            {
+                break;
+            }
+            continue;
+        }
+        float tmp1118 = tmp1091 * tmp84;
+        float tmp1125 = tmp1118 * (tmp932 + (tmp1095 + tmp974));
+        float tmp1126 = tmp1118 * (tmp935 + (tmp1098 + tmp976));
+        float tmp1127 = tmp1118 * (tmp938 + (tmp1101 + tmp978));
+        int tmp45599 = tmp42516 + tmp47741;
+        int tmp45602 = tmp45599 + tmp47737;
+        uint tmp39520 = tmp39123 + (uint(tmp45602) * 12u);
+        uint _1830 = uint(int(tmp39520 + 0u) >> int(2u));
+        for (;;)
+        {
+            int _1839 = root_buffer_0_1._m0[_1830];
+            int _1843 = atomicCompSwap(root_buffer_0_1._m0[_1830], _1839, floatBitsToInt(intBitsToFloat(_1839) + tmp1125));
+            _1832 = _1843;
+            if (_1843 == _1839)
+            {
+                break;
+            }
+            continue;
+        }
+        uint _1848 = uint(int(tmp39520 + 4u) >> int(2u));
+        for (;;)
+        {
+            int _1857 = root_buffer_0_1._m0[_1848];
+            int _1861 = atomicCompSwap(root_buffer_0_1._m0[_1848], _1857, floatBitsToInt(intBitsToFloat(_1857) + tmp1126));
+            _1850 = _1861;
+            if (_1861 == _1857)
+            {
+                break;
+            }
+            continue;
+        }
+        uint _1866 = uint(int(tmp39520 + 8u) >> int(2u));
+        for (;;)
+        {
+            int _1875 = root_buffer_0_1._m0[_1866];
+            int _1879 = atomicCompSwap(root_buffer_0_1._m0[_1866], _1875, floatBitsToInt(intBitsToFloat(_1875) + tmp1127));
+            _1868 = _1879;
+            if (_1879 == _1875)
+            {
+                break;
+            }
+            continue;
+        }
+        float tmp1134 = tmp1118 * 6.103515625e-05;
+        uint _1888 = uint(int((tmp39165 + (uint(tmp45602) * 4u)) + 0u) >> int(2u));
+        for (;;)
+        {
+            int _1897 = root_buffer_0_1._m0[_1888];
+            int _1901 = atomicCompSwap(root_buffer_0_1._m0[_1888], _1897, floatBitsToInt(intBitsToFloat(_1897) + tmp1134));
+            _1890 = _1901;
+            if (_1901 == _1897)
+            {
+                break;
+            }
+            continue;
+        }
+        float tmp1137 = tmp1091 * tmp92;
+        float tmp1144 = tmp1137 * (tmp932 + (tmp1095 + tmp1001));
+        float tmp1145 = tmp1137 * (tmp935 + (tmp1098 + tmp1003));
+        float tmp1146 = tmp1137 * (tmp938 + (tmp1101 + tmp1005));
+        int tmp45643 = tmp42564 + tmp47741;
+        int tmp45646 = tmp45643 + tmp47737;
+        uint tmp39576 = tmp39123 + (uint(tmp45646) * 12u);
+        uint _1921 = uint(int(tmp39576 + 0u) >> int(2u));
+        for (;;)
+        {
+            int _1930 = root_buffer_0_1._m0[_1921];
+            int _1934 = atomicCompSwap(root_buffer_0_1._m0[_1921], _1930, floatBitsToInt(intBitsToFloat(_1930) + tmp1144));
+            _1923 = _1934;
+            if (_1934 == _1930)
+            {
+                break;
+            }
+            continue;
+        }
+        uint _1939 = uint(int(tmp39576 + 4u) >> int(2u));
+        for (;;)
+        {
+            int _1948 = root_buffer_0_1._m0[_1939];
+            int _1952 = atomicCompSwap(root_buffer_0_1._m0[_1939], _1948, floatBitsToInt(intBitsToFloat(_1948) + tmp1145));
+            _1941 = _1952;
+            if (_1952 == _1948)
+            {
+                break;
+            }
+            continue;
+        }
+        uint _1957 = uint(int(tmp39576 + 8u) >> int(2u));
+        for (;;)
+        {
+            int _1966 = root_buffer_0_1._m0[_1957];
+            int _1970 = atomicCompSwap(root_buffer_0_1._m0[_1957], _1966, floatBitsToInt(intBitsToFloat(_1966) + tmp1146));
+            _1959 = _1970;
+            if (_1970 == _1966)
+            {
+                break;
+            }
+            continue;
+        }
+        float tmp1153 = tmp1137 * 6.103515625e-05;
+        uint _1979 = uint(int((tmp39165 + (uint(tmp45646) * 4u)) + 0u) >> int(2u));
+        for (;;)
+        {
+            int _1988 = root_buffer_0_1._m0[_1979];
+            int _1992 = atomicCompSwap(root_buffer_0_1._m0[_1979], _1988, floatBitsToInt(intBitsToFloat(_1988) + tmp1153));
+            _1981 = _1992;
+            if (_1992 == _1988)
+            {
+                break;
+            }
+            continue;
+        }
+        float tmp1157 = (1.0 - tmp60) * 0.015625;
+        float tmp1158 = tmp82 * tmp72;
+        float tmp1159 = tmp1158 * tmp73;
+        float tmp1161 = tmp917 * tmp1157;
+        float tmp1162 = tmp1161 + tmp940;
+        float tmp1164 = tmp911 * tmp1157;
+        float tmp1165 = tmp1164 + tmp945;
+        float tmp1167 = tmp914 * tmp1157;
+        float tmp1168 = tmp1167 + tmp950;
+        float tmp1173 = tmp1159 * (tmp932 + (tmp1162 + tmp942));
+        float tmp1174 = tmp1159 * (tmp935 + (tmp1165 + tmp947));
+        float tmp1175 = tmp1159 * (tmp938 + (tmp1168 + tmp952));
+        int tmp47743 = ((tmp56 + 1) & 63) << 12;
+        int tmp45690 = tmp45291 + tmp47743;
+        uint tmp39632 = tmp39123 + (uint(tmp45690) * 12u);
+        uint _2023 = uint(int(tmp39632 + 0u) >> int(2u));
+        for (;;)
+        {
+            int _2032 = root_buffer_0_1._m0[_2023];
+            int _2036 = atomicCompSwap(root_buffer_0_1._m0[_2023], _2032, floatBitsToInt(intBitsToFloat(_2032) + tmp1173));
+            _2025 = _2036;
+            if (_2036 == _2032)
+            {
+                break;
+            }
+            continue;
+        }
+        uint _2041 = uint(int(tmp39632 + 4u) >> int(2u));
+        for (;;)
+        {
+            int _2050 = root_buffer_0_1._m0[_2041];
+            int _2054 = atomicCompSwap(root_buffer_0_1._m0[_2041], _2050, floatBitsToInt(intBitsToFloat(_2050) + tmp1174));
+            _2043 = _2054;
+            if (_2054 == _2050)
+            {
+                break;
+            }
+            continue;
+        }
+        uint _2059 = uint(int(tmp39632 + 8u) >> int(2u));
+        for (;;)
+        {
+            int _2068 = root_buffer_0_1._m0[_2059];
+            int _2072 = atomicCompSwap(root_buffer_0_1._m0[_2059], _2068, floatBitsToInt(intBitsToFloat(_2068) + tmp1175));
+            _2061 = _2072;
+            if (_2072 == _2068)
+            {
+                break;
+            }
+            continue;
+        }
+        float tmp1182 = tmp1159 * 6.103515625e-05;
+        uint _2081 = uint(int((tmp39165 + (uint(tmp45690) * 4u)) + 0u) >> int(2u));
+        for (;;)
+        {
+            int _2090 = root_buffer_0_1._m0[_2081];
+            int _2094 = atomicCompSwap(root_buffer_0_1._m0[_2081], _2090, floatBitsToInt(intBitsToFloat(_2090) + tmp1182));
+            _2083 = _2094;
+            if (_2094 == _2090)
+            {
+                break;
+            }
+            continue;
+        }
+        float tmp1185 = tmp1158 * tmp84;
+        float tmp1192 = tmp1185 * (tmp932 + (tmp1162 + tmp974));
+        float tmp1193 = tmp1185 * (tmp935 + (tmp1165 + tmp976));
+        float tmp1194 = tmp1185 * (tmp938 + (tmp1168 + tmp978));
+        int tmp45734 = tmp45335 + tmp47743;
+        uint tmp39688 = tmp39123 + (uint(tmp45734) * 12u);
+        uint _2113 = uint(int(tmp39688 + 0u) >> int(2u));
+        for (;;)
+        {
+            int _2122 = root_buffer_0_1._m0[_2113];
+            int _2126 = atomicCompSwap(root_buffer_0_1._m0[_2113], _2122, floatBitsToInt(intBitsToFloat(_2122) + tmp1192));
+            _2115 = _2126;
+            if (_2126 == _2122)
+            {
+                break;
+            }
+            continue;
+        }
+        uint _2131 = uint(int(tmp39688 + 4u) >> int(2u));
+        for (;;)
+        {
+            int _2140 = root_buffer_0_1._m0[_2131];
+            int _2144 = atomicCompSwap(root_buffer_0_1._m0[_2131], _2140, floatBitsToInt(intBitsToFloat(_2140) + tmp1193));
+            _2133 = _2144;
+            if (_2144 == _2140)
+            {
+                break;
+            }
+            continue;
+        }
+        uint _2149 = uint(int(tmp39688 + 8u) >> int(2u));
+        for (;;)
+        {
+            int _2158 = root_buffer_0_1._m0[_2149];
+            int _2162 = atomicCompSwap(root_buffer_0_1._m0[_2149], _2158, floatBitsToInt(intBitsToFloat(_2158) + tmp1194));
+            _2151 = _2162;
+            if (_2162 == _2158)
+            {
+                break;
+            }
+            continue;
+        }
+        float tmp1201 = tmp1185 * 6.103515625e-05;
+        uint _2171 = uint(int((tmp39165 + (uint(tmp45734) * 4u)) + 0u) >> int(2u));
+        for (;;)
+        {
+            int _2180 = root_buffer_0_1._m0[_2171];
+            int _2184 = atomicCompSwap(root_buffer_0_1._m0[_2171], _2180, floatBitsToInt(intBitsToFloat(_2180) + tmp1201));
+            _2173 = _2184;
+            if (_2184 == _2180)
+            {
+                break;
+            }
+            continue;
+        }
+        float tmp1204 = tmp1158 * tmp92;
+        float tmp1211 = tmp1204 * (tmp932 + (tmp1162 + tmp1001));
+        float tmp1212 = tmp1204 * (tmp935 + (tmp1165 + tmp1003));
+        float tmp1213 = tmp1204 * (tmp938 + (tmp1168 + tmp1005));
+        int tmp45778 = tmp45379 + tmp47743;
+        uint tmp39744 = tmp39123 + (uint(tmp45778) * 12u);
+        uint _2203 = uint(int(tmp39744 + 0u) >> int(2u));
+        for (;;)
+        {
+            int _2212 = root_buffer_0_1._m0[_2203];
+            int _2216 = atomicCompSwap(root_buffer_0_1._m0[_2203], _2212, floatBitsToInt(intBitsToFloat(_2212) + tmp1211));
+            _2205 = _2216;
+            if (_2216 == _2212)
+            {
+                break;
+            }
+            continue;
+        }
+        uint _2221 = uint(int(tmp39744 + 4u) >> int(2u));
+        for (;;)
+        {
+            int _2230 = root_buffer_0_1._m0[_2221];
+            int _2234 = atomicCompSwap(root_buffer_0_1._m0[_2221], _2230, floatBitsToInt(intBitsToFloat(_2230) + tmp1212));
+            _2223 = _2234;
+            if (_2234 == _2230)
+            {
+                break;
+            }
+            continue;
+        }
+        uint _2239 = uint(int(tmp39744 + 8u) >> int(2u));
+        for (;;)
+        {
+            int _2248 = root_buffer_0_1._m0[_2239];
+            int _2252 = atomicCompSwap(root_buffer_0_1._m0[_2239], _2248, floatBitsToInt(intBitsToFloat(_2248) + tmp1213));
+            _2241 = _2252;
+            if (_2252 == _2248)
+            {
+                break;
+            }
+            continue;
+        }
+        float tmp1220 = tmp1204 * 6.103515625e-05;
+        uint _2261 = uint(int((tmp39165 + (uint(tmp45778) * 4u)) + 0u) >> int(2u));
+        for (;;)
+        {
+            int _2270 = root_buffer_0_1._m0[_2261];
+            int _2274 = atomicCompSwap(root_buffer_0_1._m0[_2261], _2270, floatBitsToInt(intBitsToFloat(_2270) + tmp1220));
+            _2263 = _2274;
+            if (_2274 == _2270)
+            {
+                break;
+            }
+            continue;
+        }
+        float tmp1223 = tmp82 * tmp83;
+        float tmp1224 = tmp1223 * tmp73;
+        float tmp1225 = tmp1161 + tmp1027;
+        float tmp1227 = tmp1164 + tmp1030;
+        float tmp1229 = tmp1167 + tmp1033;
+        float tmp1234 = tmp1224 * (tmp932 + (tmp1225 + tmp942));
+        float tmp1235 = tmp1224 * (tmp935 + (tmp1227 + tmp947));
+        float tmp1236 = tmp1224 * (tmp938 + (tmp1229 + tmp952));
+        int tmp45822 = tmp45423 + tmp47743;
+        uint tmp39800 = tmp39123 + (uint(tmp45822) * 12u);
+        uint _2297 = uint(int(tmp39800 + 0u) >> int(2u));
+        for (;;)
+        {
+            int _2306 = root_buffer_0_1._m0[_2297];
+            int _2310 = atomicCompSwap(root_buffer_0_1._m0[_2297], _2306, floatBitsToInt(intBitsToFloat(_2306) + tmp1234));
+            _2299 = _2310;
+            if (_2310 == _2306)
+            {
+                break;
+            }
+            continue;
+        }
+        uint _2315 = uint(int(tmp39800 + 4u) >> int(2u));
+        for (;;)
+        {
+            int _2324 = root_buffer_0_1._m0[_2315];
+            int _2328 = atomicCompSwap(root_buffer_0_1._m0[_2315], _2324, floatBitsToInt(intBitsToFloat(_2324) + tmp1235));
+            _2317 = _2328;
+            if (_2328 == _2324)
+            {
+                break;
+            }
+            continue;
+        }
+        uint _2333 = uint(int(tmp39800 + 8u) >> int(2u));
+        for (;;)
+        {
+            int _2342 = root_buffer_0_1._m0[_2333];
+            int _2346 = atomicCompSwap(root_buffer_0_1._m0[_2333], _2342, floatBitsToInt(intBitsToFloat(_2342) + tmp1236));
+            _2335 = _2346;
+            if (_2346 == _2342)
+            {
+                break;
+            }
+            continue;
+        }
+        float tmp1243 = tmp1224 * 6.103515625e-05;
+        uint _2355 = uint(int((tmp39165 + (uint(tmp45822) * 4u)) + 0u) >> int(2u));
+        for (;;)
+        {
+            int _2364 = root_buffer_0_1._m0[_2355];
+            int _2368 = atomicCompSwap(root_buffer_0_1._m0[_2355], _2364, floatBitsToInt(intBitsToFloat(_2364) + tmp1243));
+            _2357 = _2368;
+            if (_2368 == _2364)
+            {
+                break;
+            }
+            continue;
+        }
+        float tmp1246 = tmp1223 * tmp84;
+        float tmp1253 = tmp1246 * (tmp932 + (tmp1225 + tmp974));
+        float tmp1254 = tmp1246 * (tmp935 + (tmp1227 + tmp976));
+        float tmp1255 = tmp1246 * (tmp938 + (tmp1229 + tmp978));
+        int tmp45866 = tmp45467 + tmp47743;
+        uint tmp39856 = tmp39123 + (uint(tmp45866) * 12u);
+        uint _2387 = uint(int(tmp39856 + 0u) >> int(2u));
+        for (;;)
+        {
+            int _2396 = root_buffer_0_1._m0[_2387];
+            int _2400 = atomicCompSwap(root_buffer_0_1._m0[_2387], _2396, floatBitsToInt(intBitsToFloat(_2396) + tmp1253));
+            _2389 = _2400;
+            if (_2400 == _2396)
+            {
+                break;
+            }
+            continue;
+        }
+        uint _2405 = uint(int(tmp39856 + 4u) >> int(2u));
+        for (;;)
+        {
+            int _2414 = root_buffer_0_1._m0[_2405];
+            int _2418 = atomicCompSwap(root_buffer_0_1._m0[_2405], _2414, floatBitsToInt(intBitsToFloat(_2414) + tmp1254));
+            _2407 = _2418;
+            if (_2418 == _2414)
+            {
+                break;
+            }
+            continue;
+        }
+        uint _2423 = uint(int(tmp39856 + 8u) >> int(2u));
+        for (;;)
+        {
+            int _2432 = root_buffer_0_1._m0[_2423];
+            int _2436 = atomicCompSwap(root_buffer_0_1._m0[_2423], _2432, floatBitsToInt(intBitsToFloat(_2432) + tmp1255));
+            _2425 = _2436;
+            if (_2436 == _2432)
+            {
+                break;
+            }
+            continue;
+        }
+        float tmp1262 = tmp1246 * 6.103515625e-05;
+        uint _2445 = uint(int((tmp39165 + (uint(tmp45866) * 4u)) + 0u) >> int(2u));
+        for (;;)
+        {
+            int _2454 = root_buffer_0_1._m0[_2445];
+            int _2458 = atomicCompSwap(root_buffer_0_1._m0[_2445], _2454, floatBitsToInt(intBitsToFloat(_2454) + tmp1262));
+            _2447 = _2458;
+            if (_2458 == _2454)
+            {
+                break;
+            }
+            continue;
+        }
+        float tmp1265 = tmp1223 * tmp92;
+        float tmp1272 = tmp1265 * (tmp932 + (tmp1225 + tmp1001));
+        float tmp1273 = tmp1265 * (tmp935 + (tmp1227 + tmp1003));
+        float tmp1274 = tmp1265 * (tmp938 + (tmp1229 + tmp1005));
+        int tmp45910 = tmp45511 + tmp47743;
+        uint tmp39912 = tmp39123 + (uint(tmp45910) * 12u);
+        uint _2477 = uint(int(tmp39912 + 0u) >> int(2u));
+        for (;;)
+        {
+            int _2486 = root_buffer_0_1._m0[_2477];
+            int _2490 = atomicCompSwap(root_buffer_0_1._m0[_2477], _2486, floatBitsToInt(intBitsToFloat(_2486) + tmp1272));
+            _2479 = _2490;
+            if (_2490 == _2486)
+            {
+                break;
+            }
+            continue;
+        }
+        uint _2495 = uint(int(tmp39912 + 4u) >> int(2u));
+        for (;;)
+        {
+            int _2504 = root_buffer_0_1._m0[_2495];
+            int _2508 = atomicCompSwap(root_buffer_0_1._m0[_2495], _2504, floatBitsToInt(intBitsToFloat(_2504) + tmp1273));
+            _2497 = _2508;
+            if (_2508 == _2504)
+            {
+                break;
+            }
+            continue;
+        }
+        uint _2513 = uint(int(tmp39912 + 8u) >> int(2u));
+        for (;;)
+        {
+            int _2522 = root_buffer_0_1._m0[_2513];
+            int _2526 = atomicCompSwap(root_buffer_0_1._m0[_2513], _2522, floatBitsToInt(intBitsToFloat(_2522) + tmp1274));
+            _2515 = _2526;
+            if (_2526 == _2522)
+            {
+                break;
+            }
+            continue;
+        }
+        float tmp1281 = tmp1265 * 6.103515625e-05;
+        uint _2535 = uint(int((tmp39165 + (uint(tmp45910) * 4u)) + 0u) >> int(2u));
+        for (;;)
+        {
+            int _2544 = root_buffer_0_1._m0[_2535];
+            int _2548 = atomicCompSwap(root_buffer_0_1._m0[_2535], _2544, floatBitsToInt(intBitsToFloat(_2544) + tmp1281));
+            _2537 = _2548;
+            if (_2548 == _2544)
+            {
+                break;
+            }
+            continue;
+        }
+        float tmp1284 = tmp82 * tmp91;
+        float tmp1285 = tmp1284 * tmp73;
+        float tmp1286 = tmp1161 + tmp1094;
+        float tmp1288 = tmp1164 + tmp1097;
+        float tmp1290 = tmp1167 + tmp1100;
+        float tmp1295 = tmp1285 * (tmp932 + (tmp1286 + tmp942));
+        float tmp1296 = tmp1285 * (tmp935 + (tmp1288 + tmp947));
+        float tmp1297 = tmp1285 * (tmp938 + (tmp1290 + tmp952));
+        int tmp45954 = tmp45555 + tmp47743;
+        uint tmp39968 = tmp39123 + (uint(tmp45954) * 12u);
+        uint _2571 = uint(int(tmp39968 + 0u) >> int(2u));
+        for (;;)
+        {
+            int _2580 = root_buffer_0_1._m0[_2571];
+            int _2584 = atomicCompSwap(root_buffer_0_1._m0[_2571], _2580, floatBitsToInt(intBitsToFloat(_2580) + tmp1295));
+            _2573 = _2584;
+            if (_2584 == _2580)
+            {
+                break;
+            }
+            continue;
+        }
+        uint _2589 = uint(int(tmp39968 + 4u) >> int(2u));
+        for (;;)
+        {
+            int _2598 = root_buffer_0_1._m0[_2589];
+            int _2602 = atomicCompSwap(root_buffer_0_1._m0[_2589], _2598, floatBitsToInt(intBitsToFloat(_2598) + tmp1296));
+            _2591 = _2602;
+            if (_2602 == _2598)
+            {
+                break;
+            }
+            continue;
+        }
+        uint _2607 = uint(int(tmp39968 + 8u) >> int(2u));
+        for (;;)
+        {
+            int _2616 = root_buffer_0_1._m0[_2607];
+            int _2620 = atomicCompSwap(root_buffer_0_1._m0[_2607], _2616, floatBitsToInt(intBitsToFloat(_2616) + tmp1297));
+            _2609 = _2620;
+            if (_2620 == _2616)
+            {
+                break;
+            }
+            continue;
+        }
+        float tmp1304 = tmp1285 * 6.103515625e-05;
+        uint _2629 = uint(int((tmp39165 + (uint(tmp45954) * 4u)) + 0u) >> int(2u));
+        for (;;)
+        {
+            int _2638 = root_buffer_0_1._m0[_2629];
+            int _2642 = atomicCompSwap(root_buffer_0_1._m0[_2629], _2638, floatBitsToInt(intBitsToFloat(_2638) + tmp1304));
+            _2631 = _2642;
+            if (_2642 == _2638)
+            {
+                break;
+            }
+            continue;
+        }
+        float tmp1307 = tmp1284 * tmp84;
+        float tmp1314 = tmp1307 * (tmp932 + (tmp1286 + tmp974));
+        float tmp1315 = tmp1307 * (tmp935 + (tmp1288 + tmp976));
+        float tmp1316 = tmp1307 * (tmp938 + (tmp1290 + tmp978));
+        int tmp45998 = tmp45599 + tmp47743;
+        uint tmp40024 = tmp39123 + (uint(tmp45998) * 12u);
+        uint _2661 = uint(int(tmp40024 + 0u) >> int(2u));
+        for (;;)
+        {
+            int _2670 = root_buffer_0_1._m0[_2661];
+            int _2674 = atomicCompSwap(root_buffer_0_1._m0[_2661], _2670, floatBitsToInt(intBitsToFloat(_2670) + tmp1314));
+            _2663 = _2674;
+            if (_2674 == _2670)
+            {
+                break;
+            }
+            continue;
+        }
+        uint _2679 = uint(int(tmp40024 + 4u) >> int(2u));
+        for (;;)
+        {
+            int _2688 = root_buffer_0_1._m0[_2679];
+            int _2692 = atomicCompSwap(root_buffer_0_1._m0[_2679], _2688, floatBitsToInt(intBitsToFloat(_2688) + tmp1315));
+            _2681 = _2692;
+            if (_2692 == _2688)
+            {
+                break;
+            }
+            continue;
+        }
+        uint _2697 = uint(int(tmp40024 + 8u) >> int(2u));
+        for (;;)
+        {
+            int _2706 = root_buffer_0_1._m0[_2697];
+            int _2710 = atomicCompSwap(root_buffer_0_1._m0[_2697], _2706, floatBitsToInt(intBitsToFloat(_2706) + tmp1316));
+            _2699 = _2710;
+            if (_2710 == _2706)
+            {
+                break;
+            }
+            continue;
+        }
+        float tmp1323 = tmp1307 * 6.103515625e-05;
+        uint _2719 = uint(int((tmp39165 + (uint(tmp45998) * 4u)) + 0u) >> int(2u));
+        for (;;)
+        {
+            int _2728 = root_buffer_0_1._m0[_2719];
+            int _2732 = atomicCompSwap(root_buffer_0_1._m0[_2719], _2728, floatBitsToInt(intBitsToFloat(_2728) + tmp1323));
+            _2721 = _2732;
+            if (_2732 == _2728)
+            {
+                break;
+            }
+            continue;
+        }
+        float tmp1326 = tmp1284 * tmp92;
+        float tmp1333 = tmp1326 * (tmp932 + (tmp1286 + tmp1001));
+        float tmp1334 = tmp1326 * (tmp935 + (tmp1288 + tmp1003));
+        float tmp1335 = tmp1326 * (tmp938 + (tmp1290 + tmp1005));
+        int tmp46042 = tmp45643 + tmp47743;
+        uint tmp40080 = tmp39123 + (uint(tmp46042) * 12u);
+        uint _2751 = uint(int(tmp40080 + 0u) >> int(2u));
+        for (;;)
+        {
+            int _2760 = root_buffer_0_1._m0[_2751];
+            int _2764 = atomicCompSwap(root_buffer_0_1._m0[_2751], _2760, floatBitsToInt(intBitsToFloat(_2760) + tmp1333));
+            _2753 = _2764;
+            if (_2764 == _2760)
+            {
+                break;
+            }
+            continue;
+        }
+        uint _2769 = uint(int(tmp40080 + 4u) >> int(2u));
+        for (;;)
+        {
+            int _2778 = root_buffer_0_1._m0[_2769];
+            int _2782 = atomicCompSwap(root_buffer_0_1._m0[_2769], _2778, floatBitsToInt(intBitsToFloat(_2778) + tmp1334));
+            _2771 = _2782;
+            if (_2782 == _2778)
+            {
+                break;
+            }
+            continue;
+        }
+        uint _2787 = uint(int(tmp40080 + 8u) >> int(2u));
+        for (;;)
+        {
+            int _2796 = root_buffer_0_1._m0[_2787];
+            int _2800 = atomicCompSwap(root_buffer_0_1._m0[_2787], _2796, floatBitsToInt(intBitsToFloat(_2796) + tmp1335));
+            _2789 = _2800;
+            if (_2800 == _2796)
+            {
+                break;
+            }
+            continue;
+        }
+        float tmp1342 = tmp1326 * 6.103515625e-05;
+        uint _2809 = uint(int((tmp39165 + (uint(tmp46042) * 4u)) + 0u) >> int(2u));
+        for (;;)
+        {
+            int _2818 = root_buffer_0_1._m0[_2809];
+            int _2822 = atomicCompSwap(root_buffer_0_1._m0[_2809], _2818, floatBitsToInt(intBitsToFloat(_2818) + tmp1342));
+            _2811 = _2822;
+            if (_2822 == _2818)
+            {
+                break;
+            }
+            continue;
+        }
+        float tmp1346 = (2.0 - tmp60) * 0.015625;
+        float tmp1347 = (tmp85 * tmp85) * 0.5;
+        float tmp1348 = tmp1347 * tmp72;
+        float tmp1349 = tmp1348 * tmp73;
+        float tmp1351 = tmp917 * tmp1346;
+        float tmp1352 = tmp1351 + tmp940;
+        float tmp1354 = tmp911 * tmp1346;
+        float tmp1355 = tmp1354 + tmp945;
+        float tmp1357 = tmp914 * tmp1346;
+        float tmp1358 = tmp1357 + tmp950;
+        float tmp1363 = tmp1349 * (tmp932 + (tmp1352 + tmp942));
+        float tmp1364 = tmp1349 * (tmp935 + (tmp1355 + tmp947));
+        float tmp1365 = tmp1349 * (tmp938 + (tmp1358 + tmp952));
+        int tmp47745 = ((tmp56 + 2) & 63) << 12;
+        int tmp46086 = tmp45291 + tmp47745;
+        uint tmp40136 = tmp39123 + (uint(tmp46086) * 12u);
+        uint _2854 = uint(int(tmp40136 + 0u) >> int(2u));
+        for (;;)
+        {
+            int _2863 = root_buffer_0_1._m0[_2854];
+            int _2867 = atomicCompSwap(root_buffer_0_1._m0[_2854], _2863, floatBitsToInt(intBitsToFloat(_2863) + tmp1363));
+            _2856 = _2867;
+            if (_2867 == _2863)
+            {
+                break;
+            }
+            continue;
+        }
+        uint _2872 = uint(int(tmp40136 + 4u) >> int(2u));
+        for (;;)
+        {
+            int _2881 = root_buffer_0_1._m0[_2872];
+            int _2885 = atomicCompSwap(root_buffer_0_1._m0[_2872], _2881, floatBitsToInt(intBitsToFloat(_2881) + tmp1364));
+            _2874 = _2885;
+            if (_2885 == _2881)
+            {
+                break;
+            }
+            continue;
+        }
+        uint _2890 = uint(int(tmp40136 + 8u) >> int(2u));
+        for (;;)
+        {
+            int _2899 = root_buffer_0_1._m0[_2890];
+            int _2903 = atomicCompSwap(root_buffer_0_1._m0[_2890], _2899, floatBitsToInt(intBitsToFloat(_2899) + tmp1365));
+            _2892 = _2903;
+            if (_2903 == _2899)
+            {
+                break;
+            }
+            continue;
+        }
+        float tmp1372 = tmp1349 * 6.103515625e-05;
+        uint _2912 = uint(int((tmp39165 + (uint(tmp46086) * 4u)) + 0u) >> int(2u));
+        for (;;)
+        {
+            int _2921 = root_buffer_0_1._m0[_2912];
+            int _2925 = atomicCompSwap(root_buffer_0_1._m0[_2912], _2921, floatBitsToInt(intBitsToFloat(_2921) + tmp1372));
+            _2914 = _2925;
+            if (_2925 == _2921)
+            {
+                break;
+            }
+            continue;
+        }
+        float tmp1375 = tmp1348 * tmp84;
+        float tmp1382 = tmp1375 * (tmp932 + (tmp1352 + tmp974));
+        float tmp1383 = tmp1375 * (tmp935 + (tmp1355 + tmp976));
+        float tmp1384 = tmp1375 * (tmp938 + (tmp1358 + tmp978));
+        int tmp46130 = tmp45335 + tmp47745;
+        uint tmp40192 = tmp39123 + (uint(tmp46130) * 12u);
+        uint _2944 = uint(int(tmp40192 + 0u) >> int(2u));
+        for (;;)
+        {
+            int _2953 = root_buffer_0_1._m0[_2944];
+            int _2957 = atomicCompSwap(root_buffer_0_1._m0[_2944], _2953, floatBitsToInt(intBitsToFloat(_2953) + tmp1382));
+            _2946 = _2957;
+            if (_2957 == _2953)
+            {
+                break;
+            }
+            continue;
+        }
+        uint _2962 = uint(int(tmp40192 + 4u) >> int(2u));
+        for (;;)
+        {
+            int _2971 = root_buffer_0_1._m0[_2962];
+            int _2975 = atomicCompSwap(root_buffer_0_1._m0[_2962], _2971, floatBitsToInt(intBitsToFloat(_2971) + tmp1383));
+            _2964 = _2975;
+            if (_2975 == _2971)
+            {
+                break;
+            }
+            continue;
+        }
+        uint _2980 = uint(int(tmp40192 + 8u) >> int(2u));
+        for (;;)
+        {
+            int _2989 = root_buffer_0_1._m0[_2980];
+            int _2993 = atomicCompSwap(root_buffer_0_1._m0[_2980], _2989, floatBitsToInt(intBitsToFloat(_2989) + tmp1384));
+            _2982 = _2993;
+            if (_2993 == _2989)
+            {
+                break;
+            }
+            continue;
+        }
+        float tmp1391 = tmp1375 * 6.103515625e-05;
+        uint _3002 = uint(int((tmp39165 + (uint(tmp46130) * 4u)) + 0u) >> int(2u));
+        for (;;)
+        {
+            int _3011 = root_buffer_0_1._m0[_3002];
+            int _3015 = atomicCompSwap(root_buffer_0_1._m0[_3002], _3011, floatBitsToInt(intBitsToFloat(_3011) + tmp1391));
+            _3004 = _3015;
+            if (_3015 == _3011)
+            {
+                break;
+            }
+            continue;
+        }
+        float tmp1394 = tmp1348 * tmp92;
+        float tmp1401 = tmp1394 * (tmp932 + (tmp1352 + tmp1001));
+        float tmp1402 = tmp1394 * (tmp935 + (tmp1355 + tmp1003));
+        float tmp1403 = tmp1394 * (tmp938 + (tmp1358 + tmp1005));
+        int tmp46174 = tmp45379 + tmp47745;
+        uint tmp40248 = tmp39123 + (uint(tmp46174) * 12u);
+        uint _3034 = uint(int(tmp40248 + 0u) >> int(2u));
+        for (;;)
+        {
+            int _3043 = root_buffer_0_1._m0[_3034];
+            int _3047 = atomicCompSwap(root_buffer_0_1._m0[_3034], _3043, floatBitsToInt(intBitsToFloat(_3043) + tmp1401));
+            _3036 = _3047;
+            if (_3047 == _3043)
+            {
+                break;
+            }
+            continue;
+        }
+        uint _3052 = uint(int(tmp40248 + 4u) >> int(2u));
+        for (;;)
+        {
+            int _3061 = root_buffer_0_1._m0[_3052];
+            int _3065 = atomicCompSwap(root_buffer_0_1._m0[_3052], _3061, floatBitsToInt(intBitsToFloat(_3061) + tmp1402));
+            _3054 = _3065;
+            if (_3065 == _3061)
+            {
+                break;
+            }
+            continue;
+        }
+        uint _3070 = uint(int(tmp40248 + 8u) >> int(2u));
+        for (;;)
+        {
+            int _3079 = root_buffer_0_1._m0[_3070];
+            int _3083 = atomicCompSwap(root_buffer_0_1._m0[_3070], _3079, floatBitsToInt(intBitsToFloat(_3079) + tmp1403));
+            _3072 = _3083;
+            if (_3083 == _3079)
+            {
+                break;
+            }
+            continue;
+        }
+        float tmp1410 = tmp1394 * 6.103515625e-05;
+        uint _3092 = uint(int((tmp39165 + (uint(tmp46174) * 4u)) + 0u) >> int(2u));
+        for (;;)
+        {
+            int _3101 = root_buffer_0_1._m0[_3092];
+            int _3105 = atomicCompSwap(root_buffer_0_1._m0[_3092], _3101, floatBitsToInt(intBitsToFloat(_3101) + tmp1410));
+            _3094 = _3105;
+            if (_3105 == _3101)
+            {
+                break;
+            }
+            continue;
+        }
+        float tmp1413 = tmp1347 * tmp83;
+        float tmp1414 = tmp1413 * tmp73;
+        float tmp1415 = tmp1351 + tmp1027;
+        float tmp1417 = tmp1354 + tmp1030;
+        float tmp1419 = tmp1357 + tmp1033;
+        float tmp1424 = tmp1414 * (tmp932 + (tmp1415 + tmp942));
+        float tmp1425 = tmp1414 * (tmp935 + (tmp1417 + tmp947));
+        float tmp1426 = tmp1414 * (tmp938 + (tmp1419 + tmp952));
+        int tmp46218 = tmp45423 + tmp47745;
+        uint tmp40304 = tmp39123 + (uint(tmp46218) * 12u);
+        uint _3128 = uint(int(tmp40304 + 0u) >> int(2u));
+        for (;;)
+        {
+            int _3137 = root_buffer_0_1._m0[_3128];
+            int _3141 = atomicCompSwap(root_buffer_0_1._m0[_3128], _3137, floatBitsToInt(intBitsToFloat(_3137) + tmp1424));
+            _3130 = _3141;
+            if (_3141 == _3137)
+            {
+                break;
+            }
+            continue;
+        }
+        uint _3146 = uint(int(tmp40304 + 4u) >> int(2u));
+        for (;;)
+        {
+            int _3155 = root_buffer_0_1._m0[_3146];
+            int _3159 = atomicCompSwap(root_buffer_0_1._m0[_3146], _3155, floatBitsToInt(intBitsToFloat(_3155) + tmp1425));
+            _3148 = _3159;
+            if (_3159 == _3155)
+            {
+                break;
+            }
+            continue;
+        }
+        uint _3164 = uint(int(tmp40304 + 8u) >> int(2u));
+        for (;;)
+        {
+            int _3173 = root_buffer_0_1._m0[_3164];
+            int _3177 = atomicCompSwap(root_buffer_0_1._m0[_3164], _3173, floatBitsToInt(intBitsToFloat(_3173) + tmp1426));
+            _3166 = _3177;
+            if (_3177 == _3173)
+            {
+                break;
+            }
+            continue;
+        }
+        float tmp1433 = tmp1414 * 6.103515625e-05;
+        uint _3186 = uint(int((tmp39165 + (uint(tmp46218) * 4u)) + 0u) >> int(2u));
+        for (;;)
+        {
+            int _3195 = root_buffer_0_1._m0[_3186];
+            int _3199 = atomicCompSwap(root_buffer_0_1._m0[_3186], _3195, floatBitsToInt(intBitsToFloat(_3195) + tmp1433));
+            _3188 = _3199;
+            if (_3199 == _3195)
+            {
+                break;
+            }
+            continue;
+        }
+        float tmp1436 = tmp1413 * tmp84;
+        float tmp1443 = tmp1436 * (tmp932 + (tmp1415 + tmp974));
+        float tmp1444 = tmp1436 * (tmp935 + (tmp1417 + tmp976));
+        float tmp1445 = tmp1436 * (tmp938 + (tmp1419 + tmp978));
+        int tmp46262 = tmp45467 + tmp47745;
+        uint tmp40360 = tmp39123 + (uint(tmp46262) * 12u);
+        uint _3218 = uint(int(tmp40360 + 0u) >> int(2u));
+        for (;;)
+        {
+            int _3227 = root_buffer_0_1._m0[_3218];
+            int _3231 = atomicCompSwap(root_buffer_0_1._m0[_3218], _3227, floatBitsToInt(intBitsToFloat(_3227) + tmp1443));
+            _3220 = _3231;
+            if (_3231 == _3227)
+            {
+                break;
+            }
+            continue;
+        }
+        uint _3236 = uint(int(tmp40360 + 4u) >> int(2u));
+        for (;;)
+        {
+            int _3245 = root_buffer_0_1._m0[_3236];
+            int _3249 = atomicCompSwap(root_buffer_0_1._m0[_3236], _3245, floatBitsToInt(intBitsToFloat(_3245) + tmp1444));
+            _3238 = _3249;
+            if (_3249 == _3245)
+            {
+                break;
+            }
+            continue;
+        }
+        uint _3254 = uint(int(tmp40360 + 8u) >> int(2u));
+        for (;;)
+        {
+            int _3263 = root_buffer_0_1._m0[_3254];
+            int _3267 = atomicCompSwap(root_buffer_0_1._m0[_3254], _3263, floatBitsToInt(intBitsToFloat(_3263) + tmp1445));
+            _3256 = _3267;
+            if (_3267 == _3263)
+            {
+                break;
+            }
+            continue;
+        }
+        float tmp1452 = tmp1436 * 6.103515625e-05;
+        uint _3276 = uint(int((tmp39165 + (uint(tmp46262) * 4u)) + 0u) >> int(2u));
+        for (;;)
+        {
+            int _3285 = root_buffer_0_1._m0[_3276];
+            int _3289 = atomicCompSwap(root_buffer_0_1._m0[_3276], _3285, floatBitsToInt(intBitsToFloat(_3285) + tmp1452));
+            _3278 = _3289;
+            if (_3289 == _3285)
+            {
+                break;
+            }
+            continue;
+        }
+        float tmp1455 = tmp1413 * tmp92;
+        float tmp1462 = tmp1455 * (tmp932 + (tmp1415 + tmp1001));
+        float tmp1463 = tmp1455 * (tmp935 + (tmp1417 + tmp1003));
+        float tmp1464 = tmp1455 * (tmp938 + (tmp1419 + tmp1005));
+        int tmp46306 = tmp45511 + tmp47745;
+        uint tmp40416 = tmp39123 + (uint(tmp46306) * 12u);
+        uint _3308 = uint(int(tmp40416 + 0u) >> int(2u));
+        for (;;)
+        {
+            int _3317 = root_buffer_0_1._m0[_3308];
+            int _3321 = atomicCompSwap(root_buffer_0_1._m0[_3308], _3317, floatBitsToInt(intBitsToFloat(_3317) + tmp1462));
+            _3310 = _3321;
+            if (_3321 == _3317)
+            {
+                break;
+            }
+            continue;
+        }
+        uint _3326 = uint(int(tmp40416 + 4u) >> int(2u));
+        for (;;)
+        {
+            int _3335 = root_buffer_0_1._m0[_3326];
+            int _3339 = atomicCompSwap(root_buffer_0_1._m0[_3326], _3335, floatBitsToInt(intBitsToFloat(_3335) + tmp1463));
+            _3328 = _3339;
+            if (_3339 == _3335)
+            {
+                break;
+            }
+            continue;
+        }
+        uint _3344 = uint(int(tmp40416 + 8u) >> int(2u));
+        for (;;)
+        {
+            int _3353 = root_buffer_0_1._m0[_3344];
+            int _3357 = atomicCompSwap(root_buffer_0_1._m0[_3344], _3353, floatBitsToInt(intBitsToFloat(_3353) + tmp1464));
+            _3346 = _3357;
+            if (_3357 == _3353)
+            {
+                break;
+            }
+            continue;
+        }
+        float tmp1471 = tmp1455 * 6.103515625e-05;
+        uint _3366 = uint(int((tmp39165 + (uint(tmp46306) * 4u)) + 0u) >> int(2u));
+        for (;;)
+        {
+            int _3375 = root_buffer_0_1._m0[_3366];
+            int _3379 = atomicCompSwap(root_buffer_0_1._m0[_3366], _3375, floatBitsToInt(intBitsToFloat(_3375) + tmp1471));
+            _3368 = _3379;
+            if (_3379 == _3375)
+            {
+                break;
+            }
+            continue;
+        }
+        float tmp1474 = tmp1347 * tmp91;
+        float tmp1475 = tmp1474 * tmp73;
+        float tmp1476 = tmp1351 + tmp1094;
+        float tmp1478 = tmp1354 + tmp1097;
+        float tmp1480 = tmp1357 + tmp1100;
+        float tmp1485 = tmp1475 * (tmp932 + (tmp1476 + tmp942));
+        float tmp1486 = tmp1475 * (tmp935 + (tmp1478 + tmp947));
+        float tmp1487 = tmp1475 * (tmp938 + (tmp1480 + tmp952));
+        int tmp46350 = tmp45555 + tmp47745;
+        uint tmp40472 = tmp39123 + (uint(tmp46350) * 12u);
+        uint _3402 = uint(int(tmp40472 + 0u) >> int(2u));
+        for (;;)
+        {
+            int _3411 = root_buffer_0_1._m0[_3402];
+            int _3415 = atomicCompSwap(root_buffer_0_1._m0[_3402], _3411, floatBitsToInt(intBitsToFloat(_3411) + tmp1485));
+            _3404 = _3415;
+            if (_3415 == _3411)
+            {
+                break;
+            }
+            continue;
+        }
+        uint _3420 = uint(int(tmp40472 + 4u) >> int(2u));
+        for (;;)
+        {
+            int _3429 = root_buffer_0_1._m0[_3420];
+            int _3433 = atomicCompSwap(root_buffer_0_1._m0[_3420], _3429, floatBitsToInt(intBitsToFloat(_3429) + tmp1486));
+            _3422 = _3433;
+            if (_3433 == _3429)
+            {
+                break;
+            }
+            continue;
+        }
+        uint _3438 = uint(int(tmp40472 + 8u) >> int(2u));
+        for (;;)
+        {
+            int _3447 = root_buffer_0_1._m0[_3438];
+            int _3451 = atomicCompSwap(root_buffer_0_1._m0[_3438], _3447, floatBitsToInt(intBitsToFloat(_3447) + tmp1487));
+            _3440 = _3451;
+            if (_3451 == _3447)
+            {
+                break;
+            }
+            continue;
+        }
+        float tmp1494 = tmp1475 * 6.103515625e-05;
+        uint _3460 = uint(int((tmp39165 + (uint(tmp46350) * 4u)) + 0u) >> int(2u));
+        for (;;)
+        {
+            int _3469 = root_buffer_0_1._m0[_3460];
+            int _3473 = atomicCompSwap(root_buffer_0_1._m0[_3460], _3469, floatBitsToInt(intBitsToFloat(_3469) + tmp1494));
+            _3462 = _3473;
+            if (_3473 == _3469)
+            {
+                break;
+            }
+            continue;
+        }
+        float tmp1497 = tmp1474 * tmp84;
+        float tmp1504 = tmp1497 * (tmp932 + (tmp1476 + tmp974));
+        float tmp1505 = tmp1497 * (tmp935 + (tmp1478 + tmp976));
+        float tmp1506 = tmp1497 * (tmp938 + (tmp1480 + tmp978));
+        int tmp46394 = tmp45599 + tmp47745;
+        uint tmp40528 = tmp39123 + (uint(tmp46394) * 12u);
+        uint _3492 = uint(int(tmp40528 + 0u) >> int(2u));
+        for (;;)
+        {
+            int _3501 = root_buffer_0_1._m0[_3492];
+            int _3505 = atomicCompSwap(root_buffer_0_1._m0[_3492], _3501, floatBitsToInt(intBitsToFloat(_3501) + tmp1504));
+            _3494 = _3505;
+            if (_3505 == _3501)
+            {
+                break;
+            }
+            continue;
+        }
+        uint _3510 = uint(int(tmp40528 + 4u) >> int(2u));
+        for (;;)
+        {
+            int _3519 = root_buffer_0_1._m0[_3510];
+            int _3523 = atomicCompSwap(root_buffer_0_1._m0[_3510], _3519, floatBitsToInt(intBitsToFloat(_3519) + tmp1505));
+            _3512 = _3523;
+            if (_3523 == _3519)
+            {
+                break;
+            }
+            continue;
+        }
+        uint _3528 = uint(int(tmp40528 + 8u) >> int(2u));
+        for (;;)
+        {
+            int _3537 = root_buffer_0_1._m0[_3528];
+            int _3541 = atomicCompSwap(root_buffer_0_1._m0[_3528], _3537, floatBitsToInt(intBitsToFloat(_3537) + tmp1506));
+            _3530 = _3541;
+            if (_3541 == _3537)
+            {
+                break;
+            }
+            continue;
+        }
+        float tmp1513 = tmp1497 * 6.103515625e-05;
+        uint _3550 = uint(int((tmp39165 + (uint(tmp46394) * 4u)) + 0u) >> int(2u));
+        for (;;)
+        {
+            int _3559 = root_buffer_0_1._m0[_3550];
+            int _3563 = atomicCompSwap(root_buffer_0_1._m0[_3550], _3559, floatBitsToInt(intBitsToFloat(_3559) + tmp1513));
+            _3552 = _3563;
+            if (_3563 == _3559)
+            {
+                break;
+            }
+            continue;
+        }
+        float tmp1516 = tmp1474 * tmp92;
+        float tmp1523 = tmp1516 * (tmp932 + (tmp1476 + tmp1001));
+        float tmp1524 = tmp1516 * (tmp935 + (tmp1478 + tmp1003));
+        float tmp1525 = tmp1516 * (tmp938 + (tmp1480 + tmp1005));
+        int tmp46438 = tmp45643 + tmp47745;
+        uint tmp40584 = tmp39123 + (uint(tmp46438) * 12u);
+        uint _3582 = uint(int(tmp40584 + 0u) >> int(2u));
+        for (;;)
+        {
+            int _3591 = root_buffer_0_1._m0[_3582];
+            int _3595 = atomicCompSwap(root_buffer_0_1._m0[_3582], _3591, floatBitsToInt(intBitsToFloat(_3591) + tmp1523));
+            _3584 = _3595;
+            if (_3595 == _3591)
+            {
+                break;
+            }
+            continue;
+        }
+        uint _3600 = uint(int(tmp40584 + 4u) >> int(2u));
+        for (;;)
+        {
+            int _3609 = root_buffer_0_1._m0[_3600];
+            int _3613 = atomicCompSwap(root_buffer_0_1._m0[_3600], _3609, floatBitsToInt(intBitsToFloat(_3609) + tmp1524));
+            _3602 = _3613;
+            if (_3613 == _3609)
+            {
+                break;
+            }
+            continue;
+        }
+        uint _3618 = uint(int(tmp40584 + 8u) >> int(2u));
+        for (;;)
+        {
+            int _3627 = root_buffer_0_1._m0[_3618];
+            int _3631 = atomicCompSwap(root_buffer_0_1._m0[_3618], _3627, floatBitsToInt(intBitsToFloat(_3627) + tmp1525));
+            _3620 = _3631;
+            if (_3631 == _3627)
+            {
+                break;
+            }
+            continue;
+        }
+        float tmp1532 = tmp1516 * 6.103515625e-05;
+        uint _3640 = uint(int((tmp39165 + (uint(tmp46438) * 4u)) + 0u) >> int(2u));
+        for (;;)
+        {
+            int _3649 = root_buffer_0_1._m0[_3640];
+            int _3653 = atomicCompSwap(root_buffer_0_1._m0[_3640], _3649, floatBitsToInt(intBitsToFloat(_3649) + tmp1532));
+            _3642 = _3653;
+            if (_3653 == _3649)
+            {
+                break;
+            }
+            continue;
+        }
+    }
+}
+

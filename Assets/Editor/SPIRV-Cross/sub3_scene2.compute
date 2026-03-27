@@ -1,0 +1,75 @@
+static const uint3 gl_WorkGroupSize = uint3(128u, 1u, 1u);
+
+RWByteAddressBuffer root_buffer_0 : register(u0);
+
+static uint3 gl_GlobalInvocationID;
+struct SPIRV_Cross_Input
+{
+    uint3 gl_GlobalInvocationID : SV_DispatchThreadID;
+};
+
+void comp_main()
+{
+    int begin_ = int(gl_GlobalInvocationID.x) + 0;
+    int end_ = 262144 + 0;
+    for (int ii = begin_; ii < end_; ii += 262144)
+    {
+        int tmp1660 = ii + 0;
+        int tmp48703 = (tmp1660 >> 12) & 63;
+        int tmp48707 = (tmp1660 >> 6) & 63;
+        int tmp48711 = tmp1660 & 63;
+        uint tmp44577 = 0u + (uint(0) * 83886116u);
+        int tmp52281 = (tmp48711 + (tmp48707 << 6)) + (tmp48703 << 12);
+        uint tmp44584 = ((tmp44577 + 33554468u) + (uint(tmp52281) * 4u)) + 0u;
+        if (((-int(asfloat(int(root_buffer_0.Load(uint(int(tmp44584) >> int(2u)) * 4 + 0))) > 0.0f)) & 1) != 0)
+        {
+            int _79 = int(root_buffer_0.Load(uint(int(tmp44584) >> int(2u)) * 4 + 0));
+            float tmp1682 = asfloat(_79);
+            uint tmp44611 = (tmp44577 + 30408740u) + (uint(tmp52281) * 12u);
+            uint tmp44612 = tmp44611 + 0u;
+            uint tmp44626 = tmp44611 + 4u;
+            int _96 = int(root_buffer_0.Load(uint(int(tmp44626) >> int(2u)) * 4 + 0));
+            uint tmp44640 = tmp44611 + 8u;
+            int _103 = int(root_buffer_0.Load(uint(int(tmp44640) >> int(2u)) * 4 + 0));
+            root_buffer_0.Store(uint(int(tmp44612) >> int(2u)) * 4 + 0, uint(asint(asfloat(int(root_buffer_0.Load(uint(int(tmp44612) >> int(2u)) * 4 + 0))) / tmp1682)));
+            root_buffer_0.Store(uint(int(tmp44626) >> int(2u)) * 4 + 0, uint(asint(asfloat(_96) / tmp1682)));
+            root_buffer_0.Store(uint(int(tmp44640) >> int(2u)) * 4 + 0, uint(asint(asfloat(_103) / tmp1682)));
+        }
+        else
+        {
+        }
+        uint tmp44709 = (tmp44577 + 30408740u) + (uint(tmp52281) * 12u);
+        uint tmp44710 = tmp44709 + 0u;
+        if (((-int(asfloat(int(root_buffer_0.Load(uint(int(((tmp44577 + 35651620u) + (uint(tmp52281) * 4u)) + 0u) >> int(2u)) * 4 + 0))) < 1.0f)) & 1) != 0)
+        {
+            root_buffer_0.Store(uint(int(tmp44710) >> int(2u)) * 4 + 0, uint(asint(asfloat(int(root_buffer_0.Load(uint(int(tmp44710) >> int(2u)) * 4 + 0))))));
+            uint tmp44738 = tmp44709 + 4u;
+            root_buffer_0.Store(uint(int(tmp44738) >> int(2u)) * 4 + 0, uint(asint(asfloat(int(root_buffer_0.Load(uint(int(tmp44738) >> int(2u)) * 4 + 0))) + (-0.00196000002324581146240234375f))));
+            uint tmp44766 = tmp44709 + 8u;
+            root_buffer_0.Store(uint(int(tmp44766) >> int(2u)) * 4 + 0, uint(asint(asfloat(int(root_buffer_0.Load(uint(int(tmp44766) >> int(2u)) * 4 + 0))))));
+        }
+        else
+        {
+            root_buffer_0.Store(uint(int(tmp44710) >> int(2u)) * 4 + 0, uint(asint(0.0f)));
+            root_buffer_0.Store(uint(int(tmp44709 + 4u) >> int(2u)) * 4 + 0, uint(asint(0.0f)));
+            root_buffer_0.Store(uint(int(tmp44709 + 8u) >> int(2u)) * 4 + 0, uint(asint(0.0f)));
+        }
+        float tmp1725 = asfloat(int(root_buffer_0.Load(uint(int(tmp44710) >> int(2u)) * 4 + 0)));
+        uint tmp44850 = tmp44709 + 4u;
+        int _197 = int(root_buffer_0.Load(uint(int(tmp44850) >> int(2u)) * 4 + 0));
+        float tmp1728 = asfloat(_197);
+        uint tmp44864 = tmp44709 + 8u;
+        int _205 = int(root_buffer_0.Load(uint(int(tmp44864) >> int(2u)) * 4 + 0));
+        float tmp1731 = asfloat(_205);
+        root_buffer_0.Store(uint(int(tmp44710) >> int(2u)) * 4 + 0, uint(asint((int(int(((((-int(tmp48703 < 5)) & 1) & ((-int(tmp1725 < 0.0f)) & 1)) | (((-int(tmp48703 > 59)) & 1) & ((-int(tmp1725 > 0.0f)) & 1))) == 0) == 0) != 0) ? 0.0f : tmp1725)));
+        root_buffer_0.Store(uint(int(tmp44850) >> int(2u)) * 4 + 0, uint(asint((int(int(((((-int(tmp48707 < 5)) & 1) & ((-int(tmp1728 < 0.0f)) & 1)) | (((-int(tmp48707 > 59)) & 1) & ((-int(tmp1728 > 0.0f)) & 1))) == 0) == 0) != 0) ? 0.0f : tmp1728)));
+        root_buffer_0.Store(uint(int(tmp44864) >> int(2u)) * 4 + 0, uint(asint((int(int(((((-int(tmp48711 < 5)) & 1) & ((-int(tmp1731 < 0.0f)) & 1)) | (((-int(tmp48711 > 59)) & 1) & ((-int(tmp1731 > 0.0f)) & 1))) == 0) == 0) != 0) ? 0.0f : tmp1731)));
+    }
+}
+
+[numthreads(128, 1, 1)]
+void main(SPIRV_Cross_Input stage_input)
+{
+    gl_GlobalInvocationID = stage_input.gl_GlobalInvocationID;
+    comp_main();
+}

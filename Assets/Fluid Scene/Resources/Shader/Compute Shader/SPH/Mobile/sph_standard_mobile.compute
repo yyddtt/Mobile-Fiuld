@@ -1,0 +1,304 @@
+#pragma kernel ClearGrid
+#pragma kernel BuildGrid
+#pragma kernel ComputeDensity
+#pragma kernel SPHMain
+#pragma target 4.5
+#pragma only_renderers d3d11 vulkan metal gles3
+
+RWStructuredBuffer<float3> x;
+RWStructuredBuffer<float3> v;
+RWStructuredBuffer<float> rho;
+RWStructuredBuffer<int> cellHead;
+RWStructuredBuffer<int> nextIndex;
+
+struct Particle { float3 position; float4 color; };
+RWStructuredBuffer<Particle> _particlesBuffer;
+
+int n_grid;
+int particle_num;
+float3 boundsMin;
+float3 boundsMax;
+float3 gravity;
+float dt;
+float restDensity;
+float particleMass;
+float neighbourRadius;
+float viscosity;
+float eosGamma;
+float soundSpeed;
+float maxSpeed;
+float boundaryDamping;
+float boundaryDampingZ;
+float boundaryMaxBounceSpeedZ;
+float xsphC;
+float minSpeed;
+float poly6_const;
+float spiky_const;
+float visc_const;
+float eosK;
+float vorticityEps;
+float surfaceTension;
+float freeSurfaceDamping;
+float freeSurfaceThreshold;
+
+StructuredBuffer<float4> impulses;
+int impulseCount;
+float impulseRadius;
+float impulseStrength;
+float3 swirlAxis;
+float impulseNormalCoeff;
+float impulseTangentialCoeff;
+StructuredBuffer<float4> obstacles;
+int obstacleCount;
+float obstaclePushStrength;
+float obstacleDamping;
+float obstacleTangentialStrength;
+float obstacleFriction;
+
+int gridIndex(int3 c){ return c.x + c.y * n_grid + c.z * n_grid * n_grid; }
+
+[numthreads(128,1,1)]
+void ClearGrid(uint3 id : SV_DispatchThreadID)
+{
+    uint i = id.x;
+    uint total = (uint)(n_grid * n_grid * n_grid);
+    if (i < total) cellHead[i] = -1;
+}
+
+[numthreads(128,1,1)]
+void BuildGrid(uint3 id : SV_DispatchThreadID)
+{
+    uint i = id.x;
+    if (i >= (uint)particle_num) return;
+    float3 xi = x[i];
+    float3 size = boundsMax - boundsMin;
+    float3 pn = saturate((xi - boundsMin) / max(size, float3(1e-3,1e-3,1e-3)));
+    int3 cell;
+    cell.x = clamp((int)(pn.x * n_grid), 0, n_grid - 1);
+    cell.y = clamp((int)(pn.y * n_grid), 0, n_grid - 1);
+    cell.z = clamp((int)(pn.z * n_grid), 0, n_grid - 1);
+    int idx = gridIndex(cell);
+    int old;
+    InterlockedExchange(cellHead[idx], (int)i, old);
+    nextIndex[i] = old;
+}
+
+[numthreads(128,1,1)]
+void ComputeDensity(uint3 id : SV_DispatchThreadID)
+{
+    uint i = id.x;
+    if (i >= (uint)particle_num) return;
+    float3 xi = x[i];
+    float h = max(neighbourRadius, 1e-3);
+    float h2 = h * h;
+
+    float rho_i = 0.0;
+    float3 size = boundsMax - boundsMin;
+    float3 pn = saturate((xi - boundsMin) / max(size, float3(1e-3,1e-3,1e-3)));
+    int3 baseCell;
+    baseCell.x = clamp((int)(pn.x * n_grid), 0, n_grid - 1);
+    baseCell.y = clamp((int)(pn.y * n_grid), 0, n_grid - 1);
+    baseCell.z = clamp((int)(pn.z * n_grid), 0, n_grid - 1);
+
+    for (int dz = -1; dz <= 1; dz++)
+    for (int dy = -1; dy <= 1; dy++)
+    for (int dx = -1; dx <= 1; dx++)
+    {
+        int3 c;
+        c.x = clamp(baseCell.x + dx, 0, n_grid - 1);
+        c.y = clamp(baseCell.y + dy, 0, n_grid - 1);
+        c.z = clamp(baseCell.z + dz, 0, n_grid - 1);
+        int head = cellHead[gridIndex(c)];
+        int j = head;
+        int it = 0;
+        while (j >= 0 && it < 4096)
+        {
+            float3 xj = x[j];
+            float3 d = xj - xi;
+            float dsq = dot(d,d);
+            if (dsq <= h2)
+            {
+                float t = max(h2 - dsq, 0.0);
+                float w = poly6_const * t * t * t;
+                rho_i += particleMass * w;
+            }
+            j = nextIndex[j];
+            it++;
+        }
+    }
+
+    rho[i] = rho_i;
+}
+
+[numthreads(128,1,1)]
+void SPHMain(uint3 id : SV_DispatchThreadID)
+{
+    uint i = id.x;
+    if (i >= (uint)particle_num) return;
+    float3 xi = x[i];
+    float3 vi = v[i] + gravity * dt;
+    float h = max(neighbourRadius, 1e-3);
+    float h2 = h * h;
+    float3 size = boundsMax - boundsMin;
+    float3 pn = saturate((xi - boundsMin) / max(size, float3(1e-3,1e-3,1e-3)));
+    int3 baseCell;
+    baseCell.x = clamp((int)(pn.x * n_grid), 0, n_grid - 1);
+    baseCell.y = clamp((int)(pn.y * n_grid), 0, n_grid - 1);
+    baseCell.z = clamp((int)(pn.z * n_grid), 0, n_grid - 1);
+
+    float rho_i = max(rho[i], 1e-3);
+    float rhoRatio_i = rho_i / max(restDensity, 1e-3);
+    float p_i = eosK * max(pow(rhoRatio_i, max(eosGamma, 1.0)) - 1.0, 0.0);
+
+    float3 acc_p = float3(0,0,0);
+    float3 acc_v = float3(0,0,0);
+    float3 v_corr = float3(0,0,0);
+    float3 omega = float3(0,0,0);
+    float3 n_est = float3(0,0,0);
+    float3 acc_st = float3(0,0,0);
+
+    for (int dz2 = -1; dz2 <= 1; dz2++)
+    for (int dy2 = -1; dy2 <= 1; dy2++)
+    for (int dx2 = -1; dx2 <= 1; dx2++)
+    {
+        int3 c2;
+        c2.x = clamp(baseCell.x + dx2, 0, n_grid - 1);
+        c2.y = clamp(baseCell.y + dy2, 0, n_grid - 1);
+        c2.z = clamp(baseCell.z + dz2, 0, n_grid - 1);
+        int head2 = cellHead[gridIndex(c2)];
+        int k = head2;
+        int it2 = 0;
+        while (k >= 0 && it2 < 4096)
+        {
+            if (k != (int)i)
+            {
+                float3 xk = x[k];
+                float3 d2 = xk - xi;
+                float dsq2 = dot(d2,d2);
+                if (dsq2 <= h2)
+                {
+                    float r = sqrt(max(dsq2, 1e-6));
+                    float hr = max(h - r, 0.0);
+                    float3 dir = -d2 / max(r, 1e-6);
+                    float3 gradW = -spiky_const * (hr * hr) * dir;
+                    float rho_k = max(rho[k], 1e-3);
+                    float rhoRatio_k = rho_k / max(restDensity, 1e-3);
+                    float p_k = eosK * max(pow(rhoRatio_k, max(eosGamma, 1.0)) - 1.0, 0.0);
+                    float sym = 0.5 * (p_i / (rho_i * rho_i) + p_k / (rho_k * rho_k));
+                    acc_p += -particleMass * sym * gradW;
+
+                    float lapW = visc_const * hr / max(h, 1e-3);
+                    float3 vk = v[k];
+                    acc_v += viscosity * particleMass * (vk - vi) / rho_k * lapW;
+
+                    float t2 = max(h2 - dsq2, 0.0);
+                    float w2 = poly6_const * t2 * t2 * t2;
+                    v_corr += particleMass * (vk - vi) / rho_k * w2;
+
+                    float3 omega_ij = cross(vk - vi, gradW);
+                    float om_mag = length(omega_ij);
+                    omega += particleMass * omega_ij / rho_k;
+                    n_est += particleMass * gradW * om_mag / rho_k;
+
+                    float rhoRatio_k2 = rho_k / max(restDensity, 1e-3);
+                    float surfLocal = saturate(1.0 - 0.5 * (rhoRatio_i + rhoRatio_k2));
+                    acc_st += surfaceTension * particleMass * surfLocal * gradW;
+                }
+            }
+            k = nextIndex[k];
+            it2++;
+        }
+    }
+
+    float3 acc = acc_p + acc_v;
+    if (vorticityEps > 0.0)
+    {
+        float3 n_dir = normalize(n_est + float3(1e-6,1e-6,1e-6));
+        float3 f_vor = vorticityEps * cross(n_dir, omega);
+        acc += f_vor;
+    }
+    acc += acc_st;
+    for (int t = 0; t < impulseCount; t++)
+    {
+        float3 ip = impulses[t].xyz;
+        float str = impulseStrength * impulses[t].w;
+        float3 dd = xi - ip;
+        float rr = length(dd);
+        if (rr < impulseRadius)
+        {
+            float hr = max(impulseRadius - rr, 0.0);
+            float w = hr * hr * hr;
+            float3 dirI = normalize(dd + float3(1e-6,1e-6,1e-6));
+            float3 ax = normalize(swirlAxis + float3(1e-6,1e-6,1e-6));
+            float3 tanDir = normalize(cross(ax, dirI) + float3(1e-6,1e-6,1e-6));
+            acc += str * (impulseNormalCoeff * dirI + impulseTangentialCoeff * tanDir) * w;
+        }
+    }
+    vi += acc * dt;
+    vi += xsphC * v_corr;
+    {
+        float low = minSpeed * 2.0;
+        float m2 = dot(vi, vi);
+        if (m2 < low * low)
+        {
+            float f = max(0.0, 1.0 - freeSurfaceDamping * dt);
+            if (rhoRatio_i < freeSurfaceThreshold)
+            {
+                float kf = saturate((freeSurfaceThreshold - rhoRatio_i) / max(freeSurfaceThreshold, 1e-3));
+                f = max(0.0, 1.0 - freeSurfaceDamping * (1.0 + kf) * dt);
+            }
+            vi *= f;
+        }
+    }
+
+    float3 s = (xi - boundsMin) / (boundsMax - boundsMin);
+    if (xi.x < boundsMin.x) { xi.x = boundsMin.x; vi.x = -vi.x * boundaryDamping; }
+    if (xi.y < boundsMin.y)
+    {
+        xi.y = boundsMin.y;
+        if (vi.y < -minSpeed) { vi.y = -vi.y * boundaryDamping; } else { vi.y = 0.0; }
+    }
+    if (xi.z < boundsMin.z) { xi.z = boundsMin.z; vi.z = -vi.z * boundaryDampingZ; float az = min(abs(vi.z), boundaryMaxBounceSpeedZ); vi.z = (vi.z < 0 ? -az : az); }
+    if (xi.x > boundsMax.x) { xi.x = boundsMax.x; vi.x = -vi.x * boundaryDamping; }
+    if (xi.y > boundsMax.y) { xi.y = boundsMax.y; vi.y = -vi.y * boundaryDamping; }
+    if (xi.z > boundsMax.z) { xi.z = boundsMax.z; vi.z = -vi.z * boundaryDampingZ; float az = min(abs(vi.z), boundaryMaxBounceSpeedZ); vi.z = (vi.z < 0 ? -az : az); }
+
+    if (xi.y <= boundsMin.y + 1e-5)
+    {
+        if (vi.y < 0.0) { vi.y = 0.0; }
+        else if (abs(vi.y) < minSpeed) { vi.y = 0.0; }
+    }
+    for (int ob = 0; ob < obstacleCount; ob++)
+    {
+        float3 op = obstacles[ob].xyz;
+        float rad = obstacles[ob].w;
+        float3 dd = xi - op;
+        float rr = length(dd);
+        if (rr < rad)
+        {
+            float3 dir = normalize(dd + float3(1e-6,1e-6,1e-6));
+            float pen = rad - rr;
+            xi = op + dir * rad;
+            float vn = dot(vi, dir);
+            vi -= vn * dir;
+            vi += dir * (obstaclePushStrength * pen);
+            vi *= obstacleDamping;
+            float3 ax = normalize(swirlAxis + float3(1e-6,1e-6,1e-6));
+            float3 tanDir = normalize(cross(ax, dir) + float3(1e-6,1e-6,1e-6));
+            vi += tanDir * (obstacleTangentialStrength * pen);
+            float vt = dot(vi, tanDir);
+            vi -= tanDir * (vt * obstacleFriction);
+        }
+    }
+
+    float msq = dot(vi, vi);
+    if (msq > maxSpeed * maxSpeed) vi = normalize(vi) * maxSpeed;
+    else if (msq < minSpeed * minSpeed) vi = float3(0,0,0);
+    xi += vi * dt;
+    v[i] = vi;
+    x[i] = xi;
+
+    float3 col = float3(saturate((xi.x - boundsMin.x) / max(boundsMax.x - boundsMin.x, 1e-3)), saturate((xi.y - boundsMin.y) / max(boundsMax.y - boundsMin.y, 1e-3)), 1.0);
+    _particlesBuffer[i].position = xi;
+    _particlesBuffer[i].color = float4(col, 1);
+}

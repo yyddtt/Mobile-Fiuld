@@ -1,0 +1,68 @@
+static const uint3 gl_WorkGroupSize = uint3(128u, 1u, 1u);
+
+RWByteAddressBuffer root_buffer_0 : register(u0);
+
+static uint3 gl_GlobalInvocationID;
+struct SPIRV_Cross_Input
+{
+    uint3 gl_GlobalInvocationID : SV_DispatchThreadID;
+};
+
+void comp_main()
+{
+    int _21 = int(gl_GlobalInvocationID.x);
+    for (int ii = _21; ii < 140000; )
+    {
+        uint _45 = uint(ii & 262143);
+        uint _47 = _45 * 12u;
+        root_buffer_0.Store(uint(int(_47) >> int(2u)) * 4 + 0, uint(0));
+        root_buffer_0.Store(uint(int(_47 + 4u) >> int(2u)) * 4 + 0, uint(0));
+        root_buffer_0.Store(uint(int(_47 + 8u) >> int(2u)) * 4 + 0, uint(0));
+        root_buffer_0.Store(uint(int(6291456u + _47) >> int(2u)) * 4 + 0, uint(0));
+        root_buffer_0.Store(uint(int(_47 + 6291460u) >> int(2u)) * 4 + 0, uint(0));
+        root_buffer_0.Store(uint(int(_47 + 6291464u) >> int(2u)) * 4 + 0, uint(1077936128));
+        uint _87 = _45 * 4u;
+        root_buffer_0.Store(uint(int(9437184u + _87) >> int(2u)) * 4 + 0, uint(1175364608));
+        root_buffer_0.Store(30408704, uint(0));
+        root_buffer_0.Store(30408708, uint(0));
+        root_buffer_0.Store(30408712, uint(25000));
+        root_buffer_0.Store(30408716, uint(25000));
+        root_buffer_0.Store(30408720, uint(25000));
+        root_buffer_0.Store(30408724, uint(100000));
+        root_buffer_0.Store(30408728, uint(100000));
+        root_buffer_0.Store(30408732, uint(100000));
+        root_buffer_0.Store(30408736, uint(140000));
+        root_buffer_0.Store(uint(int(29360128u + _87) >> int(2u)) * 4 + 0, uint(1065353216));
+        uint _182 = _45 * 36u;
+        root_buffer_0.Store(uint(int(19922944u + _182) >> int(2u)) * 4 + 0, uint(1065353216));
+        root_buffer_0.Store(uint(int(_182 + 19922948u) >> int(2u)) * 4 + 0, uint(0));
+        root_buffer_0.Store(uint(int(_182 + 19922952u) >> int(2u)) * 4 + 0, uint(0));
+        root_buffer_0.Store(uint(int(_182 + 19922956u) >> int(2u)) * 4 + 0, uint(0));
+        root_buffer_0.Store(uint(int(_182 + 19922960u) >> int(2u)) * 4 + 0, uint(1065353216));
+        root_buffer_0.Store(uint(int(_182 + 19922964u) >> int(2u)) * 4 + 0, uint(0));
+        root_buffer_0.Store(uint(int(_182 + 19922968u) >> int(2u)) * 4 + 0, uint(0));
+        root_buffer_0.Store(uint(int(_182 + 19922972u) >> int(2u)) * 4 + 0, uint(0));
+        root_buffer_0.Store(uint(int(_182 + 19922976u) >> int(2u)) * 4 + 0, uint(1065353216));
+        root_buffer_0.Store(uint(int(10485760u + _182) >> int(2u)) * 4 + 0, uint(0));
+        root_buffer_0.Store(uint(int(_182 + 10485764u) >> int(2u)) * 4 + 0, uint(0));
+        root_buffer_0.Store(uint(int(_182 + 10485768u) >> int(2u)) * 4 + 0, uint(0));
+        root_buffer_0.Store(uint(int(_182 + 10485772u) >> int(2u)) * 4 + 0, uint(0));
+        root_buffer_0.Store(uint(int(_182 + 10485776u) >> int(2u)) * 4 + 0, uint(0));
+        root_buffer_0.Store(uint(int(_182 + 10485780u) >> int(2u)) * 4 + 0, uint(0));
+        root_buffer_0.Store(uint(int(_182 + 10485784u) >> int(2u)) * 4 + 0, uint(0));
+        root_buffer_0.Store(uint(int(_182 + 10485788u) >> int(2u)) * 4 + 0, uint(0));
+        root_buffer_0.Store(uint(int(_182 + 10485792u) >> int(2u)) * 4 + 0, uint(0));
+        root_buffer_0.Store(uint(int(3145728u + _47) >> int(2u)) * 4 + 0, uint(0));
+        root_buffer_0.Store(uint(int(_47 + 3145732u) >> int(2u)) * 4 + 0, uint(0));
+        root_buffer_0.Store(uint(int(_47 + 3145736u) >> int(2u)) * 4 + 0, uint(0));
+        ii += 140032;
+        continue;
+    }
+}
+
+[numthreads(128, 1, 1)]
+void main(SPIRV_Cross_Input stage_input)
+{
+    gl_GlobalInvocationID = stage_input.gl_GlobalInvocationID;
+    comp_main();
+}

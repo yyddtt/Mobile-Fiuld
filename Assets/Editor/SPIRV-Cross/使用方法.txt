@@ -1,0 +1,37 @@
+spirv-cross --output aot_vulkan_compute/aniso_G_gridn.compute --hlsl aot_vulkan_spv/aniso_G_gridn.spv
+spirv-cross --output aot_vulkan_compute/sub0.compute --hlsl aot_vulkan_spv/sub0.spv
+spirv-cross --output aot_vulkan_compute/sub1.compute --hlsl aot_vulkan_spv/sub1.spv
+spirv-cross --output aot_vulkan_compute/sub2.compute --hlsl aot_vulkan_spv/sub2.spv
+spirv-cross --output aot_vulkan_compute/sub3_pure.compute --hlsl aot_vulkan_spv/sub3_pure.spv
+spirv-cross --output aot_vulkan_compute/sub3_aniso.compute --hlsl aot_vulkan_spv/sub3_aniso.spv
+spirv-cross --output aot_vulkan_compute/sub4.compute --hlsl aot_vulkan_spv/sub4.spv
+spirv-cross --output aot_heart_vulkan_compute/sub3_anis_U.compute --hlsl aot_heart_vulkan_spv/sub3_anis_U.spv
+
+spirv-cross --output aot_vulkan_compute/finger1.compute --hlsl aot_vulkan_spv/finger1.spv
+spirv-cross --output aot_vulkan_compute/finger2.compute --hlsl aot_vulkan_spv/finger2.spv
+
+
+spirv-cross --output aot_vulkan_compute/sub0_anis.compute --hlsl aot_vulkan_spv/sub0_anis.spv
+spirv-cross --output aot_vulkan_compute/sub1_anis.compute --hlsl aot_vulkan_spv/sub1_anis.spv
+spirv-cross --output aot_vulkan_compute/sub3_anis1.compute --hlsl aot_vulkan_spv/sub3_anis1.spv
+spirv-cross --output aot_vulkan_compute/sub3_anis_wij.compute --hlsl aot_vulkan_spv/sub3_anis_wij.spv
+spirv-cross --output aot_vulkan_compute/sub3_anis_weight.compute --hlsl aot_vulkan_spv/sub3_anis_weight.spv
+
+spirv-cross --output aot_vulkan_compute/sub1_gridn.compute --hlsl aot_vulkan_spv/sub1_gridn.spv
+spirv-cross --output aot_vulkan_compute/sub3_gridn.compute --hlsl aot_vulkan_spv/sub3_gridn.spv
+
+spirv-cross --output aot_vulkan_compute/test.compute --hlsl aot_vulkan_spv/testnp.spv
+spirv-cross --output aot_vulkan_compute/marchingcube.compute --hlsl aot_vulkan_spv/marchingcube.spv
+
+spirv-cross --output aot_heart_vulkan_compute/cut_cube.compute --hlsl aot_heart_vulkan_spv/cut_cube.spv
+spirv-cross --output aot_heart_vulkan_compute/delete_cube.compute --hlsl aot_heart_vulkan_spv/delete_cube.spv
+spirv-cross --output aot_heart_vulkan_compute/finger_shape0.compute --hlsl aot_heart_vulkan_spv/finger_shape0.spv
+spirv-cross --output aot_heart_vulkan_compute/finger_shape1.compute --hlsl aot_heart_vulkan_spv/finger_shape1.spv
+spirv-cross --output aot_heart_vulkan_compute/finger_shape2.compute --hlsl aot_heart_vulkan_spv/finger_shape2.spv
+spirv-cross --output aot_heart_vulkan_compute/finger_shape3.compute --hlsl aot_heart_vulkan_spv/finger_shape3.spv
+
+spirv-cross --output aot_heart_vulkan_compute/in_bottle.compute --hlsl aot_heart_vulkan_spv/in_bottle.spv
+spirv-cross --output aot_heart_vulkan_compute/background1.compute --hlsl aot_heart_vulkan_spv/background1.spv
+
+
+

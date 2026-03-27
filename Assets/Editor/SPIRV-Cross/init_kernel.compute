@@ -1,0 +1,152 @@
+static const uint3 gl_WorkGroupSize = uint3(128u, 1u, 1u);
+
+RWByteAddressBuffer _38 : register(u1);
+RWByteAddressBuffer _201 : register(u0);
+RWByteAddressBuffer _436 : register(u0);
+RWByteAddressBuffer _440 : register(u1);
+cbuffer SPIRV_Cross_NumWorkgroups
+{
+    uint3 SPIRV_Cross_NumWorkgroups_1_count : packoffset(c0);
+};
+
+
+static uint3 gl_GlobalInvocationID;
+struct SPIRV_Cross_Input
+{
+    uint3 gl_GlobalInvocationID : SV_DispatchThreadID;
+};
+
+static uint4 _rand_;
+
+void _init_rand()
+{
+    int RAND_STATE = 1024;
+    uint i = (7654321u + gl_GlobalInvocationID.x) * (1234567u + (9723451u * uint(int(_38.Load(RAND_STATE * 4 + 0)))));
+    _rand_.x = (123456789u * i) * 1000000007u;
+    _rand_.y = 362436069u;
+    _rand_.z = 521288629u;
+    _rand_.w = 88675123u;
+    _38.Store(RAND_STATE * 4 + 0, uint(int(_38.Load(RAND_STATE * 4 + 0)) + 1));
+}
+
+uint _rand_u32()
+{
+    uint t = _rand_.x ^ (_rand_.x << uint(11));
+    uint4 _81 = _rand_;
+    _rand_.x = _81.yzw.x;
+    _rand_.y = _81.yzw.y;
+    _rand_.z = _81.yzw.z;
+    _rand_.w = (_rand_.w ^ (_rand_.w >> uint(19))) ^ (t ^ (t >> uint(8)));
+    return _rand_.w * 1000000007u;
+}
+
+float _rand_f32()
+{
+    uint _108 = _rand_u32();
+    return float(_108) * 2.3283064365386962890625e-10f;
+}
+
+void my_init_c60_00()
+{
+    int _sid0 = int(gl_GlobalInvocationID.x);
+    for (int _sid = _sid0; _sid < 65536; _sid += int(128u * SPIRV_Cross_NumWorkgroups_1_count.x))
+    {
+        int _itv = 0 + _sid;
+        int B = _itv;
+        float _136 = _rand_f32();
+        float C = _136;
+        float _138 = _rand_f32();
+        float D = _138;
+        float _140 = _rand_f32();
+        float E = _140;
+        float F = 0.4000000059604644775390625f;
+        float G = C * F;
+        float H = D * F;
+        float I = E * F;
+        float J = 0.550000011920928955078125f;
+        float K = G + J;
+        float L = 0.0500000007450580596923828125f;
+        float M = H + L;
+        float N = I + J;
+        int MCY = 0;
+        int MIB = 0;
+        int MD0 = MCY + (74711048 * MIB);
+        int MD1 = MD0 + 524296;
+        int MH1 = 65535;
+        int MH2 = B & MH1;
+        int MD4 = MD1 + (12 * MH2);
+        int MD5 = MD4 + 0;
+        _201.Store((MD5 >> 2) * 4 + 0, asuint(K));
+        int MDf = MD4 + 4;
+        _201.Store((MDf >> 2) * 4 + 0, asuint(M));
+        int MDp = MD4 + 8;
+        _201.Store((MDp >> 2) * 4 + 0, asuint(N));
+        float V = 1.0f;
+        int MDv = MD0 + 8;
+        int MDy = MDv + (4 * MH2);
+        int MDz = MDy + 0;
+        _201.Store((MDz >> 2) * 4 + 0, asuint(V));
+        int MDF = MD0 + 6291464;
+        int MDI = MDF + (36 * MH2);
+        int MDJ = MDI + 0;
+        _201.Store((MDJ >> 2) * 4 + 0, asuint(V));
+        float Aq = 0.0f;
+        int MDT = MDI + 4;
+        _201.Store((MDT >> 2) * 4 + 0, asuint(Aq));
+        int ME3 = MDI + 8;
+        _201.Store((ME3 >> 2) * 4 + 0, asuint(Aq));
+        int MEd = MDI + 12;
+        _201.Store((MEd >> 2) * 4 + 0, asuint(Aq));
+        int MEn = MDI + 16;
+        _201.Store((MEn >> 2) * 4 + 0, asuint(V));
+        int MEx = MDI + 20;
+        _201.Store((MEx >> 2) * 4 + 0, asuint(Aq));
+        int MEH = MDI + 24;
+        _201.Store((MEH >> 2) * 4 + 0, asuint(Aq));
+        int MER = MDI + 28;
+        _201.Store((MER >> 2) * 4 + 0, asuint(Aq));
+        int MF1 = MDI + 32;
+        _201.Store((MF1 >> 2) * 4 + 0, asuint(V));
+        int MF7 = MD0 + 3932168;
+        int MFa = MF7 + (36 * MH2);
+        int MFb = MFa + 0;
+        _201.Store((MFb >> 2) * 4 + 0, asuint(Aq));
+        int MFl = MFa + 4;
+        _201.Store((MFl >> 2) * 4 + 0, asuint(Aq));
+        int MFv = MFa + 8;
+        _201.Store((MFv >> 2) * 4 + 0, asuint(Aq));
+        int MFF = MFa + 12;
+        _201.Store((MFF >> 2) * 4 + 0, asuint(Aq));
+        int MFP = MFa + 16;
+        _201.Store((MFP >> 2) * 4 + 0, asuint(Aq));
+        int MFZ = MFa + 20;
+        _201.Store((MFZ >> 2) * 4 + 0, asuint(Aq));
+        int MG9 = MFa + 24;
+        _201.Store((MG9 >> 2) * 4 + 0, asuint(Aq));
+        int MGj = MFa + 28;
+        _201.Store((MGj >> 2) * 4 + 0, asuint(Aq));
+        int MGt = MFa + 32;
+        _201.Store((MGt >> 2) * 4 + 0, asuint(Aq));
+        int MGz = MD0 + 1310728;
+        int MGC = MGz + (12 * MH2);
+        int MGD = MGC + 0;
+        _201.Store((MGD >> 2) * 4 + 0, asuint(Aq));
+        int MGN = MGC + 4;
+        _201.Store((MGN >> 2) * 4 + 0, asuint(Aq));
+        int MGX = MGC + 8;
+        _201.Store((MGX >> 2) * 4 + 0, asuint(Aq));
+    }
+}
+
+void comp_main()
+{
+    _init_rand();
+    my_init_c60_00();
+}
+
+[numthreads(128, 1, 1)]
+void main(SPIRV_Cross_Input stage_input)
+{
+    gl_GlobalInvocationID = stage_input.gl_GlobalInvocationID;
+    comp_main();
+}

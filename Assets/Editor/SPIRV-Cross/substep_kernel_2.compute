@@ -1,0 +1,141 @@
+static const uint3 gl_WorkGroupSize = uint3(128u, 1u, 1u);
+
+RWByteAddressBuffer _108 : register(u0);
+RWByteAddressBuffer _487 : register(u0);
+cbuffer SPIRV_Cross_NumWorkgroups
+{
+    uint3 SPIRV_Cross_NumWorkgroups_1_count : packoffset(c0);
+};
+
+
+static uint3 gl_GlobalInvocationID;
+struct SPIRV_Cross_Input
+{
+    uint3 gl_GlobalInvocationID : SV_DispatchThreadID;
+};
+
+void substep_c58_02()
+{
+    int _sid0 = int(gl_GlobalInvocationID.x);
+    for (int _sid = _sid0; _sid < 262144; _sid += int(128u * SPIRV_Cross_NumWorkgroups_1_count.x))
+    {
+        int _itv = 0 + _sid;
+        int Lt7 = 63;
+        int YP = _itv;
+        int Lrp = 12;
+        int Lrq = YP >> Lrp;
+        int Lrs = Lrq & Lt7;
+        int Lrt = 6;
+        int Lru = YP >> Lrt;
+        int Lrw = Lru & Lt7;
+        int LrA = YP & Lt7;
+        int KBi = 0;
+        int Ma2 = 0;
+        int KBk = KBi + (74711048 * Ma2);
+        int KBl = KBk + 2883592;
+        int Ma4 = 1;
+        int MvL = Lrw << Lrt;
+        int Ma9 = LrA + MvL;
+        int MvN = Lrs << Lrp;
+        int Mac = Ma9 + MvN;
+        int KBq = KBl + (4 * Mac);
+        int KBr = KBq + 0;
+        float Z4 = asfloat(_108.Load((KBr >> 2) * 4 + 0));
+        float Z5 = 0.0f;
+        int Z6 = -int(Z4 > Z5);
+        int Z8 = Z6 & Ma4;
+        if (Z8 != 0)
+        {
+            float Za = asfloat(_108.Load((KBr >> 2) * 4 + 0));
+            int KBN = KBk + 8650760;
+            int KBS = KBN + (12 * Mac);
+            int KBT = KBS + 0;
+            float Zc = asfloat(_108.Load((KBT >> 2) * 4 + 0));
+            float Zd = Zc / Za;
+            int KC7 = KBS + 4;
+            float Zf = asfloat(_108.Load((KC7 >> 2) * 4 + 0));
+            float Zg = Zf / Za;
+            int KCl = KBS + 8;
+            float Zi = asfloat(_108.Load((KCl >> 2) * 4 + 0));
+            float Zj = Zi / Za;
+            _108.Store((KBT >> 2) * 4 + 0, asuint(Zd));
+            _108.Store((KC7 >> 2) * 4 + 0, asuint(Zg));
+            _108.Store((KCl >> 2) * 4 + 0, asuint(Zj));
+        }
+        int KD9 = KBk + 8650760;
+        int KDe = KD9 + (12 * Mac);
+        int KDf = KDe + 0;
+        float Zo = asfloat(_108.Load((KDf >> 2) * 4 + 0));
+        _108.Store((KDf >> 2) * 4 + 0, asuint(Zo));
+        float Zs = -0.00196000002324581146240234375f;
+        int KDH = KDe + 4;
+        float Zt = asfloat(_108.Load((KDH >> 2) * 4 + 0));
+        float Zu = Zt + Zs;
+        _108.Store((KDH >> 2) * 4 + 0, asuint(Zu));
+        int KE9 = KDe + 8;
+        float Zx = asfloat(_108.Load((KE9 >> 2) * 4 + 0));
+        _108.Store((KE9 >> 2) * 4 + 0, asuint(Zx));
+        int ZA = 5;
+        int ZB = -int(Lrs < ZA);
+        int ZC = -int(Lrw < ZA);
+        int ZD = -int(LrA < ZA);
+        int ZE = ZB & Ma4;
+        int ZF = ZC & Ma4;
+        int ZG = ZD & Ma4;
+        float ZH = asfloat(_108.Load((KDf >> 2) * 4 + 0));
+        int ZI = -int(ZH < Z5);
+        float ZJ = asfloat(_108.Load((KDH >> 2) * 4 + 0));
+        int ZK = -int(ZJ < Z5);
+        float ZL = asfloat(_108.Load((KE9 >> 2) * 4 + 0));
+        int ZM = -int(ZL < Z5);
+        int ZN = ZI & Ma4;
+        int ZO = ZK & Ma4;
+        int ZP = ZM & Ma4;
+        int ZQ = ZE & ZN;
+        int ZR = ZF & ZO;
+        int ZS = ZG & ZP;
+        int ZT = 59;
+        int ZU = -int(Lrs > ZT);
+        int ZV = -int(Lrw > ZT);
+        int ZW = -int(LrA > ZT);
+        int ZX = ZU & Ma4;
+        int ZY = ZV & Ma4;
+        int ZZ = ZW & Ma4;
+        int Aq0 = -int(ZH > Z5);
+        int Aq1 = -int(ZJ > Z5);
+        int Aq2 = -int(ZL > Z5);
+        int Aq3 = Aq0 & Ma4;
+        int Aq4 = Aq1 & Ma4;
+        int Aq5 = Aq2 & Ma4;
+        int Aq6 = ZX & Aq3;
+        int Aq7 = ZY & Aq4;
+        int Aq8 = ZZ & Aq5;
+        int Aq9 = ZQ | Aq6;
+        int Aqa = ZR | Aq7;
+        int Aqb = ZS | Aq8;
+        int Aqc = int(Aq9 == 0);
+        int Aqd = int(Aqc == 0);
+        float Aqe = (Aqd != 0) ? Z5 : ZH;
+        int Aqf = int(Aqa == 0);
+        int Aqg = int(Aqf == 0);
+        float Aqh = (Aqg != 0) ? Z5 : ZJ;
+        int Aqi = int(Aqb == 0);
+        int Aqj = int(Aqi == 0);
+        float Aqk = (Aqj != 0) ? Z5 : ZL;
+        _108.Store((KDf >> 2) * 4 + 0, asuint(Aqe));
+        _108.Store((KDH >> 2) * 4 + 0, asuint(Aqh));
+        _108.Store((KE9 >> 2) * 4 + 0, asuint(Aqk));
+    }
+}
+
+void comp_main()
+{
+    substep_c58_02();
+}
+
+[numthreads(128, 1, 1)]
+void main(SPIRV_Cross_Input stage_input)
+{
+    gl_GlobalInvocationID = stage_input.gl_GlobalInvocationID;
+    comp_main();
+}
