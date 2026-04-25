@@ -65,12 +65,15 @@ Shader "SSFR/FluidComposite"
                 float2 uv = i.uv;
                 
                 // --- BACKGROUND SAMPLING ---
-                // Background comes from CommandBuffer.Blit(CurrentActive, tempRT). Its V orientation
-                // relative to the fullscreen Blit UVs is indicated by _MainTex_TexelSize.y (Unity
-                // convention). Unconditional flips under UNITY_UV_STARTS_AT_TOP break after some
-                // Unity / graphics API / HDR paths and misalign refraction with fluid depth.
+                // We handle the V-Flip for background here explicitly.
+                // On D3D (UNITY_UV_STARTS_AT_TOP), if we are blitting from a texture (bgTex)
+                // that is upside-down in memory relative to screen UVs, we flip.
+                // Since inversion may still happen on some paths, force the flip for _MainTex first,
+                // then conditionally flip back when Unity indicates negative texel orientation.
                 float2 bgUV = uv;
+                
                 #if UNITY_UV_STARTS_AT_TOP
+                bgUV.y = 1.0 - bgUV.y;
                 if (_MainTex_TexelSize.y < 0)
                     bgUV.y = 1.0 - bgUV.y;
                 #endif
