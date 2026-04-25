@@ -55,6 +55,11 @@ Shader "SSFR/FluidNormals"
                 return float3(uv.x, uv.y, depth); // Very rough approximation
             }
 
+            float FixBg(float x, float c)
+            {
+                return (x > 500.0) ? c : x;
+            }
+
             float4 frag (v2f i) : SV_Target
             {
                 float2 uv = i.uv;
@@ -65,39 +70,29 @@ Shader "SSFR/FluidNormals"
                 // If background
                 if (d > 500.0) return float4(0.5, 0.5, 1.0, 1.0); // Flat normal
 
-                // Finite Difference / Sobel
-                //  TL T TR
-                //  L  C  R
-                //  BL B BR
+                // 双尺度差分：近距离捕捉形状，略宽尺度压低深度噪声带来的「颗粒法线」
+                float d_l  = FixBg(tex2D(_MainTex, uv + float2(-ts.x, 0)).r, d);
+                float d_r  = FixBg(tex2D(_MainTex, uv + float2( ts.x, 0)).r, d);
+                float d_d  = FixBg(tex2D(_MainTex, uv + float2(0, -ts.y)).r, d);
+                float d_u  = FixBg(tex2D(_MainTex, uv + float2(0,  ts.y)).r, d);
+                float d_ll = FixBg(tex2D(_MainTex, uv + float2(-2.0 * ts.x, 0)).r, d);
+                float d_rr = FixBg(tex2D(_MainTex, uv + float2( 2.0 * ts.x, 0)).r, d);
+                float d_dd = FixBg(tex2D(_MainTex, uv + float2(0, -2.0 * ts.y)).r, d);
+                float d_uu = FixBg(tex2D(_MainTex, uv + float2(0,  2.0 * ts.y)).r, d);
 
-                float d_l = tex2D(_MainTex, uv + float2(-ts.x, 0)).r;
-                float d_r = tex2D(_MainTex, uv + float2( ts.x, 0)).r;
-                float d_d = tex2D(_MainTex, uv + float2(0, -ts.y)).r;
-                float d_u = tex2D(_MainTex, uv + float2(0,  ts.y)).r;
+                float dzdx_f = (d_r - d_l) * 0.5;
+                float dzdy_f = (d_u - d_d) * 0.5;
+                float dzdx_c = (d_rr - d_ll) * 0.25;
+                float dzdy_c = (d_uu - d_dd) * 0.25;
+                float dzdx = lerp(dzdx_c, dzdx_f, 0.55);
+                float dzdy = lerp(dzdy_c, dzdy_f, 0.55);
 
-                // Handle edges (if neighbor is background, use center depth)
-                if (d_l > 500.0) d_l = d;
-                if (d_r > 500.0) d_r = d;
-                if (d_d > 500.0) d_d = d;
-                if (d_u > 500.0) d_u = d;
-
-                // Calculate derivatives
-                // dx = change in depth per pixel X
-                // dy = change in depth per pixel Y
-                // We need to scale this to be meaningful. 
-                // A large change in depth means the surface is slanted.
-                
-                // Scale factor: relates pixel size to world depth units.
-                // This is the tricky "Magic Number" often.
-                // But generally: Normal = normalize(-dx, -dy, 1)
-                
-                float dzdx = (d_r - d_l) * 0.5;
-                float dzdy = (d_u - d_d) * 0.5;
-
-                // Boost strength
-                float scale = 100.0 * _NormalStrength; 
+                // 略低于原 100：减轻高频锯齿；仍由 _NormalStrength 控制观感
+                float scale = 82.0 * _NormalStrength;
 
                 float3 n = normalize(float3(-dzdx * scale, -dzdy * scale, 1.0));
+                // 轻微朝视线方向收，避免薄液膜上法线过度摆动
+                n = normalize(lerp(float3(0, 0, 1), n, 0.92));
 
                 // Pack to 0..1 range
                 return float4(n * 0.5 + 0.5, 1.0);

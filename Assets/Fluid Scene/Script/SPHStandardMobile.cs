@@ -3,17 +3,21 @@ using UnityEngine.Rendering;
 
 public class SPHStandardMobile : MonoBehaviour
 {
+    public const int MaxParticleCountMobile = 10000;
+    public const int MinParticleCount = 256;
+
     public enum RenderMode { Fluid, GridParticles }
-    public enum DepthSmoothMode { None, CurvatureFlow, Bilateral, Gaussian }
     [Header("Simulation")]
-    public int particleCount = 7000;
+    [Range(256, 10000)]
+    public int particleCount = 8000;
     public Vector3 boundsMin = new Vector3(0,0,0);
     public Vector3 boundsMax = new Vector3(15,10,5);
     [HideInInspector] public int gridResolution = 32;
     public float neighbourRadius = 0.35f;
     [HideInInspector] public float particleMass = 1.0f;
     public float restDensity = 1000.0f;
-    public float viscosity = 0.08f;
+    [Tooltip("越大越「糖浆」；想轻盈可保持偏低并与 XSPH 配合。")]
+    public float viscosity = 0.055f;
     [HideInInspector] public float eosGamma = 7.0f;
     [HideInInspector] public float soundSpeed = 25.0f;
     public Vector3 gravity = new Vector3(0,-9.8f,0);
@@ -21,58 +25,73 @@ public class SPHStandardMobile : MonoBehaviour
     [HideInInspector] public float boundaryDamping = 0.5f;
     [HideInInspector] public float boundaryDampingZ = 0.6f;
     [HideInInspector] public float boundaryMaxBounceSpeedZ = 3.5f;
-    [HideInInspector] public float xsphC = 0.2f;
-    public float particleSize = 0.18f;
+    [HideInInspector] public float xsphC = 0.14f;
+    [Tooltip("SSFR 椭球基准半径（世界单位）。SPH 排列较规则，可略小于 MPM；过大则屏上 splat 显胖、细节糊成一片。建议约 0.08–0.11。")]
+    public float particleSize = 0.102f;
     public bool runSimulation = true;
     [HideInInspector] public bool enableLowParticleCountTuning = true;
     public float minSpeed = 0.015f;
     
+    [Tooltip("初始粒子生成盒最小角，坐标必须在 boundsMin～boundsMax 内；若越界会被钳制，x 偏小且 boundsMin.x 较大时会整团贴在左墙。")]
     public Vector3 spawnMin = new Vector3(4,2,1);
+    [Tooltip("初始粒子生成盒最大角，须大于 spawnMin 且落在边界盒内。")]
     public Vector3 spawnMax = new Vector3(10,6,4);
     [HideInInspector] public bool autoCalibrateMass = true;
     [HideInInspector] public bool autoNeighbourRadius = true;
     [HideInInspector] public float initialJitter = 0.05f;
     public bool enableSubstepping = true;
-    public float fixedTimeStep = 0.005f;
-    public int maxSubsteps = 4;
+    public float fixedTimeStep = 0.004f;
+    public int maxSubsteps = 6;
     public RenderMode renderMode = RenderMode.Fluid;
-    [Header("Fluid Composite")]
-    public Color waterTint = new Color(0.6f,0.8f,1f,1f);
-    public float waterOpacity = 0.6f;
-    public float refractStrength = 0.02f;
-    public float fresnelPower = 4f;
-    public float waterSoftDepth = 0.08f;
-    public float minDepthVisibility = 0.1f;
-    public float edgeBoost = 1.2f;
-    public float edgeWidth = 0.009f;
-    public float alphaFloor = 0.08f;
-    public bool useBlurredDepthForNormals = true;
     [HideInInspector] public bool simulateInLateUpdate = true;
     [Header("Physics Preset")]
     public bool realisticWaterPreset = true;
     public bool sweepFlowPreset = true;
-    public float tintMix = 0.5f;
-    public float envStrength = 0.6f;
-    public float specularStrength = 0.8f;
-    public float highlightClamp = 0.93f;
-    public float absorption = 0.8f;
-    public float reflectionThicknessSuppress = 1.0f;
-    public float refractionThicknessSuppress = 0.35f;
-    public bool enableReflection = true;
-    public bool enableRefraction = true;
-    public bool useBackground = true;
-    public float backgroundWeight = 1f;
-    public bool sharpEdgesPreset = true;
-    [HideInInspector] public float highQualityDepthScale = 1.0f;
+    [Tooltip("开启时仅保留历史名称；渲染参数请直接在下方 SSFR 区块调节（与 MPM 一致）。不再强制覆盖模糊/染色。")]
+    public bool sharpEdgesPreset = false;
     [Header("Adaptive/Power")]
     [HideInInspector] public int targetFrameRate = 60;
     [Header("Camera")]
     public bool autoCameraClipTuning = true;
     public float clipMargin = 5f;
-    [Header("Frame Stride (Advanced)")]
-    [HideInInspector] public int thicknessUpdateStride = 1;
-    [HideInInspector] public int thicknessNormalsUpdateStride = 1;
-    [HideInInspector] public int depthNormalsUpdateStride = 1;
+
+    [Header("Rendering (SSFR, aligned with MPM)")]
+    public bool enableRendering = true;
+    public bool renderParticles = false;
+    public bool showDepthDebug = false;
+    public bool showThicknessDebug = false;
+    public bool showNormalDebug = false;
+    [Tooltip("传给 SSFR/FluidComposite 的 _Color，与同场景 MPMFluidMobile 的 fluidColor 作用相同。")]
+    public Color waterTint = new Color(0.84339625f, 0.9272471f, 1f, 1f);
+    [Range(0f, 5f)] public float absorption = 1.45f;
+    [Range(0f, 1f)] public float smoothness = 0.94f;
+    [Range(0f, 1f)] public float specular = 0.56f;
+    [Tooltip("FluidComposite 中从厚度里减去的偏置；过大等价于整体裁掉薄区域（易觉得被裁剪、浪尖消失）。MPM 常用约 0.05–0.08。")]
+    [Range(0f, 0.5f)] public float thicknessCutoff = 0.065f;
+    [Range(0f, 0.2f)] public float refractionStrength = 0.02f;
+    [Header("Thickness")]
+    [Range(0.01f, 0.5f)] public float thicknessContribution = 0.056f;
+    [Range(0, 5)] public int thicknessBlurIterations = 2;
+    [Range(1, 20)] public int thicknessBlurRadius = 5;
+    [Range(1, 5)] public int thicknessDownsample = 2;
+    [Header("Normals")]
+    [Tooltip("传给 SSFR/FluidNormals；过大易显颗粒波纹，略低更「整片水面」。")]
+    [Range(0.1f, 10f)] public float normalStrength = 0.86f;
+    [Header("Anisotropy (grid particles & fluid splats)")]
+    [Tooltip("乘在 particleSize 上（着色器内 splat 尺寸）。MPM 常需 1.4+ 填洞；SPH 可降到约 1.15–1.28 以保留轮廓细节。")]
+    [Range(1f, 2f)] public float renderParticleScale = 1.38f;
+    [Range(0f, 5f)] public float anisotropyScale = 0.38f;
+    [Range(1f, 10f)] public float maxAnisotropy = 4f;
+    [Header("Depth filtering")]
+    public DepthFilterType filterType = DepthFilterType.Gaussian;
+    public enum DepthFilterType { Bilateral, Gaussian }
+    [Tooltip("深度 RT 目标高度；略提高可减轻锯齿（SPH 可略锐于 MPM）。0 则仅用 depthDownsample。")]
+    public int targetDepthHeight = 520;
+    [Range(1, 4)] public int depthDownsample = 2;
+    [Range(0, 10)] public int blurIterations = 2;
+    [Range(0.1f, 50f)] public float blurSigmaSpatial = 6.8f;
+    [Range(0.01f, 5f)] public float blurSigmaRange = 2.35f;
+    [Range(1, 20)] public int blurRadius = 6;
 
     ComputeShader cs;
     int kClearGrid;
@@ -88,80 +107,29 @@ public class SPHStandardMobile : MonoBehaviour
     ComputeBuffer bufImpulses;
     ComputeBuffer bufObstacles;
 
-    struct Particle { public Vector3 position; public Vector4 color; }
     ComputeBuffer particlesBuffer;
     Material gridParticleMat;
 
-    Material fluidMat;
+    CommandBuffer fluidCmd;
+    int bgTexID;
+    int depthTexID;
     Material depthMat;
+    Material blurMat;
+    Material gaussianMat;
+    Material debugDepthMat;
+    int thicknessTexID;
     Material thicknessMat;
     Material thicknessBlurMat;
-    Material thicknessNormalsMat;
-    Material thicknessAdditiveMat;
-    Material depthNormalsMat;
-    Material depthGaussianBlurMat;
-    Material depthBilateralBlurMat;
-    Material depthCurvatureFlowMat;
+    Material debugThicknessMat;
+    int normalTexID;
+    Material normalMat;
+    Material debugNormalMat;
+    Material compositeMat;
+    MaterialPropertyBlock props;
+    Camera mainCam;
+
     Mesh sphereMesh;
     Bounds drawBounds;
-    RenderTexture particleDepthRT;
-    RenderTexture particleDepthBackRT;
-    RenderTexture particleDepthTempRT;
-    RenderTexture particleBlurredDepthRT;
-    RenderTexture depthNormalRT;
-    RenderTexture particleThicknessRT;
-    RenderTexture particleThicknessTempRT;
-    RenderTexture particleBlurredThicknessRT;
-    RenderTexture thicknessNormalRT;
-    CommandBuffer depthCB;
-    CommandBuffer thicknessCB;
-    public bool enableDepthPass = true;
-    [HideInInspector] public Vector2Int depthRTSize = new Vector2Int(256, 256);
-    public bool showDepthPreview = true;
-    public bool enableDepthBlur = true;
-    public bool useBilateralDepthBlur = true;
-    public bool showBlurredDepthPreview = true;
-    [HideInInspector] public Vector4 depthGaussianWeights = new Vector4(0.15f, 0.4f, 0.15f, 0.15f);
-    public float depthSigmaSpatial = 2.8f;
-    public float depthSigmaRange = 0.035f;
-    [Header("Depth Smoothing")]
-    public DepthSmoothMode depthSmoothMode = DepthSmoothMode.Bilateral;
-    [HideInInspector] public int curvatureFlowIterations = 8;
-    [HideInInspector] public float curvatureFlowLambda = 0.2f;
-    [HideInInspector] public float curvatureFlowSigmaRange = 0.03f;
-    public bool depthDebugToScreen = false;
-    [Range(0,2)] public int depthDebugMode = 0; // 0=Depth,1=White,2=ID gradient
-    public bool enableThicknessPass = true;
-    public bool thicknessAdditive = true;
-    public float thicknessContributionScale = 0.035f;
-    [HideInInspector] public float thicknessThreshold = 0.005f;
-    public float thicknessScale = 1.3f;
-    public bool showThicknessPreview = true;
-    public bool enableThicknessBlur = true;
-    public bool showBlurredThicknessPreview = true;
-    [Header("Normals")]
-    public bool enableThicknessNormals = true;
-    public float thicknessNormalStrength = 1.3f;
-    public bool showThicknessNormalsPreview = true;
-    [Header("Preview/Debug")]
-    public float previewScale = 1.0f;
-    public float compositeThicknessScale = 1.0f;
-    public float compositeThicknessGamma = 1.0f;
-    public float compositeThicknessMax = 8.0f;
-    public float compositeThicknessExposure = 0.80f;
-    public float thicknessTopBias = 0.5f;
-    [HideInInspector] public Vector4 thicknessBlurWeights = new Vector4(0.18f, 0.52f, 0.18f, 0.12f);
-    public float depthEdgeStrength = 1.6f;
-    public float depthEdgeThreshold = 0.0025f;
-    public float fresnelAlphaBase = 0.6f;
-    public float fresnelAlphaWeight = 1.0f;
-    public float refractionClampPixels = 0.7f;
-    public float refractionEdgeSuppress = 0.7f;
-    public bool showDepthNormalsPreview = false;
-    
-    public float depthNormalStrength = 11.0f;
-    public float depthNormalWeight = 0.25f;
-    public Color absorptionColor = new Color(0.8f,0.6f,0.5f,1f);
     public bool enableStir = false;
     public Transform stirTransform;
     public float stirRadius = 0.6f;
@@ -174,7 +142,8 @@ public class SPHStandardMobile : MonoBehaviour
     public bool enableBarrierMove = true;
     public bool requireSelectionToMove = true;
     public LayerMask selectableMask = ~0;
-    public float vorticityEps = 0.35f;
+    [Tooltip("涡量约束强度；>0.2 时显式 WCSPH 极易抖。扫流预设已改为上限夹紧。")]
+    public float vorticityEps = 0.08f;
     public float surfaceTension = 0.0f;
     public float freeSurfaceDamping = 0.0f;
     public float freeSurfaceThreshold = 0.75f;
@@ -214,10 +183,25 @@ public class SPHStandardMobile : MonoBehaviour
     int cpuCacheFrame = -999;
     public int cpuCacheStrideFrames = 4;
 
+    [Tooltip("首帧渲染前在 GPU 上预跑的子步数，缓解初始密度未建立导致的「悬在空中」与首帧乱溅。")]
+    [Range(0, 48)]
+    public int simulationWarmupSteps = 12;
+
+#if UNITY_EDITOR
+    void OnValidate()
+    {
+        particleCount = Mathf.Clamp(particleCount, MinParticleCount, MaxParticleCountMobile);
+        gridResolution = Mathf.Clamp(gridResolution, 16, 48);
+        maxImpulses = Mathf.Max(1, maxImpulses);
+    }
+#endif
+
     void Start()
     {
         cs = Resources.Load<ComputeShader>("Shader/Compute Shader/SPH/Mobile/sph_standard_mobile");
         if (cs == null) { enabled = false; return; }
+        particleCount = Mathf.Clamp(particleCount, MinParticleCount, MaxParticleCountMobile);
+        gridResolution = Mathf.Clamp(gridResolution, 16, 48);
         kClearGrid = cs.FindKernel("ClearGrid");
         kBuildGrid = cs.FindKernel("BuildGrid");
         kDensity = cs.FindKernel("ComputeDensity");
@@ -229,10 +213,15 @@ public class SPHStandardMobile : MonoBehaviour
         bufRho = new ComputeBuffer(particleCount, sizeof(float));
         bufCellHead = new ComputeBuffer(gridCount, sizeof(int));
         bufNextIndex = new ComputeBuffer(particleCount, sizeof(int));
-        particlesBuffer = new ComputeBuffer(particleCount, sizeof(float) * (3 + 4));
-        bufImpulses = new ComputeBuffer(Mathf.Max(1, maxImpulses), sizeof(float) * 4);
+        particlesBuffer = new ComputeBuffer(particleCount, sizeof(float) * 12);
+        int impulseCapacity = Mathf.Max(1, maxImpulses);
+        if (enableStir)
+            impulseCapacity = Mathf.Max(impulseCapacity, 16);
+        bufImpulses = new ComputeBuffer(impulseCapacity, sizeof(float) * 4);
         bufImpulses.SetData(new Vector4[1] { Vector4.zero });
         bufObstacles = new ComputeBuffer(Mathf.Max(1, obstacleTransforms != null ? obstacleTransforms.Length : 1), sizeof(float) * 4);
+
+        BindSphPersistentKernelBuffers();
 
         var xInit = new Vector3[particleCount];
         var vInit = new Vector3[particleCount];
@@ -264,31 +253,6 @@ public class SPHStandardMobile : MonoBehaviour
             }
         }
 
-        var fsh = Shader.Find("Instanced/FluidCompositeMobile");
-        if (fsh == null) { enabled = false; return; }
-        fluidMat = new Material(fsh);
-        fluidMat.enableInstancing = true;
-        fluidMat.SetFloat("_size", particleSize);
-        fluidMat.SetColor("_TintColor", waterTint);
-        fluidMat.SetFloat("_Opacity", waterOpacity);
-        fluidMat.SetFloat("_RefractStrength", refractStrength);
-        fluidMat.SetFloat("_FresnelPower", fresnelPower);
-        fluidMat.SetFloat("_SoftDepth", waterSoftDepth);
-        fluidMat.SetFloat("_MinDepthVisibility", minDepthVisibility);
-        fluidMat.SetFloat("_EdgeBoost", edgeBoost);
-        fluidMat.SetFloat("_EdgeWidth", edgeWidth);
-        fluidMat.SetFloat("_AlphaFloor", alphaFloor);
-        fluidMat.SetFloat("_TintMix", tintMix);
-        fluidMat.SetFloat("_EnvStrength", envStrength);
-        fluidMat.SetFloat("_SpecularStrength", specularStrength);
-        fluidMat.SetFloat("_HighlightClamp", highlightClamp);
-        fluidMat.SetFloat("_Absorption", absorption);
-        fluidMat.SetFloat("_ReflectionThicknessSuppress", reflectionThicknessSuppress);
-        fluidMat.SetFloat("_RefractionThicknessSuppress", refractionThicknessSuppress);
-        fluidMat.SetFloat("_EnableReflection", enableReflection ? 1f : 0f);
-        fluidMat.SetFloat("_EnableRefraction", enableRefraction ? 1f : 0f);
-        fluidMat.SetFloat("_UseBackground", useBackground ? 1f : 0f);
-        fluidMat.SetFloat("_BackgroundWeight", backgroundWeight);
         var gph = Shader.Find("Instanced/GridParticleMobile");
         if (gph != null)
         {
@@ -297,149 +261,72 @@ public class SPHStandardMobile : MonoBehaviour
             gridParticleMat.SetFloat("_size", particleSize);
         }
 
-        sphereMesh = CreateSphereMesh();
-        drawBounds = new Bounds((boundsMin + boundsMax) * 0.5f, boundsMax - boundsMin + Vector3.one * 2f);
-        int rtW = Mathf.RoundToInt(depthRTSize.x * Mathf.Max(0.5f, highQualityDepthScale));
-        int rtH = Mathf.RoundToInt(depthRTSize.y * Mathf.Max(0.5f, highQualityDepthScale));
+        var dph = Shader.Find("Instanced/GridParticleDepth");
+        if (dph != null)
+        {
+            depthMat = new Material(dph);
+            depthMat.enableInstancing = true;
+        }
 
-        var cam = Camera.main;
-        if (cam != null) cam.depthTextureMode |= DepthTextureMode.Depth;
-        if (cam != null && autoCameraClipTuning) ApplyCameraClipTuning(cam);
-        if (enableDepthPass)
+        var debugShader = Shader.Find("Fluid/DebugDepth");
+        if (debugShader != null) debugDepthMat = new Material(debugShader);
+
+        var blurShader = Shader.Find("SSFR/DepthBilateral");
+        if (blurShader != null) blurMat = new Material(blurShader);
+
+        var gaussShader = Shader.Find("SSFR/DepthGaussianSmart");
+        if (gaussShader != null) gaussianMat = new Material(gaussShader);
+
+        var thShader = Shader.Find("Instanced/GridParticleThickness");
+        if (thShader != null)
         {
-            var dsh = Shader.Find("Instanced/ParticleDepthMobile");
-            if (dsh != null)
-            {
-                depthMat = new Material(dsh);
-                depthMat.enableInstancing = true;
-                depthMat.SetFloat("_size", particleSize);
-                var dColorFmt = SelectSingleChannelFloatFormat();
-                particleDepthRT = new RenderTexture(rtW, rtH, 0, dColorFmt);
-                particleDepthRT.name = "ParticleDepthRT";
-                particleDepthRT.filterMode = FilterMode.Point;
-                particleDepthRT.Create();
-                particleDepthBackRT = new RenderTexture(rtW, rtH, 0, dColorFmt);
-                particleDepthBackRT.name = "ParticleDepthBackRT";
-                particleDepthBackRT.filterMode = FilterMode.Point;
-                particleDepthBackRT.Create();
-                if (enableDepthBlur)
-                {
-                    var gsh = Shader.Find("Hidden/DepthGaussianBlur");
-                    var bsh = Shader.Find("Hidden/DepthBilateral");
-                    if (gsh != null)
-                    {
-                        depthGaussianBlurMat = new Material(gsh);
-                        depthGaussianBlurMat.SetVector("_Weights", depthGaussianWeights);
-                    }
-                    if (bsh != null)
-                    {
-                        depthBilateralBlurMat = new Material(bsh);
-                        depthBilateralBlurMat.SetFloat("_SigmaSpatial", depthSigmaSpatial);
-                        depthBilateralBlurMat.SetFloat("_SigmaRange", depthSigmaRange);
-                    }
-                    var dFmt = SelectSingleChannelFloatFormat();
-                    particleDepthTempRT = new RenderTexture(rtW, rtH, 0, dFmt);
-                    particleDepthTempRT.name = "ParticleDepthTempRT";
-                    particleDepthTempRT.filterMode = FilterMode.Bilinear;
-                    particleDepthTempRT.Create();
-                    particleBlurredDepthRT = new RenderTexture(rtW, rtH, 0, dFmt);
-                    particleBlurredDepthRT.name = "BlurredDepthRT";
-                    particleBlurredDepthRT.filterMode = FilterMode.Bilinear;
-                    particleBlurredDepthRT.Create();
-                    var cfsh = Shader.Find("Hidden/DepthCurvatureFlow");
-                    if (cfsh != null)
-                    {
-                        depthCurvatureFlowMat = new Material(cfsh);
-                    }
-                }
-                depthCB = new CommandBuffer();
-                depthCB.name = "SPH Particle Depth Pass";
-                if (cam != null) cam.AddCommandBuffer(CameraEvent.BeforeImageEffects, depthCB);
-            }
+            thicknessMat = new Material(thShader);
+            thicknessMat.enableInstancing = true;
         }
-        if (enableThicknessPass)
+
+        var thBlurShader = Shader.Find("SSFR/ThicknessBlur");
+        if (thBlurShader != null) thicknessBlurMat = new Material(thBlurShader);
+
+        var debugThShader = Shader.Find("Fluid/DebugThickness");
+        if (debugThShader != null) debugThicknessMat = new Material(debugThShader);
+
+        var normShader = Shader.Find("SSFR/FluidNormals");
+        if (normShader != null) normalMat = new Material(normShader);
+
+        var debugNormShader = Shader.Find("Fluid/DebugNormal");
+        if (debugNormShader != null) debugNormalMat = new Material(debugNormShader);
+
+        var compShader = Shader.Find("SSFR/FluidComposite");
+        if (compShader != null) compositeMat = new Material(compShader);
+
+        sphereMesh = CreateSphereMesh();
+        props = new MaterialPropertyBlock();
+        drawBounds = new Bounds((boundsMin + boundsMax) * 0.5f, boundsMax - boundsMin + Vector3.one * 2f);
+
+        if (depthMat != null) depthMat.SetBuffer("_particlesBuffer", particlesBuffer);
+        if (thicknessMat != null) thicknessMat.SetBuffer("_particlesBuffer", particlesBuffer);
+
+        mainCam = Camera.main;
+        if (mainCam != null)
         {
-            var tsh = Shader.Find("Hidden/ParticleThickness");
-            var tash = Shader.Find("Instanced/ParticleThicknessAdditiveMobile");
-            if (tsh != null)
-            {
-                thicknessMat = new Material(tsh);
-                thicknessMat.SetFloat("_Threshold", thicknessThreshold);
-                thicknessMat.SetFloat("_Scale", thicknessScale);
-                var tFmt = SelectSingleChannelFloatFormat();
-                particleThicknessRT = new RenderTexture(rtW, rtH, 0, tFmt);
-                particleThicknessRT.name = "ParticleThicknessRT";
-                particleThicknessRT.filterMode = FilterMode.Point;
-                particleThicknessRT.Create();
-            }
-            if (tash != null)
-            {
-                thicknessAdditiveMat = new Material(tash);
-                thicknessAdditiveMat.enableInstancing = true;
-                thicknessAdditiveMat.SetFloat("_size", particleSize);
-                thicknessAdditiveMat.SetFloat("_ContributionScale", thicknessContributionScale);
-                if (thicknessCB == null)
-                {
-                    thicknessCB = new CommandBuffer();
-                    thicknessCB.name = "SPH Particle Thickness Additive Pass";
-                    if (cam != null) cam.AddCommandBuffer(CameraEvent.BeforeImageEffects, thicknessCB);
-                }
-            }
+            mainCam.depthTextureMode |= DepthTextureMode.Depth;
+            if (autoCameraClipTuning) ApplyCameraClipTuning(mainCam);
+
+            fluidCmd = new CommandBuffer();
+            fluidCmd.name = "SPH Fluid Rendering (SSFR)";
+            bgTexID = Shader.PropertyToID("_FluidBackgroundTexture");
+            depthTexID = Shader.PropertyToID("_FluidDepthTexture");
+            thicknessTexID = Shader.PropertyToID("_FluidThicknessTexture");
+            normalTexID = Shader.PropertyToID("_FluidNormalTexture");
+            mainCam.AddCommandBuffer(CameraEvent.BeforeForwardAlpha, fluidCmd);
         }
-        if (enableThicknessBlur)
-        {
-            var bsh = Shader.Find("Hidden/ThicknessBlur");
-            if (bsh != null)
-            {
-                thicknessBlurMat = new Material(bsh);
-                thicknessBlurMat.SetVector("_Weights", thicknessBlurWeights);
-                var tFmt = SelectSingleChannelFloatFormat();
-                particleThicknessTempRT = new RenderTexture(rtW, rtH, 0, tFmt);
-                particleThicknessTempRT.name = "ParticleThicknessTempRT";
-                particleThicknessTempRT.filterMode = FilterMode.Bilinear;
-                particleThicknessTempRT.Create();
-                particleBlurredThicknessRT = new RenderTexture(rtW, rtH, 0, tFmt);
-                particleBlurredThicknessRT.name = "BlurredThicknessRT";
-                particleBlurredThicknessRT.filterMode = FilterMode.Bilinear;
-                particleBlurredThicknessRT.Create();
-            }
-        }
-        if (enableThicknessNormals)
-        {
-            var nsh = Shader.Find("Hidden/ThicknessNormals");
-            if (nsh != null)
-            {
-                thicknessNormalsMat = new Material(nsh);
-                thicknessNormalsMat.SetFloat("_NormalStrength", thicknessNormalStrength);
-                thicknessNormalRT = new RenderTexture(rtW, rtH, 0, RenderTextureFormat.ARGB32);
-                thicknessNormalRT.name = "ThicknessNormalRT";
-                thicknessNormalRT.filterMode = FilterMode.Bilinear;
-                thicknessNormalRT.Create();
-            }
-        }
-        {
-            var dnh = Shader.Find("Hidden/DepthNormals");
-            if (dnh != null && enableDepthPass)
-            {
-                depthNormalsMat = new Material(dnh);
-                depthNormalsMat.SetFloat("_NormalStrength", depthNormalStrength);
-                depthNormalRT = new RenderTexture(rtW, rtH, 0, RenderTextureFormat.ARGB32);
-                depthNormalRT.name = "DepthNormalRT";
-                depthNormalRT.filterMode = FilterMode.Bilinear;
-                depthNormalRT.Create();
-            }
-        }
-        if (enableLowParticleCountTuning && particleCount <= 8000)
+        if (enableLowParticleCountTuning && particleCount < 8000)
         {
             maxSubsteps = Mathf.Max(maxSubsteps, 6);
             fixedTimeStep = Mathf.Min(fixedTimeStep, 0.0045f);
-            viscosity = Mathf.Max(viscosity, 0.15f);
-            xsphC = Mathf.Clamp(xsphC, 0.35f, 0.55f);
-            boundaryDamping = Mathf.Clamp(boundaryDamping, 0.75f, 0.95f);
-        }
-        if (particleCount >= 8000)
-        {
-            ApplyMediumParticleStability();
+            viscosity = Mathf.Max(viscosity, 0.09f);
+            xsphC = Mathf.Clamp(xsphC, 0.22f, 0.42f);
+            boundaryDamping = Mathf.Clamp(boundaryDamping, 0.68f, 0.9f);
         }
         if (realisticWaterPreset)
         {
@@ -449,6 +336,10 @@ public class SPHStandardMobile : MonoBehaviour
         {
             ApplySweepFlowPreset();
         }
+        if (particleCount >= 8000)
+        {
+            ApplyMediumParticleStability();
+        }
         if (targetFrameRate > 0) Application.targetFrameRate = targetFrameRate;
         if (sharpEdgesPreset) ApplySharpEdgesPreset();
         if (Application.isMobilePlatform)
@@ -456,6 +347,18 @@ public class SPHStandardMobile : MonoBehaviour
             QualitySettings.pixelLightCount = Mathf.Max(QualitySettings.pixelLightCount, 4);
             if (QualitySettings.shadows == ShadowQuality.Disable) QualitySettings.shadows = ShadowQuality.HardOnly;
         }
+
+        WarmupSimulation();
+    }
+
+    void WarmupSimulation()
+    {
+        if (!runSimulation || simulationWarmupSteps <= 0 || cs == null) return;
+        if (bufX == null || bufV == null || bufImpulses == null || bufObstacles == null || particlesBuffer == null)
+            return;
+        float dtW = Mathf.Min(fixedTimeStep * 0.45f, 0.0032f);
+        for (int i = 0; i < simulationWarmupSteps; i++)
+            SimulateStep(dtW);
     }
     
 
@@ -482,6 +385,17 @@ public class SPHStandardMobile : MonoBehaviour
         float dtFrame = Mathf.Clamp(Time.deltaTime, 1e-4f, 0.05f);
         int steps = enableSubstepping ? Mathf.Clamp(Mathf.CeilToInt(dtFrame / fixedTimeStep), 1, maxSubsteps) : 1;
         float dtStep = dtFrame / steps;
+        // 粗略 CFL：显式压力对 dt 敏感，步长过大易见整团弹跳/抖动
+        float h = Mathf.Max(neighbourRadius, 0.01f);
+        float c = Mathf.Max(soundSpeed, 8f);
+        float dtCfl = 0.28f * h / c;
+        if (enableSubstepping && dtStep > dtCfl && dtCfl > 1e-5f)
+        {
+            int need = Mathf.Clamp(Mathf.CeilToInt(dtFrame / dtCfl), 1, Mathf.Max(maxSubsteps * 2, maxSubsteps));
+            steps = Mathf.Max(steps, need);
+            steps = Mathf.Min(steps, Mathf.Max(maxSubsteps * 2, 12));
+            dtStep = dtFrame / steps;
+        }
         for (int s = 0; s < steps; s++)
         {
             SimulateStep(dtStep);
@@ -860,8 +774,32 @@ public class SPHStandardMobile : MonoBehaviour
         return false;
     }
 
+    void BindSphPersistentKernelBuffers()
+    {
+        cs.SetBuffer(kClearGrid, "cellHead", bufCellHead);
+        cs.SetBuffer(kBuildGrid, "x", bufX);
+        cs.SetBuffer(kBuildGrid, "cellHead", bufCellHead);
+        cs.SetBuffer(kBuildGrid, "nextIndex", bufNextIndex);
+        cs.SetBuffer(kDensity, "x", bufX);
+        cs.SetBuffer(kDensity, "rho", bufRho);
+        cs.SetBuffer(kDensity, "cellHead", bufCellHead);
+        cs.SetBuffer(kDensity, "nextIndex", bufNextIndex);
+        cs.SetBuffer(kMain, "x", bufX);
+        cs.SetBuffer(kMain, "v", bufV);
+        cs.SetBuffer(kMain, "rho", bufRho);
+        cs.SetBuffer(kMain, "cellHead", bufCellHead);
+        cs.SetBuffer(kMain, "nextIndex", bufNextIndex);
+        cs.SetBuffer(kMain, "_particlesBuffer", particlesBuffer);
+        cs.SetBuffer(kMain, "impulses", bufImpulses);
+        cs.SetBuffer(kMain, "obstacles", bufObstacles);
+    }
+
     void SimulateStep(float dt)
     {
+        if (cs == null || bufX == null || bufV == null || bufRho == null || bufCellHead == null || bufNextIndex == null
+            || bufImpulses == null || bufObstacles == null || particlesBuffer == null)
+            return;
+
         float hConst = Mathf.Max(neighbourRadius, 1e-3f);
         float poly6 = 315f / (64f * Mathf.PI * Mathf.Pow(hConst, 9f));
         float spiky = 45f / (Mathf.PI * Mathf.Pow(hConst, 6f));
@@ -871,20 +809,12 @@ public class SPHStandardMobile : MonoBehaviour
         cs.SetInt("particle_num", particleCount);
         cs.SetVector("boundsMin", boundsMin);
         cs.SetVector("boundsMax", boundsMax);
-        cs.SetBuffer(kClearGrid, "cellHead", bufCellHead);
         int groupsGrid = (gridResolution * gridResolution * gridResolution + 127) / 128;
         cs.Dispatch(kClearGrid, groupsGrid, 1, 1);
 
-        cs.SetBuffer(kBuildGrid, "x", bufX);
-        cs.SetBuffer(kBuildGrid, "cellHead", bufCellHead);
-        cs.SetBuffer(kBuildGrid, "nextIndex", bufNextIndex);
-        int groupsBuild = (particleCount + 127) / 128;
-        cs.Dispatch(kBuildGrid, groupsBuild, 1, 1);
+        int groupsMain = (particleCount + 127) / 128;
+        cs.Dispatch(kBuildGrid, groupsMain, 1, 1);
 
-        cs.SetInt("n_grid", gridResolution);
-        cs.SetInt("particle_num", particleCount);
-        cs.SetVector("boundsMin", boundsMin);
-        cs.SetVector("boundsMax", boundsMax);
         cs.SetFloat("restDensity", restDensity);
         cs.SetFloat("particleMass", particleMass);
         cs.SetFloat("neighbourRadius", neighbourRadius);
@@ -892,22 +822,10 @@ public class SPHStandardMobile : MonoBehaviour
         cs.SetFloat("spiky_const", spiky);
         cs.SetFloat("visc_const", visc);
         cs.SetFloat("eosK", eosKVal);
-        cs.SetBuffer(kDensity, "x", bufX);
-        cs.SetBuffer(kDensity, "rho", bufRho);
-        cs.SetBuffer(kDensity, "cellHead", bufCellHead);
-        cs.SetBuffer(kDensity, "nextIndex", bufNextIndex);
-        int groupsMain = (particleCount + 127) / 128;
         cs.Dispatch(kDensity, groupsMain, 1, 1);
 
-        cs.SetInt("n_grid", gridResolution);
-        cs.SetInt("particle_num", particleCount);
-        cs.SetVector("boundsMin", boundsMin);
-        cs.SetVector("boundsMax", boundsMax);
         cs.SetVector("gravity", gravity);
         cs.SetFloat("dt", dt);
-        cs.SetFloat("restDensity", restDensity);
-        cs.SetFloat("particleMass", particleMass);
-        cs.SetFloat("neighbourRadius", neighbourRadius);
         cs.SetFloat("viscosity", viscosity);
         cs.SetFloat("eosGamma", eosGamma);
         cs.SetFloat("soundSpeed", soundSpeed);
@@ -924,30 +842,23 @@ public class SPHStandardMobile : MonoBehaviour
         cs.SetVector("swirlAxis", swirlAxis);
         cs.SetFloat("impulseNormalCoeff", Mathf.Max(0f, impulseNormalCoeff));
         cs.SetFloat("impulseTangentialCoeff", Mathf.Max(0f, impulseTangentialCoeff));
-        cs.SetFloat("poly6_const", poly6);
-        cs.SetFloat("spiky_const", spiky);
-        cs.SetFloat("visc_const", visc);
-        cs.SetFloat("eosK", eosKVal);
-        cs.SetBuffer(kMain, "x", bufX);
-        cs.SetBuffer(kMain, "v", bufV);
-        cs.SetBuffer(kMain, "rho", bufRho);
-        cs.SetBuffer(kMain, "cellHead", bufCellHead);
-        cs.SetBuffer(kMain, "nextIndex", bufNextIndex);
-        cs.SetBuffer(kMain, "_particlesBuffer", particlesBuffer);
         int iCount = 0;
         float iRad = 0f;
         float iStr = 0f;
         float dynImpulseRadius = 0f;
         float speedFactor = 1f + Mathf.Clamp(stirSpeed * stirSpeedBoost, 0f, 5f);
         float boostFromRadius = 1f;
-        if (enableStir && stirTransform != null)
+        bool impulsesBufferRebuilt = false;
+        if (enableStir && stirTransform != null && bufImpulses != null)
         {
             Vector3 p = ClampToBounds(stirTransform.position);
-            int desiredCount = Mathf.Clamp(Mathf.Min(16, maxImpulses), 1, maxImpulses);
-            if (bufImpulses != null && bufImpulses.count < desiredCount)
+            int safeImp = Mathf.Max(1, maxImpulses);
+            int desiredCount = Mathf.Min(16, safeImp);
+            if (bufImpulses.count < desiredCount)
             {
                 bufImpulses.Release();
                 bufImpulses = new ComputeBuffer(desiredCount, sizeof(float) * 4);
+                impulsesBufferRebuilt = true;
             }
             var arr = new Vector4[desiredCount];
             int wr = 0;
@@ -1015,7 +926,7 @@ public class SPHStandardMobile : MonoBehaviour
         cs.SetInt("impulseCount", iCount);
         cs.SetFloat("impulseRadius", Mathf.Max(iRad, dynImpulseRadius));
         cs.SetFloat("impulseStrength", iStr);
-        cs.SetBuffer(kMain, "impulses", bufImpulses);
+        if (impulsesBufferRebuilt) cs.SetBuffer(kMain, "impulses", bufImpulses);
         int obstCountBase = obstacleTransforms != null ? obstacleTransforms.Length : 0;
         int chainN = 0;
         Transform stickRoot = stirTransform != null && stirTransform.parent != null ? stirTransform.parent : stirTransform;
@@ -1083,10 +994,12 @@ public class SPHStandardMobile : MonoBehaviour
         }
         int obstCount = obstCountBase + chainN;
         int allocCount = Mathf.Max(1, obstCount);
+        bool obstaclesBufferRebuilt = false;
         if (bufObstacles == null || bufObstacles.count != allocCount)
         {
             if (bufObstacles != null) bufObstacles.Release();
             bufObstacles = new ComputeBuffer(allocCount, sizeof(float) * 4);
+            obstaclesBufferRebuilt = true;
         }
         var obs = new Vector4[allocCount];
         if (obstCountBase > 0)
@@ -1115,7 +1028,7 @@ public class SPHStandardMobile : MonoBehaviour
         float tanScale = 1f + Mathf.Clamp(stickAngularSpeed * 1.5f, 0f, 8f);
         cs.SetFloat("obstacleTangentialStrength", obstacleTangentialStrength * tanScale);
         cs.SetFloat("obstacleFriction", obstacleFriction);
-        if (bufObstacles != null) cs.SetBuffer(kMain, "obstacles", bufObstacles);
+        if (obstaclesBufferRebuilt) cs.SetBuffer(kMain, "obstacles", bufObstacles);
         if (enableStir && stirTransform != null)
         {
             Vector3 axDyn = (stickRoot != null ? stickRoot.up : stirTransform.up);
@@ -1128,235 +1041,187 @@ public class SPHStandardMobile : MonoBehaviour
 
     void Draw()
     {
-        if (sphereMesh == null) return;
+        if (sphereMesh == null || particlesBuffer == null) return;
         drawBounds.center = (boundsMin + boundsMax) * 0.5f;
         drawBounds.size = boundsMax - boundsMin + Vector3.one * 2f;
-        if (renderMode == RenderMode.GridParticles && gridParticleMat != null)
+
+        if (renderMode == RenderMode.GridParticles)
         {
-            float drawSize = particleSize;
-            gridParticleMat.SetFloat("_size", drawSize);
-            gridParticleMat.SetBuffer("_particlesBuffer", particlesBuffer);
-            Graphics.DrawMeshInstancedProcedural(sphereMesh, 0, gridParticleMat, drawBounds, particleCount);
+            if (gridParticleMat == null) return;
+            props.Clear();
+            props.SetFloat("_size", particleSize);
+            props.SetFloat("_SizeScale", renderParticleScale);
+            props.SetFloat("_AnisotropyScale", anisotropyScale);
+            props.SetFloat("_MaxAnisotropy", maxAnisotropy);
+            props.SetBuffer("_particlesBuffer", particlesBuffer);
+            Shader.SetGlobalBuffer("_particlesBuffer", particlesBuffer);
+            Shader.SetGlobalFloat("_SizeScale", renderParticleScale);
+            Shader.SetGlobalFloat("_size", particleSize);
+            Shader.SetGlobalFloat("_AnisotropyScale", anisotropyScale);
+            Shader.SetGlobalFloat("_MaxAnisotropy", maxAnisotropy);
+            Graphics.DrawMeshInstancedProcedural(sphereMesh, 0, gridParticleMat, drawBounds, particleCount, props, ShadowCastingMode.On, true);
             return;
         }
-        // 延后流体合成到所有贴图准备完成之后
-        if (enableDepthPass && depthMat != null && particleDepthRT != null && depthCB != null)
+
+        if (fluidCmd != null && !enableRendering)
         {
-            float drawSize = Mathf.Max(particleSize, neighbourRadius * 0.60f);
-            depthMat.SetFloat("_size", drawSize);
-            depthMat.SetBuffer("_particlesBuffer", particlesBuffer);
-            depthMat.SetFloat("_DebugMode", depthDebugMode);
-            depthMat.SetFloat("_ParticleCount", Mathf.Max(1, particleCount));
-            depthCB.Clear();
-            depthCB.SetRenderTarget(particleDepthRT);
-            depthCB.SetViewport(new Rect(0, 0, particleDepthRT.width, particleDepthRT.height));
-            depthCB.ClearRenderTarget(false, true, Color.white);
-            depthCB.DrawMeshInstancedProcedural(sphereMesh, 0, depthMat, 0, particleCount, null);
-            depthCB.SetRenderTarget(particleDepthBackRT);
-            depthCB.SetViewport(new Rect(0, 0, particleDepthBackRT.width, particleDepthBackRT.height));
-            depthCB.ClearRenderTarget(false, true, Color.black);
-            depthCB.DrawMeshInstancedProcedural(sphereMesh, 0, depthMat, 1, particleCount, null);
-            if (enableDepthBlur && particleDepthTempRT != null && particleBlurredDepthRT != null)
-            {
-                switch (depthSmoothMode)
-                {
-                    case DepthSmoothMode.CurvatureFlow:
-                        if (depthCurvatureFlowMat != null)
-                        {
-                            depthCurvatureFlowMat.SetFloat("_Lambda", curvatureFlowLambda);
-                            depthCurvatureFlowMat.SetFloat("_SigmaRange", curvatureFlowSigmaRange);
-                            RenderTexture src = particleDepthRT;
-                            RenderTexture dst = particleDepthTempRT;
-                            int iters = Mathf.Max(1, curvatureFlowIterations);
-                            for (int i = 0; i < iters - 1; i++)
-                            {
-                                depthCurvatureFlowMat.SetTexture("_DepthTex", src);
-                                Graphics.Blit(src, dst, depthCurvatureFlowMat);
-                                var tmp = src; src = dst; dst = tmp;
-                            }
-                            depthCurvatureFlowMat.SetTexture("_DepthTex", src);
-                            Graphics.Blit(src, particleBlurredDepthRT, depthCurvatureFlowMat);
-                        }
-                        else
-                        {
-                            Graphics.Blit(particleDepthRT, particleBlurredDepthRT);
-                        }
-                        break;
-                    case DepthSmoothMode.Bilateral:
-                        if (depthBilateralBlurMat != null)
-                        {
-                            depthBilateralBlurMat.SetTexture("_DepthTex", particleDepthRT);
-                            Graphics.Blit(particleDepthRT, particleDepthTempRT, depthBilateralBlurMat, 0);
-                            depthBilateralBlurMat.SetTexture("_DepthTex", particleDepthTempRT);
-                            Graphics.Blit(particleDepthTempRT, particleBlurredDepthRT, depthBilateralBlurMat, 1);
-                        }
-                        else
-                        {
-                            Graphics.Blit(particleDepthRT, particleBlurredDepthRT);
-                        }
-                        break;
-                    case DepthSmoothMode.Gaussian:
-                        if (depthGaussianBlurMat != null)
-                        {
-                            depthGaussianBlurMat.SetTexture("_DepthTex", particleDepthRT);
-                            Graphics.Blit(particleDepthRT, particleDepthTempRT, depthGaussianBlurMat, 0);
-                            depthGaussianBlurMat.SetTexture("_DepthTex", particleDepthTempRT);
-                            Graphics.Blit(particleDepthTempRT, particleBlurredDepthRT, depthGaussianBlurMat, 1);
-                        }
-                        else
-                        {
-                            Graphics.Blit(particleDepthRT, particleBlurredDepthRT);
-                        }
-                        break;
-                    default:
-                        Graphics.Blit(particleDepthRT, particleBlurredDepthRT);
-                        break;
-                }
-            }
-        }
-        if (enableThicknessPass && particleThicknessRT != null)
-        {
-            bool doThicknessThisFrame = (Time.frameCount % Mathf.Max(thicknessUpdateStride, 1)) == 0;
-            if (thicknessAdditive && thicknessAdditiveMat != null && thicknessCB != null && doThicknessThisFrame)
-            {
-                float drawSize = Mathf.Max(particleSize, neighbourRadius * 0.8f);
-                thicknessAdditiveMat.SetFloat("_size", drawSize);
-                thicknessAdditiveMat.SetFloat("_ContributionScale", thicknessContributionScale);
-                thicknessAdditiveMat.SetBuffer("_particlesBuffer", particlesBuffer);
-                thicknessCB.Clear();
-                thicknessCB.SetRenderTarget(particleThicknessRT);
-                thicknessCB.SetViewport(new Rect(0, 0, particleThicknessRT.width, particleThicknessRT.height));
-                thicknessCB.ClearRenderTarget(false, true, Color.black);
-                thicknessCB.DrawMeshInstancedProcedural(sphereMesh, 0, thicknessAdditiveMat, 0, particleCount, null);
-            }
-            else if (thicknessMat != null && particleDepthRT != null && doThicknessThisFrame)
-            {
-                var depthSrc = (enableDepthBlur && particleBlurredDepthRT != null) ? particleBlurredDepthRT : particleDepthRT;
-                thicknessMat.SetTexture("_DepthTex", depthSrc);
-                thicknessMat.SetFloat("_Threshold", thicknessThreshold);
-                thicknessMat.SetFloat("_Scale", thicknessScale);
-                Graphics.Blit(depthSrc, particleThicknessRT, thicknessMat);
-            }
-        }
-        if (enableThicknessBlur && thicknessBlurMat != null && particleThicknessRT != null && particleThicknessTempRT != null && particleBlurredThicknessRT != null)
-        {
-            bool doThicknessBlurThisFrame = (Time.frameCount % Mathf.Max(thicknessUpdateStride, 1)) == 0;
-            if (doThicknessBlurThisFrame)
-            {
-                Graphics.Blit(particleThicknessRT, particleThicknessTempRT, thicknessBlurMat, 0);
-                Graphics.Blit(particleThicknessTempRT, particleBlurredThicknessRT, thicknessBlurMat, 1);
-            }
-        }
-        if (enableThicknessNormals && thicknessNormalsMat != null && particleBlurredThicknessRT != null && thicknessNormalRT != null)
-        {
-            bool doThicknessNormalsThisFrame = (Time.frameCount % Mathf.Max(thicknessNormalsUpdateStride, 1)) == 0;
-            if (doThicknessNormalsThisFrame)
-            {
-                thicknessNormalsMat.SetFloat("_NormalStrength", thicknessNormalStrength);
-                thicknessNormalsMat.SetTexture("_ThicknessTex", particleBlurredThicknessRT);
-                Graphics.Blit(particleBlurredThicknessRT, thicknessNormalRT, thicknessNormalsMat);
-            }
-        }
-        if (depthNormalsMat != null && depthNormalRT != null)
-        {
-            bool doDepthNormalsThisFrame = (Time.frameCount % Mathf.Max(depthNormalsUpdateStride, 1)) == 0;
-            var depthSrcForNormals = (useBlurredDepthForNormals && enableDepthBlur && particleBlurredDepthRT != null) ? particleBlurredDepthRT : particleDepthRT;
-            if (doDepthNormalsThisFrame && depthSrcForNormals != null)
-            {
-                depthNormalsMat.SetFloat("_NormalStrength", depthNormalStrength);
-                depthNormalsMat.SetTexture("_DepthTex", depthSrcForNormals);
-                Graphics.Blit(depthSrcForNormals, depthNormalRT, depthNormalsMat);
-            }
-        }
-        if (depthDebugToScreen && depthMat != null)
-        {
-            float drawSize = Mathf.Max(particleSize, neighbourRadius * 0.9f);
-            depthMat.SetFloat("_size", drawSize);
-            depthMat.SetBuffer("_particlesBuffer", particlesBuffer);
-            depthMat.SetFloat("_DebugMode", depthDebugMode);
-            depthMat.SetFloat("_ParticleCount", Mathf.Max(1, particleCount));
-            Graphics.DrawMeshInstancedProcedural(sphereMesh, 0, depthMat, drawBounds, particleCount);
+            fluidCmd.Clear();
+            return;
         }
 
-        if (fluidMat != null && particleBlurredThicknessRT != null && thicknessNormalRT != null)
+        props.Clear();
+        props.SetFloat("_size", particleSize);
+        props.SetFloat("_SizeScale", renderParticleScale);
+        props.SetFloat("_AnisotropyScale", anisotropyScale);
+        props.SetFloat("_MaxAnisotropy", maxAnisotropy);
+        props.SetBuffer("_particlesBuffer", particlesBuffer);
+
+        Shader.SetGlobalBuffer("_particlesBuffer", particlesBuffer);
+        Shader.SetGlobalFloat("_SizeScale", renderParticleScale);
+        Shader.SetGlobalFloat("_size", particleSize);
+        Shader.SetGlobalFloat("_AnisotropyScale", anisotropyScale);
+        Shader.SetGlobalFloat("_MaxAnisotropy", maxAnisotropy);
+
+        if (renderParticles && gridParticleMat != null)
         {
-            float drawSize = Mathf.Max(particleSize, neighbourRadius * 0.65f);
-            fluidMat.SetFloat("_size", drawSize);
-            fluidMat.SetBuffer("_particlesBuffer", particlesBuffer);
-            fluidMat.SetColor("_TintColor", waterTint);
-            fluidMat.SetFloat("_Opacity", waterOpacity);
-            fluidMat.SetFloat("_RefractStrength", refractStrength);
-            fluidMat.SetFloat("_FresnelPower", fresnelPower);
-            fluidMat.SetFloat("_SoftDepth", waterSoftDepth);
-            fluidMat.SetFloat("_MinDepthVisibility", minDepthVisibility);
-            fluidMat.SetFloat("_EdgeBoost", edgeBoost);
-            fluidMat.SetFloat("_EdgeWidth", edgeWidth);
-            fluidMat.SetFloat("_AlphaFloor", alphaFloor);
-            fluidMat.SetFloat("_TintMix", tintMix);
-            fluidMat.SetFloat("_EnvStrength", envStrength);
-            fluidMat.SetFloat("_SpecularStrength", specularStrength);
-            fluidMat.SetFloat("_HighlightClamp", highlightClamp);
-            fluidMat.SetColor("_AbsorptionColor", absorptionColor);
-            fluidMat.SetFloat("_ReflectionThicknessSuppress", reflectionThicknessSuppress);
-            fluidMat.SetFloat("_RefractionThicknessSuppress", refractionThicknessSuppress);
-            fluidMat.SetFloat("_EnableReflection", enableReflection ? 1f : 0f);
-            fluidMat.SetFloat("_EnableRefraction", enableRefraction ? 1f : 0f);
-            fluidMat.SetFloat("_UseBackground", useBackground ? 1f : 0f);
-            fluidMat.SetFloat("_BackgroundWeight", backgroundWeight);
-            fluidMat.SetFloat("_ThicknessScale", compositeThicknessScale);
-            fluidMat.SetFloat("_ThicknessGamma", compositeThicknessGamma);
-            fluidMat.SetFloat("_ThicknessMax", compositeThicknessMax);
-            fluidMat.SetFloat("_ThicknessExposure", compositeThicknessExposure);
-            fluidMat.SetFloat("_ThicknessTopBias", thicknessTopBias);
-            fluidMat.SetFloat("_DepthEdgeStrength", depthEdgeStrength);
-            fluidMat.SetFloat("_DepthEdgeThreshold", depthEdgeThreshold);
-            fluidMat.SetFloat("_FresnelAlphaBase", fresnelAlphaBase);
-            fluidMat.SetFloat("_FresnelAlphaWeight", fresnelAlphaWeight);
-            fluidMat.SetFloat("_RefractionClampPixels", refractionClampPixels);
-            fluidMat.SetFloat("_RefractionEdgeSuppress", refractionEdgeSuppress);
-            fluidMat.SetTexture("_BlurredThicknessTex", particleBlurredThicknessRT);
-            fluidMat.SetTexture("_ThicknessNormalsTex", thicknessNormalRT);
-            if (particleDepthRT != null)
+            Graphics.DrawMeshInstancedProcedural(sphereMesh, 0, gridParticleMat, drawBounds, particleCount, props, ShadowCastingMode.On, true);
+        }
+
+        if (fluidCmd != null)
+        {
+            fluidCmd.Clear();
+            if (depthMat == null) return;
+
+            int fluidDepthW = 0;
+            int fluidDepthH = 0;
+
+            fluidCmd.GetTemporaryRT(bgTexID, -1, -1, 0, FilterMode.Bilinear);
+            fluidCmd.Blit(BuiltinRenderTextureType.CurrentActive, bgTexID);
+            fluidCmd.SetGlobalTexture("_FluidBackgroundTexture", bgTexID);
+
+            if (depthMat != null)
             {
-                fluidMat.SetTexture("_SSDepthTex", particleDepthRT);
+                RenderTextureFormat depthFmt = SelectSingleChannelFloatFormat();
+
+                int effectiveDownsample = depthDownsample;
+                if (targetDepthHeight > 0)
+                {
+                    float scale = (float)Screen.height / (float)targetDepthHeight;
+                    effectiveDownsample = Mathf.Max(depthDownsample, Mathf.RoundToInt(scale));
+                }
+
+                int dw = Mathf.Max(1, Screen.width / effectiveDownsample);
+                int dh = Mathf.Max(1, Screen.height / effectiveDownsample);
+                fluidDepthW = dw;
+                fluidDepthH = dh;
+
+                fluidCmd.GetTemporaryRT(depthTexID, dw, dh, 24, FilterMode.Bilinear, depthFmt);
+                fluidCmd.SetRenderTarget(depthTexID);
+                fluidCmd.ClearRenderTarget(true, true, new Color(10000f, 10000f, 10000f, 10000f));
+                fluidCmd.DrawMeshInstancedProcedural(sphereMesh, 0, depthMat, 0, particleCount, props);
+
+                Material currentBlurMat = (filterType == DepthFilterType.Gaussian && gaussianMat != null) ? gaussianMat : blurMat;
+
+                if (currentBlurMat != null && blurIterations > 0)
+                {
+                    currentBlurMat.SetFloat("_SigmaSpatial", blurSigmaSpatial);
+                    currentBlurMat.SetFloat("_SigmaRange", blurSigmaRange);
+                    currentBlurMat.SetInt("_FilterRadius", blurRadius);
+
+                    int tempDepthID = Shader.PropertyToID("_FluidDepthTemp");
+                    fluidCmd.GetTemporaryRT(tempDepthID, dw, dh, 0, FilterMode.Bilinear, depthFmt);
+
+                    for (int i = 0; i < blurIterations; i++)
+                    {
+                        fluidCmd.Blit(depthTexID, tempDepthID, currentBlurMat, 0);
+                        fluidCmd.Blit(tempDepthID, depthTexID, currentBlurMat, 1);
+                    }
+                    fluidCmd.ReleaseTemporaryRT(tempDepthID);
+                }
+                fluidCmd.SetGlobalTexture("_FluidDepthTexture", depthTexID);
             }
-            if (depthNormalRT != null)
+
+            if (thicknessMat != null)
             {
-                fluidMat.SetTexture("_DepthNormalsTex", depthNormalRT);
-                fluidMat.SetFloat("_DepthNormalWeight", depthNormalWeight);
+                props.SetFloat("_ContributionScale", thicknessContribution);
+                props.SetFloat("_SizeScale", renderParticleScale);
+                int w = Screen.width / thicknessDownsample;
+                int h = Screen.height / thicknessDownsample;
+                RenderTextureFormat thickFmt = SelectSingleChannelFloatFormat();
+
+                fluidCmd.GetTemporaryRT(thicknessTexID, w, h, 0, FilterMode.Bilinear, thickFmt);
+                fluidCmd.SetRenderTarget(thicknessTexID);
+                fluidCmd.ClearRenderTarget(false, true, Color.black);
+                fluidCmd.DrawMeshInstancedProcedural(sphereMesh, 0, thicknessMat, 0, particleCount, props);
+
+                if (thicknessBlurMat != null && thicknessBlurIterations > 0)
+                {
+                    thicknessBlurMat.SetInt("_FilterRadius", thicknessBlurRadius);
+                    int tempID = Shader.PropertyToID("_FluidThicknessTemp");
+                    fluidCmd.GetTemporaryRT(tempID, w, h, 0, FilterMode.Bilinear, thickFmt);
+                    for (int i = 0; i < thicknessBlurIterations; i++)
+                    {
+                        fluidCmd.Blit(thicknessTexID, tempID, thicknessBlurMat, 0);
+                        fluidCmd.Blit(tempID, thicknessTexID, thicknessBlurMat, 1);
+                    }
+                    fluidCmd.ReleaseTemporaryRT(tempID);
+                }
+                fluidCmd.SetGlobalTexture("_FluidThicknessTexture", thicknessTexID);
             }
-            Graphics.DrawMeshInstancedProcedural(sphereMesh, 0, fluidMat, drawBounds, particleCount);
+
+            if (normalMat != null && depthMat != null && fluidDepthW > 0 && fluidDepthH > 0)
+            {
+                normalMat.SetFloat("_NormalStrength", normalStrength);
+                fluidCmd.GetTemporaryRT(normalTexID, fluidDepthW, fluidDepthH, 0, FilterMode.Bilinear, RenderTextureFormat.ARGBHalf);
+                fluidCmd.Blit(depthTexID, normalTexID, normalMat);
+                fluidCmd.SetGlobalTexture("_FluidNormalTexture", normalTexID);
+            }
+
+            if (showDepthDebug && depthMat != null)
+            {
+                if (debugDepthMat != null) fluidCmd.Blit(depthTexID, BuiltinRenderTextureType.CameraTarget, debugDepthMat);
+                else fluidCmd.Blit(depthTexID, BuiltinRenderTextureType.CameraTarget);
+            }
+            else if (showThicknessDebug && thicknessMat != null)
+            {
+                if (debugThicknessMat != null) fluidCmd.Blit(thicknessTexID, BuiltinRenderTextureType.CameraTarget, debugThicknessMat);
+                else fluidCmd.Blit(thicknessTexID, BuiltinRenderTextureType.CameraTarget);
+            }
+            else if (showNormalDebug && normalMat != null)
+            {
+                fluidCmd.Blit(normalTexID, BuiltinRenderTextureType.CameraTarget);
+            }
+            else if (compositeMat != null)
+            {
+                compositeMat.SetColor("_Color", waterTint);
+                compositeMat.SetFloat("_Absorption", absorption);
+                compositeMat.SetFloat("_Smoothness", smoothness);
+                compositeMat.SetFloat("_Specular", specular);
+                compositeMat.SetFloat("_ThicknessCutoff", thicknessCutoff);
+                compositeMat.SetFloat("_RefractionStrength", refractionStrength);
+                fluidCmd.Blit(bgTexID, BuiltinRenderTextureType.CameraTarget, compositeMat);
+            }
         }
     }
 
     void OnGUI()
     {
-        int w = Mathf.RoundToInt(depthRTSize.x * Mathf.Max(0.1f, previewScale));
-        int h = Mathf.RoundToInt(depthRTSize.y * Mathf.Max(0.1f, previewScale));
-        if (showDepthPreview && particleDepthRT != null)
+        if (showDepthDebug && debugDepthMat != null)
         {
-            GUI.DrawTexture(new Rect(10, 10, w, h), particleDepthRT, ScaleMode.StretchToFill, false);
+            if (Event.current.type.Equals(EventType.Repaint))
+                Graphics.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), Texture2D.whiteTexture, debugDepthMat);
         }
-        if (showBlurredDepthPreview && particleBlurredDepthRT != null)
+        else if (showThicknessDebug && debugThicknessMat != null)
         {
-            GUI.DrawTexture(new Rect(20 + w, 10, w, h), particleBlurredDepthRT, ScaleMode.StretchToFill, false);
+            if (Event.current.type.Equals(EventType.Repaint))
+                Graphics.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), Texture2D.whiteTexture, debugThicknessMat);
         }
-        if (showDepthNormalsPreview && depthNormalRT != null)
+        else if (showNormalDebug && debugNormalMat != null)
         {
-            GUI.DrawTexture(new Rect(30 + 2*w, 10, w, h), depthNormalRT, ScaleMode.StretchToFill, false);
+            if (Event.current.type.Equals(EventType.Repaint))
+                Graphics.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), Texture2D.whiteTexture, debugNormalMat);
         }
-        if (showThicknessPreview && particleThicknessRT != null)
-        {
-            GUI.DrawTexture(new Rect(10, 20 + h, w, h), particleThicknessRT, ScaleMode.StretchToFill, false);
-        }
-        if (showBlurredThicknessPreview && particleBlurredThicknessRT != null)
-        {
-            GUI.DrawTexture(new Rect(10, 30 + 2*h, w, h), particleBlurredThicknessRT, ScaleMode.StretchToFill, false);
-        }
-        if (showThicknessNormalsPreview && thicknessNormalRT != null)
-        {
-            GUI.DrawTexture(new Rect(10, 40 + 3*h, w, h), thicknessNormalRT, ScaleMode.StretchToFill, false);
-        }
+
         int btnW = 132;
         int btnH = 54;
         int pad = 10;
@@ -1375,60 +1240,13 @@ public class SPHStandardMobile : MonoBehaviour
 
     void OnDestroy()
     {
+        if (mainCam != null && fluidCmd != null)
+        {
+            mainCam.RemoveCommandBuffer(CameraEvent.BeforeForwardAlpha, fluidCmd);
+            fluidCmd.Release();
+            fluidCmd = null;
+        }
         Release(bufX); Release(bufV); Release(bufRho); Release(bufCellHead); Release(bufNextIndex); Release(particlesBuffer); Release(bufImpulses); Release(bufObstacles);
-        var cam = Camera.main;
-        if (depthCB != null)
-        {
-            if (cam != null) cam.RemoveCommandBuffer(CameraEvent.BeforeImageEffects, depthCB);
-            depthCB.Release();
-            depthCB = null;
-        }
-        if (thicknessCB != null)
-        {
-            if (cam != null) cam.RemoveCommandBuffer(CameraEvent.BeforeImageEffects, thicknessCB);
-            thicknessCB.Release();
-            thicknessCB = null;
-        }
-        if (particleDepthRT != null)
-        {
-            particleDepthRT.Release();
-            particleDepthRT = null;
-        }
-        if (particleDepthBackRT != null)
-        {
-            particleDepthBackRT.Release();
-            particleDepthBackRT = null;
-        }
-        if (particleDepthTempRT != null)
-        {
-            particleDepthTempRT.Release();
-            particleDepthTempRT = null;
-        }
-        if (particleBlurredDepthRT != null)
-        {
-            particleBlurredDepthRT.Release();
-            particleBlurredDepthRT = null;
-        }
-        if (particleThicknessRT != null)
-        {
-            particleThicknessRT.Release();
-            particleThicknessRT = null;
-        }
-        if (particleThicknessTempRT != null)
-        {
-            particleThicknessTempRT.Release();
-            particleThicknessTempRT = null;
-        }
-        if (particleBlurredThicknessRT != null)
-        {
-            particleBlurredThicknessRT.Release();
-            particleBlurredThicknessRT = null;
-        }
-        if (thicknessNormalRT != null)
-        {
-            thicknessNormalRT.Release();
-            thicknessNormalRT = null;
-        }
     }
     
     RenderTextureFormat SelectSingleChannelFloatFormat()
@@ -1491,59 +1309,43 @@ public class SPHStandardMobile : MonoBehaviour
 
     void ApplySharpEdgesPreset()
     {
-        useBlurredDepthForNormals = true;
-        depthSmoothMode = DepthSmoothMode.Bilateral;
-        depthSigmaSpatial = Mathf.Clamp(2.4f, 2.0f, 4.0f);
-        depthSigmaRange = Mathf.Clamp(0.020f, 0.010f, 0.05f);
-        waterSoftDepth = Mathf.Clamp(0.035f, 0.015f, 0.08f);
-        minDepthVisibility = Mathf.Clamp(0.22f, 0.06f, 0.30f);
-        alphaFloor = Mathf.Clamp(0.26f, 0.10f, 0.40f);
-        edgeBoost = Mathf.Clamp(1.55f, 0.8f, 2.3f);
-        edgeWidth = Mathf.Clamp(0.0075f, 0.005f, 0.02f);
-        depthEdgeStrength = Mathf.Clamp(2.2f, 0.8f, 2.6f);
-        depthEdgeThreshold = Mathf.Clamp(0.0015f, 0.0008f, 0.006f);
-        refractionClampPixels = Mathf.Clamp(0.45f, 0.3f, 1.2f);
-        refractionEdgeSuppress = Mathf.Clamp(0.95f, 0.6f, 0.98f);
-        compositeThicknessExposure = Mathf.Clamp(1.10f, 0.6f, 1.3f);
-        compositeThicknessGamma = Mathf.Clamp(0.80f, 0.6f, 1.4f);
-        compositeThicknessMax = Mathf.Clamp(9.0f, 6.0f, 24.0f);
-        thicknessTopBias = Mathf.Clamp(0.65f, 0.2f, 0.9f);
-        depthNormalStrength = Mathf.Clamp(22.0f, 10.0f, 26.0f);
-        depthNormalWeight = Mathf.Clamp(0.45f, 0.15f, 0.55f);
-        fresnelAlphaBase = Mathf.Clamp(0.72f, 0.4f, 0.9f);
-        fresnelAlphaWeight = Mathf.Clamp(1.50f, 0.6f, 2.0f);
-        absorption = Mathf.Clamp(1.35f, 0.6f, 2.2f);
-        absorptionColor = new Color(0.58f, 0.76f, 1.0f, 1.0f);
+        // 与 MPMFluidMobile 一致：不在此预设里改写 SSFR，避免与 MPM 的 Gaussian/高模糊/染色 完全两套逻辑。
     }
     
     void ApplyMediumParticleStability()
     {
-        maxSubsteps = Mathf.Max(maxSubsteps, 14);
-        fixedTimeStep = Mathf.Clamp(fixedTimeStep, 0.0033f, 0.0039f);
-        viscosity = Mathf.Max(viscosity, 0.12f);
-        xsphC = Mathf.Clamp(xsphC, 0.30f, 0.36f);
-        boundaryDamping = Mathf.Clamp(boundaryDamping, 0.82f, 0.88f);
-        soundSpeed = Mathf.Clamp(soundSpeed, 24f, 30f);
+        // 粒子多时仍保持可接受的子步数；过高子步 + 强边界阻尼易造成“一碰底就吸住”。
+        maxSubsteps = Mathf.Clamp(Mathf.Max(maxSubsteps, 8), 8, 12);
+        fixedTimeStep = Mathf.Clamp(fixedTimeStep, 0.0033f, 0.0042f);
+        // 不强行抬高黏度，避免把「轻盈水」又拉回糖浆感；只做上限防止极端发散
+        viscosity = Mathf.Min(viscosity, 0.095f);
+        if (viscosity < 0.04f) viscosity = 0.04f;
+        xsphC = Mathf.Clamp(xsphC, 0.08f, 0.22f);
+        boundaryDamping = Mathf.Clamp(boundaryDamping, 0.55f, 0.72f);
+        soundSpeed = Mathf.Clamp(soundSpeed, 26f, 38f);
         maxSpeed = Mathf.Min(maxSpeed, 12.5f);
         initialJitter = Mathf.Min(initialJitter, 0.015f);
-        minSpeed = 0.003f;
+        // 与着色器里“贴壁休眠”配合：过小会在稀疏邻域误判静止
+        minSpeed = Mathf.Max(minSpeed, 0.012f);
+        vorticityEps = Mathf.Min(vorticityEps, 0.14f);
     }
     
     void ApplyRealisticWaterPreset()
     {
         enableLowParticleCountTuning = false;
-        viscosity = 0.08f;
-        xsphC = 0.20f;
-        boundaryDamping = 0.65f;
+        viscosity = 0.055f;
+        xsphC = 0.14f;
+        boundaryDamping = 0.58f;
         boundaryDampingZ = 0.60f;
         boundaryMaxBounceSpeedZ = 3.5f;
         minSpeed = 0.015f;
-        soundSpeed = 20f;
+        soundSpeed = Mathf.Max(soundSpeed, 24f);
         maxSpeed = Mathf.Min(maxSpeed, 10.0f);
     }
     void ApplySweepFlowPreset()
     {
-        vorticityEps = Mathf.Clamp(0.65f, 0.35f, 1.2f);
+        // 曾误写为 Clamp(0.65, …) 恒等于 0.65，涡量过强会导致整流体高频抖、跳。
+        vorticityEps = Mathf.Clamp(vorticityEps, 0f, 0.16f);
         obstacleTangentialStrength = 85f;
         obstaclePushStrength = 52f;
         obstacleFriction = 0.12f;
@@ -1554,10 +1356,8 @@ public class SPHStandardMobile : MonoBehaviour
         freeSurfaceDamping = 0.0f;
         freeSurfaceThreshold = 0.70f;
         minImpulseRadius = Mathf.Max(minImpulseRadius, 0.9f);
-        highQualityDepthScale = Mathf.Clamp(1.5f, 1.0f, 2.0f);
-        depthNormalStrength = Mathf.Clamp(24.0f, 10.0f, 28.0f);
-        depthNormalWeight = Mathf.Clamp(0.50f, 0.15f, 0.65f);
-        thicknessNormalStrength = Mathf.Clamp(1.6f, 1.0f, 2.2f);
+        normalStrength = Mathf.Clamp(normalStrength, 0.85f, 1.6f);
+        // 扫流预设只调物理/交互；不再抬高深度模糊，避免 SPH 被强制糊成「MPM 填洞」档。
     }
     public void ResetSimulation()
     {

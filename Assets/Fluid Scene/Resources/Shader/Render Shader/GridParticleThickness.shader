@@ -51,8 +51,9 @@ Shader "Instanced/GridParticleThickness" {
 
                 float speed = length(vel);
                 float3 dir = (speed > 0.001) ? vel / speed : float3(0,0,1);
-                float stretch = min(1.0 + speed * _AnisotropyScale * anisotropyFactor, _MaxAnisotropy);
-                float squash = 1.0 / sqrt(stretch);
+                float stretch = min(1.0 + speed * _AnisotropyScale * anisotropyFactor * 0.82, _MaxAnisotropy);
+                // 与 GridParticleDepth 类似：限制过度压扁，减少厚度通道里的孔洞与「粒粒分明」感
+                float squash = max(1.0 / sqrt(stretch), 0.88);
 
                 float3 up = float3(0,1,0);
                 if (abs(dot(dir, up)) > 0.99) up = float3(0,0,1);
@@ -118,7 +119,8 @@ Shader "Instanced/GridParticleThickness" {
                     // Range: Boost from 1x to 8x based on density.
                     // Thresholds: Density < 0.2 is spray, > 0.6 is bulk.
                     float sprayFactor = 1.0 - smoothstep(0.1, 0.6, density);
-                    o.thicknessBoost = 1.0 + sprayFactor * 7.0; // Max 8x boost for pure spray
+                    // 过高会把薄飞沫加成发白雾边；略收敛仍保留薄区可见性
+                    o.thicknessBoost = 1.0 + sprayFactor * 3.25;
                 #endif
                 
                 return o;

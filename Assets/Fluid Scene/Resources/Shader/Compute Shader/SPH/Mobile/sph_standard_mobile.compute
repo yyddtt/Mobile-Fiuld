@@ -11,7 +11,8 @@ RWStructuredBuffer<float> rho;
 RWStructuredBuffer<int> cellHead;
 RWStructuredBuffer<int> nextIndex;
 
-struct Particle { float3 position; float4 color; };
+// Same layout as MPM for Instanced/GridParticleDepth & GridParticleThickness
+struct Particle { float4 position; float4 color; float4 velocity; };
 RWStructuredBuffer<Particle> _particlesBuffer;
 
 int n_grid;
@@ -201,8 +202,11 @@ void SPHMain(uint3 id : SV_DispatchThreadID)
                     n_est += particleMass * gradW * om_mag / rho_k;
 
                     float rhoRatio_k2 = rho_k / max(restDensity, 1e-3);
-                    float surfLocal = saturate(1.0 - 0.5 * (rhoRatio_i + rhoRatio_k2));
-                    acc_st += surfaceTension * particleMass * surfLocal * gradW;
+                    if (surfaceTension > 0.0)
+                    {
+                        float surfLocal = saturate(1.0 - 0.5 * (rhoRatio_i + rhoRatio_k2));
+                        acc_st += surfaceTension * particleMass * surfLocal * gradW;
+                    }
                 }
             }
             k = nextIndex[k];
@@ -217,7 +221,8 @@ void SPHMain(uint3 id : SV_DispatchThreadID)
         float3 f_vor = vorticityEps * cross(n_dir, omega);
         acc += f_vor;
     }
-    acc += acc_st;
+    if (surfaceTension > 0.0)
+        acc += acc_st;
     for (int t = 0; t < impulseCount; t++)
     {
         float3 ip = impulses[t].xyz;
@@ -251,54 +256,74 @@ void SPHMain(uint3 id : SV_DispatchThreadID)
         }
     }
 
+    // 与 minSpeed（用于自由面/休眠）解耦：底面用固定撞击阈值，避免极小 minSpeed 时一碰底就 vy=0 像“胶水”。
+    const float floorImpactVy = 0.035;
+    const float wallEps = 1e-4;
+
     float3 s = (xi - boundsMin) / (boundsMax - boundsMin);
     if (xi.x < boundsMin.x) { xi.x = boundsMin.x; vi.x = -vi.x * boundaryDamping; }
     if (xi.y < boundsMin.y)
     {
         xi.y = boundsMin.y;
-        if (vi.y < -minSpeed) { vi.y = -vi.y * boundaryDamping; } else { vi.y = 0.0; }
+        if (vi.y < -floorImpactVy) { vi.y = -vi.y * boundaryDamping; }
+        else if (vi.y < 0.0) { vi.y *= boundaryDamping; }
     }
     if (xi.z < boundsMin.z) { xi.z = boundsMin.z; vi.z = -vi.z * boundaryDampingZ; float az = min(abs(vi.z), boundaryMaxBounceSpeedZ); vi.z = (vi.z < 0 ? -az : az); }
     if (xi.x > boundsMax.x) { xi.x = boundsMax.x; vi.x = -vi.x * boundaryDamping; }
     if (xi.y > boundsMax.y) { xi.y = boundsMax.y; vi.y = -vi.y * boundaryDamping; }
     if (xi.z > boundsMax.z) { xi.z = boundsMax.z; vi.z = -vi.z * boundaryDampingZ; float az = min(abs(vi.z), boundaryMaxBounceSpeedZ); vi.z = (vi.z < 0 ? -az : az); }
 
-    if (xi.y <= boundsMin.y + 1e-5)
+    if (xi.y <= boundsMin.y + wallEps)
     {
         if (vi.y < 0.0) { vi.y = 0.0; }
-        else if (abs(vi.y) < minSpeed) { vi.y = 0.0; }
     }
-    for (int ob = 0; ob < obstacleCount; ob++)
+    if (obstacleCount > 0)
     {
-        float3 op = obstacles[ob].xyz;
-        float rad = obstacles[ob].w;
-        float3 dd = xi - op;
-        float rr = length(dd);
-        if (rr < rad)
+        for (int ob = 0; ob < obstacleCount; ob++)
         {
-            float3 dir = normalize(dd + float3(1e-6,1e-6,1e-6));
-            float pen = rad - rr;
-            xi = op + dir * rad;
-            float vn = dot(vi, dir);
-            vi -= vn * dir;
-            vi += dir * (obstaclePushStrength * pen);
-            vi *= obstacleDamping;
-            float3 ax = normalize(swirlAxis + float3(1e-6,1e-6,1e-6));
-            float3 tanDir = normalize(cross(ax, dir) + float3(1e-6,1e-6,1e-6));
-            vi += tanDir * (obstacleTangentialStrength * pen);
-            float vt = dot(vi, tanDir);
-            vi -= tanDir * (vt * obstacleFriction);
+            float3 op = obstacles[ob].xyz;
+            float rad = obstacles[ob].w;
+            float3 dd = xi - op;
+            float rr = length(dd);
+            if (rr < rad)
+            {
+                float3 dir = normalize(dd + float3(1e-6,1e-6,1e-6));
+                float pen = rad - rr;
+                xi = op + dir * rad;
+                float vn = dot(vi, dir);
+                vi -= vn * dir;
+                vi += dir * (obstaclePushStrength * pen);
+                vi *= obstacleDamping;
+                float3 ax = normalize(swirlAxis + float3(1e-6,1e-6,1e-6));
+                float3 tanDir = normalize(cross(ax, dir) + float3(1e-6,1e-6,1e-6));
+                vi += tanDir * (obstacleTangentialStrength * pen);
+                float vt = dot(vi, tanDir);
+                vi -= tanDir * (vt * obstacleFriction);
+            }
         }
     }
 
     float msq = dot(vi, vi);
     if (msq > maxSpeed * maxSpeed) vi = normalize(vi) * maxSpeed;
-    else if (msq < minSpeed * minSpeed) vi = float3(0,0,0);
+    else
+    {
+        // 仅贴边界时做“休眠”清零，避免流体内部因邻域稀疏/力抵消被误判为静止而悬在空中。
+        float margin = max(neighbourRadius * 1.25, minSpeed * 10.0);
+        bool nearWall =
+            xi.x <= boundsMin.x + margin || xi.x >= boundsMax.x - margin ||
+            xi.y <= boundsMin.y + margin || xi.y >= boundsMax.y - margin ||
+            xi.z <= boundsMin.z + margin || xi.z >= boundsMax.z - margin;
+        if (nearWall && msq < minSpeed * minSpeed) vi = float3(0,0,0);
+    }
     xi += vi * dt;
     v[i] = vi;
     x[i] = xi;
 
     float3 col = float3(saturate((xi.x - boundsMin.x) / max(boundsMax.x - boundsMin.x, 1e-3)), saturate((xi.y - boundsMin.y) / max(boundsMax.y - boundsMin.y, 1e-3)), 1.0);
-    _particlesBuffer[i].position = xi;
-    _particlesBuffer[i].color = float4(col, 1);
+    float densRatio = rho_i / max(restDensity, 1e-3);
+    Particle pOut;
+    pOut.position = float4(xi, 1.0);
+    pOut.color = float4(col, 1.0);
+    pOut.velocity = float4(vi, densRatio);
+    _particlesBuffer[i] = pOut;
 }

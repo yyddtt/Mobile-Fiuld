@@ -48,7 +48,7 @@ Shader "Instanced/GridParticleDepth" {
 
                 float speed = length(vel);
                 float3 dir = (speed > 0.001) ? vel / speed : float3(0,0,1);
-                float stretch = min(1.0 + speed * _AnisotropyScale * anisotropyFactor, _MaxAnisotropy);
+                float stretch = min(1.0 + speed * _AnisotropyScale * anisotropyFactor * 0.82, _MaxAnisotropy);
                 // float squash = 1.0 / sqrt(stretch);
                 // Modified: Clamp squash to prevent particles from becoming too thin (which causes holes/pits in turbulent areas)
                 // 0.85 ensures that even at max stretch, the particle keeps 85% of its width.

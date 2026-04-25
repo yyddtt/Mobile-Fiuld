@@ -3,47 +3,52 @@ using UnityEngine.Rendering;
 
 public class MPMFluidMobile : MonoBehaviour
 {
+    public const int MaxParticleCountMobile = 10000;
+    public const int MinParticleCount = 256;
+
     [Header("Simulation")]
     [Tooltip("Total number of particles in the simulation.")]
-    public int particleCount = 10000;
+    [Range(256, 10000)]
+    public int particleCount = 8000;
     [Tooltip("Minimum corner of the simulation boundary box.")]
     public Vector3 boundsMin = new Vector3(0, 0, 0);
     [Tooltip("Maximum corner of the simulation boundary box.")]
     public Vector3 boundsMax = new Vector3(15, 10, 5);
-    [Tooltip("Grid resolution. Higher values (e.g. 64) reduce blockiness but cost performance.")]
-    public int gridResolution = 48;
+    [Tooltip("Grid resolution. Higher values (e.g. 64) reduce blockiness but cost performance. 普通机型建议 32–40。")]
+    [Range(16, 48)]
+    public int gridResolution = 40;
     [Tooltip("Target density of the fluid (kg/m^3).")]
     public float restDensity = 1000.0f;
     [Tooltip("Stiffness of the fluid (Sound Speed). Higher values make the fluid less compressible but more explosive.")]
     public float soundSpeed = 45.0f;
     [Tooltip("Exponent for the Equation of State (EOS). Typically 7 for water.")]
     public float eosGamma = 7.0f;
-    [Tooltip("Smoothing factor for grid velocities. Helps reduce jitter/noise but blurs motion.")]
+    [Tooltip("网格速度平滑（0–1）：减轻抖动但会拖慢运动；过大显「粘稠」。轻盈感可试约 0.2–0.35。")]
     [Range(0f, 1f)]
-    public float gridSmooth = 0.5f;
+    public float gridSmooth = 0.28f;
     [Tooltip("Friction of the boundary walls. 0 = Super slippery, 1 = Sticky.")]
     [Range(0f, 1f)]
     public float boundaryFriction = 0.02f;
     [Tooltip("Scale factor for initial particle mass. < 1.0 reduces initial expansion/explosion.")]
     [Range(0.8f, 1.2f)]
     public float initialMassScale = 0.95f;
-    public float viscosity = 0.02f;
+    public float viscosity = 0.014f;
     public Vector3 gravity = new Vector3(0, -9.8f, 0);
     public float particleSize = 0.12f; // Reverted to original for detail
     public bool runSimulation = true;
     [Range(0f, 1.5f)] public float initialJitter = 0.0f;
     public bool enableSubstepping = true;
     public float fixedTimeStep = 0.0045f;
-    public int maxSubsteps = 6;
+    public int maxSubsteps = 5;
     
     [Header("Thickness")]
-    [Range(0.01f, 0.5f)] public float thicknessContribution = 0.05f;
-    [Range(0, 5)] public int thicknessBlurIterations = 2;
+    [Range(0.01f, 0.5f)] public float thicknessContribution = 0.052f;
+    [Range(0, 5)] public int thicknessBlurIterations = 1;
     [Range(1, 20)] public int thicknessBlurRadius = 10;
     [Range(1, 5)] public int thicknessDownsample = 2;
 
     [Header("Normals")]
-    [Range(0.1f, 10f)] public float normalStrength = 1.0f;
+    [Range(0.1f, 10f)] public float normalStrength = 0.88f;
     
     [Header("Debug")]
     public bool enableRendering = true; // Master switch for fluid rendering
@@ -85,6 +90,7 @@ public class MPMFluidMobile : MonoBehaviour
 
         boatSpheresBuffer.SetData(spheres, 0, 0, count);
         boatSphereCount = count;
+        if (cs != null) cs.SetBuffer(kGridUpdate, "boatSpheres", boatSpheresBuffer);
     }
 
     public struct ProbeData
@@ -100,7 +106,7 @@ public class MPMFluidMobile : MonoBehaviour
     [Header("Camera")]
     public bool autoCameraClipTuning = true;
     public float clipMargin = 5f;
-    public bool debugLogStats = true;
+    public bool debugLogStats = false;
     public int debugLogStrideFrames = 60;
     public int debugSampleCount = 256;
     public float pressureWeight = 0.12f;
@@ -114,6 +120,7 @@ public class MPMFluidMobile : MonoBehaviour
     int kP2G;
     int kGridUpdate;
     int kG2P;
+    int kGridToRender;
     int kProbeGrid;
 
     ComputeBuffer bufX;
@@ -131,7 +138,7 @@ public class MPMFluidMobile : MonoBehaviour
     Material gridParticleMat;
 
     [Header("Anisotropy")]
-    [Range(1f, 2f)] public float renderParticleScale = 1.2f;
+    [Range(1f, 2f)] public float renderParticleScale = 1.45f;
     [Range(0f, 5f)] public float anisotropyScale = 0.3f;
     [Range(1f, 10f)] public float maxAnisotropy = 3.0f;
 
@@ -139,13 +146,13 @@ public class MPMFluidMobile : MonoBehaviour
     public DepthFilterType filterType = DepthFilterType.Gaussian;
     public enum DepthFilterType { Bilateral, Gaussian }
     
-    [Tooltip("Target vertical resolution for the depth buffer (e.g. 720p). 0 = Manual Downsample.")]
-    public int targetDepthHeight = 540; 
-    [Range(1, 4)] public int depthDownsample = 1;
-    [Range(0, 10)] public int blurIterations = 1;
-    [Range(0.1f, 50f)] public float blurSigmaSpatial = 10.0f;
-    [Range(0.01f, 5f)] public float blurSigmaRange = 0.2f;
-    [Range(1, 20)] public int blurRadius = 10;
+    [Tooltip("Target vertical resolution for the depth buffer (e.g. 720p). 0 = Manual Downsample。普通机型建议 360–480。")]
+    public int targetDepthHeight = 420;
+    [Range(1, 4)] public int depthDownsample = 2;
+    [Range(0, 10)] public int blurIterations = 2;
+    [Range(0.1f, 50f)] public float blurSigmaSpatial = 9.5f;
+    [Range(0.01f, 5f)] public float blurSigmaRange = 2.5f;
+    [Range(1, 20)] public int blurRadius = 8;
 
     CommandBuffer fluidCmd;
     int bgTexID;
@@ -167,9 +174,9 @@ public class MPMFluidMobile : MonoBehaviour
     Material compositeMat;
     [Header("Rendering")]
     public Color fluidColor = new Color(0.0f, 0.5f, 1.0f, 1.0f);
-    [Range(0f, 5f)] public float absorption = 1.0f;
-    [Range(0f, 1f)] public float smoothness = 0.8f;
-    [Range(0f, 1f)] public float specular = 0.5f;
+    [Range(0f, 5f)] public float absorption = 0.82f;
+    [Range(0f, 1f)] public float smoothness = 0.9f;
+    [Range(0f, 1f)] public float specular = 0.58f;
     [Range(0f, 0.5f)] public float thicknessCutoff = 0.05f; // New threshold to trim wavy edges
     [Range(0f, 0.2f)] public float refractionStrength = 0.02f; // New refraction strength
 
@@ -190,16 +197,26 @@ public class MPMFluidMobile : MonoBehaviour
     [Tooltip("Maximum corner of the particle spawn volume.")]
     public Vector3 spawnMax = new Vector3(10, 6, 4);
 
+#if UNITY_EDITOR
+    void OnValidate()
+    {
+        particleCount = Mathf.Clamp(particleCount, MinParticleCount, MaxParticleCountMobile);
+        gridResolution = Mathf.Clamp(gridResolution, 16, 48);
+    }
+#endif
+
     void Start()
     {
         cs = Resources.Load<ComputeShader>("Shader/Compute Shader/MPM/Mobile/mpm_fluid_mobile");
         if (cs == null) { enabled = false; return; }
+        particleCount = Mathf.Clamp(particleCount, MinParticleCount, MaxParticleCountMobile);
+        gridResolution = Mathf.Clamp(gridResolution, 16, 48);
         kClearGrid = cs.FindKernel("ClearGrid");
         kP2G = cs.FindKernel("P2G");
         kGridUpdate = cs.FindKernel("GridUpdate");
         kG2P = cs.FindKernel("G2P");
+        kGridToRender = cs.FindKernel("GridToRenderParticles");
         kProbeGrid = cs.FindKernel("ProbeGrid");
-        int kGridToRender = cs.FindKernel("GridToRenderParticles");
 
         int gridCount = gridResolution * gridResolution * gridResolution;
         bufX = new ComputeBuffer(particleCount, sizeof(float) * 3);
@@ -230,6 +247,9 @@ public class MPMFluidMobile : MonoBehaviour
         boatSpheresBuffer = new ComputeBuffer(1, 32);
         boatSpheresBuffer.SetData(new HullSphere[1]);
         boatSphereCount = 0;
+
+        BindMpmPersistentKernelBuffers();
+        cs.SetBuffer(kGridUpdate, "boatSpheres", boatSpheresBuffer);
 
         var gph = Shader.Find("Instanced/GridParticleMobile");
         if (gph != null)
@@ -363,17 +383,25 @@ public class MPMFluidMobile : MonoBehaviour
         cs.SetVector("stirrerVelocity", stirrerVelocity);
 
         cs.SetInt("boatSphereCount", boatSphereCount);
-        // Always bind buffer even if count is 0 to satisfy Unity shader validation
-        if (boatSpheresBuffer != null)
-        {
-            cs.SetBuffer(kGridUpdate, "boatSpheres", boatSpheresBuffer);
-        }
 
+        cs.Dispatch(kClearGrid, groupsGrid, 1, 1);
+
+        cs.Dispatch(kP2G, groupsParticle, 1, 1);
+
+        cs.Dispatch(kGridUpdate, groupsGrid, 1, 1);
+
+        cs.Dispatch(kG2P, groupsParticle, 1, 1);
+
+        // Grid To Render Particles (Smoothing)
+        cs.Dispatch(kGridToRender, groupsParticle, 1, 1);
+    }
+
+    void BindMpmPersistentKernelBuffers()
+    {
         cs.SetBuffer(kClearGrid, "gridMassI_rw", bufGridMassI);
         cs.SetBuffer(kClearGrid, "gridMomX_rw", bufGridMomX);
         cs.SetBuffer(kClearGrid, "gridMomY_rw", bufGridMomY);
         cs.SetBuffer(kClearGrid, "gridMomZ_rw", bufGridMomZ);
-        cs.Dispatch(kClearGrid, groupsGrid, 1, 1);
 
         cs.SetBuffer(kP2G, "x_ro", bufX);
         cs.SetBuffer(kP2G, "v_ro", bufV);
@@ -384,13 +412,11 @@ public class MPMFluidMobile : MonoBehaviour
         cs.SetBuffer(kP2G, "gridMomX_rw", bufGridMomX);
         cs.SetBuffer(kP2G, "gridMomY_rw", bufGridMomY);
         cs.SetBuffer(kP2G, "gridMomZ_rw", bufGridMomZ);
-        cs.Dispatch(kP2G, groupsParticle, 1, 1);
 
         cs.SetBuffer(kGridUpdate, "gridMassI_rw", bufGridMassI);
         cs.SetBuffer(kGridUpdate, "gridMomX_rw", bufGridMomX);
         cs.SetBuffer(kGridUpdate, "gridMomY_rw", bufGridMomY);
         cs.SetBuffer(kGridUpdate, "gridMomZ_rw", bufGridMomZ);
-        cs.Dispatch(kGridUpdate, groupsGrid, 1, 1);
 
         cs.SetBuffer(kG2P, "x", bufX);
         cs.SetBuffer(kG2P, "v", bufV);
@@ -401,18 +427,14 @@ public class MPMFluidMobile : MonoBehaviour
         cs.SetBuffer(kG2P, "gridMomX", bufGridMomX);
         cs.SetBuffer(kG2P, "gridMomY", bufGridMomY);
         cs.SetBuffer(kG2P, "gridMomZ", bufGridMomZ);
-        cs.Dispatch(kG2P, groupsParticle, 1, 1);
 
-        // Grid To Render Particles (Smoothing)
-        int kGridToRender = cs.FindKernel("GridToRenderParticles");
-        cs.SetBuffer(kGridToRender, "x", bufX); // Current position (updated by G2P)
-        cs.SetBuffer(kGridToRender, "v", bufV); // Current velocity
-        cs.SetBuffer(kGridToRender, "gridMassI", bufGridMassI); // Mass from P2G
+        cs.SetBuffer(kGridToRender, "x", bufX);
+        cs.SetBuffer(kGridToRender, "v", bufV);
+        cs.SetBuffer(kGridToRender, "gridMassI", bufGridMassI);
         cs.SetBuffer(kGridToRender, "gridMomX", bufGridMomX);
         cs.SetBuffer(kGridToRender, "gridMomY", bufGridMomY);
         cs.SetBuffer(kGridToRender, "gridMomZ", bufGridMomZ);
-        cs.SetBuffer(kGridToRender, "_particlesBuffer", particlesBuffer); // Output for rendering
-        cs.Dispatch(kGridToRender, groupsParticle, 1, 1);
+        cs.SetBuffer(kGridToRender, "_particlesBuffer", particlesBuffer);
     }
 
     public void DispatchProbe(ComputeBuffer probeBuf, int count)
@@ -466,7 +488,9 @@ public class MPMFluidMobile : MonoBehaviour
         if (fluidCmd != null)
         {
             fluidCmd.Clear();
-            
+            int fluidDepthW = 0;
+            int fluidDepthH = 0;
+
             // 1. Background Capture
             fluidCmd.GetTemporaryRT(bgTexID, -1, -1, 0, FilterMode.Bilinear);
             fluidCmd.Blit(BuiltinRenderTextureType.CurrentActive, bgTexID);
@@ -486,15 +510,17 @@ public class MPMFluidMobile : MonoBehaviour
                     effectiveDownsample = Mathf.Max(depthDownsample, Mathf.RoundToInt(scale));
                 }
 
-                int dw = Screen.width / effectiveDownsample;
-                int dh = Screen.height / effectiveDownsample;
+                int dw = Mathf.Max(1, Screen.width / effectiveDownsample);
+                int dh = Mathf.Max(1, Screen.height / effectiveDownsample);
+                fluidDepthW = dw;
+                fluidDepthH = dh;
                 
                 fluidCmd.GetTemporaryRT(depthTexID, dw, dh, 24, FilterMode.Bilinear, depthFmt);
                 fluidCmd.SetRenderTarget(depthTexID);
                 fluidCmd.ClearRenderTarget(true, true, new Color(10000f, 10000f, 10000f, 10000f));
                 fluidCmd.DrawMeshInstancedProcedural(sphereMesh, 0, depthMat, 0, particleCount, props);
 
-                // Depth Blur
+                // Depth Blur（中间 RT 必须与深度同分辨率；原先用全屏 -1 在移动端会浪费大量带宽）
                 Material currentBlurMat = (filterType == DepthFilterType.Gaussian && gaussianMat != null) ? gaussianMat : blurMat;
 
                 if (currentBlurMat != null && blurIterations > 0)
@@ -505,7 +531,7 @@ public class MPMFluidMobile : MonoBehaviour
                     currentBlurMat.SetInt("_FilterRadius", blurRadius);
 
                     int tempDepthID = Shader.PropertyToID("_FluidDepthTemp");
-                    fluidCmd.GetTemporaryRT(tempDepthID, -1, -1, 0, FilterMode.Bilinear, depthFmt);
+                    fluidCmd.GetTemporaryRT(tempDepthID, dw, dh, 0, FilterMode.Bilinear, depthFmt);
 
                     for (int i = 0; i < blurIterations; i++)
                     {
@@ -546,14 +572,11 @@ public class MPMFluidMobile : MonoBehaviour
                 fluidCmd.SetGlobalTexture("_FluidThicknessTexture", thicknessTexID);
             }
 
-            // 4. Normal Pass
-             if (normalMat != null)
+            // 4. Normal Pass（与深度 RT 同尺寸，避免与 effectiveDownsample 不一致）
+             if (normalMat != null && depthMat != null && fluidDepthW > 0 && fluidDepthH > 0)
              {
                  normalMat.SetFloat("_NormalStrength", normalStrength);
-                 // Match depth resolution for normals to avoid resampling artifacts
-                 int nw = Screen.width / depthDownsample;
-                 int nh = Screen.height / depthDownsample;
-                 fluidCmd.GetTemporaryRT(normalTexID, nw, nh, 0, FilterMode.Bilinear, RenderTextureFormat.ARGBHalf);
+                 fluidCmd.GetTemporaryRT(normalTexID, fluidDepthW, fluidDepthH, 0, FilterMode.Bilinear, RenderTextureFormat.ARGBHalf);
                  
                  // Explicitly Blit from Depth to Normal (sets _MainTex to depthTexID)
                  fluidCmd.Blit(depthTexID, normalTexID, normalMat);

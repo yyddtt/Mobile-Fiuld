@@ -43,6 +43,7 @@ Shader "SSFR/FluidComposite"
             sampler2D _FluidDepthTexture;
             sampler2D _FluidThicknessTexture;
             sampler2D _FluidNormalTexture;
+            float4 _FluidNormalTexture_TexelSize;
             sampler2D _CameraDepthTexture; 
 
             float4 _Color;
@@ -64,15 +65,14 @@ Shader "SSFR/FluidComposite"
                 float2 uv = i.uv;
                 
                 // --- BACKGROUND SAMPLING ---
-                // We handle the V-Flip for background here explicitly.
-                // On D3D (UNITY_UV_STARTS_AT_TOP), if we are blitting from a texture (bgTex)
-                // that is upside-down in memory relative to screen UVs, we flip.
-                // Since the user reported inversion persists, we force the flip for _MainTex.
-                
+                // Background comes from CommandBuffer.Blit(CurrentActive, tempRT). Its V orientation
+                // relative to the fullscreen Blit UVs is indicated by _MainTex_TexelSize.y (Unity
+                // convention). Unconditional flips under UNITY_UV_STARTS_AT_TOP break after some
+                // Unity / graphics API / HDR paths and misalign refraction with fluid depth.
                 float2 bgUV = uv;
-                
                 #if UNITY_UV_STARTS_AT_TOP
-                bgUV.y = 1.0 - bgUV.y;
+                if (_MainTex_TexelSize.y < 0)
+                    bgUV.y = 1.0 - bgUV.y;
                 #endif
 
                 // --- FLUID DATA SAMPLING ---
@@ -82,7 +82,13 @@ Shader "SSFR/FluidComposite"
                 
                 float fluidDepth = tex2D(_FluidDepthTexture, uv).r;
                 float thickness = tex2D(_FluidThicknessTexture, uv).r;
-                float3 normal = tex2D(_FluidNormalTexture, uv).rgb * 2.0 - 1.0;
+                float2 nt = _FluidNormalTexture_TexelSize.xy;
+                float3 nC = tex2D(_FluidNormalTexture, uv).rgb * 2.0 - 1.0;
+                float3 nL = tex2D(_FluidNormalTexture, uv + float2(-nt.x, 0)).rgb * 2.0 - 1.0;
+                float3 nR = tex2D(_FluidNormalTexture, uv + float2( nt.x, 0)).rgb * 2.0 - 1.0;
+                float3 nD = tex2D(_FluidNormalTexture, uv + float2(0, -nt.y)).rgb * 2.0 - 1.0;
+                float3 nU = tex2D(_FluidNormalTexture, uv + float2(0,  nt.y)).rgb * 2.0 - 1.0;
+                float3 normal = normalize(nC * 2.1 + nL + nR + nD + nU);
 
                 // --- EDGE TRIMMING & SPRAY PRESERVATION ---
                 // Original logic: thickness = max(0.0, thickness - _ThicknessCutoff);
@@ -171,7 +177,7 @@ Shader "SSFR/FluidComposite"
                 // Calculate an edge factor that is 0 at thickness=0 and 1 at thickness=0.1
                 // This will be used to dampen refraction and normal effects at the very edge.
                 // Modified: Use smoothstep for better control and avoid "waves"
-                float edgeFactor = smoothstep(0.0, 0.2, thickness);
+                float edgeFactor = smoothstep(0.0, 0.26, thickness);
                 
                 // 1. Dampen Normal at edges: Force normal to point towards camera (0,0,1)
                 // This prevents extreme refraction and specular highlights at the jagged edges.
@@ -179,7 +185,7 @@ Shader "SSFR/FluidComposite"
 
                 // 2. Dampen Refraction Offset
                 // Modified: Reduced multiplier to prevent extreme distortion at edges
-                float2 offset = normal.xy * 0.01 * min(thickness, 1.0) * edgeFactor;
+                float2 offset = normal.xy * 0.012 * min(thickness, 1.0) * edgeFactor;
                 float2 refractedBgUV = bgUV + offset; 
                 float3 refractedBg = tex2D(_MainTex, refractedBgUV).rgb;
 
@@ -204,8 +210,9 @@ Shader "SSFR/FluidComposite"
                 // Final Color Combination
                 // Modified: Separate lighting fade to be much stricter than normal/refraction fade.
                 // This kills the white specular/fresnel line at the very edge.
-                float lightingFade = smoothstep(0.05, 0.4, thickness);
-                float3 finalColor = refractedBg * transmission + (spec + fresnel) * lightingFade;
+                float lightingFade = smoothstep(0.07, 0.42, thickness);
+                float edgeSpec = edgeFactor * edgeFactor;
+                float3 finalColor = refractedBg * transmission + (spec + fresnel * edgeSpec) * lightingFade;
 
                 return float4(finalColor, 1.0);
             }
