@@ -38,7 +38,6 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 705507994}
-  m_IndirectSpecularColor: {r: 0.25330302, g: 0.21698889, b: 0.23319246, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -1789,7 +1788,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1824180953}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2ee69f9411d2bf54c89a4e3f15def75a, type: 3}
   m_Name: 
@@ -1826,7 +1825,6 @@ MonoBehaviour:
   simulateInLateUpdate: 1
   realisticWaterPreset: 1
   sweepFlowPreset: 1
-  sharpEdgesPreset: 0
   targetFrameRate: 60
   autoCameraClipTuning: 1
   clipMargin: 5
@@ -1973,7 +1971,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1824180953}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4520443af29b1784189723d1a199aca1, type: 3}
   m_Name: 

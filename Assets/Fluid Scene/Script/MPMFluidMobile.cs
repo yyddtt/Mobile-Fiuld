@@ -251,61 +251,22 @@ public class MPMFluidMobile : MonoBehaviour
         BindMpmPersistentKernelBuffers();
         cs.SetBuffer(kGridUpdate, "boatSpheres", boatSpheresBuffer);
 
-        var gph = Shader.Find("Instanced/GridParticleMobile");
-        if (gph != null)
-        {
-            gridParticleMat = new Material(gph);
-            gridParticleMat.enableInstancing = true;
-            gridParticleMat.SetFloat("_size", particleSize);
-        }
+        var sm = MobileSsfRenderShared.CreateSsfMaterials(particleSize, particlesBuffer);
+        gridParticleMat = sm.gridParticle;
+        depthMat = sm.depth;
+        debugDepthMat = sm.debugDepth;
+        blurMat = sm.blur;
+        gaussianMat = sm.gaussian;
+        thicknessMat = sm.thickness;
+        thicknessBlurMat = sm.thicknessBlur;
+        debugThicknessMat = sm.debugThickness;
+        normalMat = sm.normal;
+        debugNormalMat = sm.debugNormal;
+        compositeMat = sm.composite;
 
-        var dph = Shader.Find("Instanced/GridParticleDepth");
-        if (dph != null)
-        {
-            depthMat = new Material(dph);
-            depthMat.enableInstancing = true;
-        }
-
-        var debugShader = Shader.Find("Fluid/DebugDepth");
-        if (debugShader != null)
-        {
-            debugDepthMat = new Material(debugShader);
-        }
-
-        var blurShader = Shader.Find("SSFR/DepthBilateral");
-        if (blurShader != null) blurMat = new Material(blurShader);
-
-        var gaussShader = Shader.Find("SSFR/DepthGaussianSmart");
-        if (gaussShader != null) gaussianMat = new Material(gaussShader);
-
-        var thShader = Shader.Find("Instanced/GridParticleThickness");
-        if (thShader != null)
-        {
-            thicknessMat = new Material(thShader);
-            thicknessMat.enableInstancing = true;
-        }
-
-        var thBlurShader = Shader.Find("SSFR/ThicknessBlur");
-        if (thBlurShader != null) thicknessBlurMat = new Material(thBlurShader);
-
-        var debugThShader = Shader.Find("Fluid/DebugThickness");
-        if (debugThShader != null) debugThicknessMat = new Material(debugThShader);
-
-        var normShader = Shader.Find("SSFR/FluidNormals");
-        if (normShader != null) normalMat = new Material(normShader);
-
-        var debugNormShader = Shader.Find("Fluid/DebugNormal");
-        if (debugNormShader != null) debugNormalMat = new Material(debugNormShader);
-
-        var compShader = Shader.Find("SSFR/FluidComposite");
-        if (compShader != null) compositeMat = new Material(compShader);
-
-        sphereMesh = CreateSphereMesh();
+        sphereMesh = MobileSsfRenderShared.CreateParticleSphereMesh();
         props = new MaterialPropertyBlock();
         drawBounds = new Bounds((boundsMin + boundsMax) * 0.5f, boundsMax - boundsMin + Vector3.one * 2f);
-
-        if (depthMat != null) depthMat.SetBuffer("_particlesBuffer", particlesBuffer);
-        if (thicknessMat != null) thicknessMat.SetBuffer("_particlesBuffer", particlesBuffer);
 
         if (targetFrameRate > 0) Application.targetFrameRate = targetFrameRate;
 
@@ -499,7 +460,7 @@ public class MPMFluidMobile : MonoBehaviour
             // 2. Depth Pass
             if (depthMat != null)
             {
-                RenderTextureFormat depthFmt = SelectSingleChannelFloatFormat();
+                RenderTextureFormat depthFmt = MobileSsfRenderShared.SelectSingleChannelFloatFormat();
                 
                 // Adaptive Downsampling: Ensure consistent blur radius across different screen DPIs
                 // If targetDepthHeight > 0, we calculate downsample to match that height roughly.
@@ -550,7 +511,7 @@ public class MPMFluidMobile : MonoBehaviour
                 props.SetFloat("_SizeScale", renderParticleScale); // Sync size scale for thickness
                 int w = Screen.width / thicknessDownsample;
                 int h = Screen.height / thicknessDownsample;
-                RenderTextureFormat thickFmt = SelectSingleChannelFloatFormat();
+                RenderTextureFormat thickFmt = MobileSsfRenderShared.SelectSingleChannelFloatFormat();
                 
                 fluidCmd.GetTemporaryRT(thicknessTexID, w, h, 0, FilterMode.Bilinear, thickFmt);
                 fluidCmd.SetRenderTarget(thicknessTexID);
@@ -622,23 +583,6 @@ public class MPMFluidMobile : MonoBehaviour
         Release(bufX); Release(bufV); Release(bufC0); Release(bufC1); Release(bufC2); Release(bufGridMassI); Release(bufGridMomX); Release(bufGridMomY); Release(bufGridMomZ);
         Release(particlesBuffer);
         Release(boatSpheresBuffer);
-    }
-
-    RenderTextureFormat SelectSingleChannelFloatFormat()
-    {
-        if (SystemInfo.SupportsRenderTextureFormat(RenderTextureFormat.RHalf)) return RenderTextureFormat.RHalf;
-        if (SystemInfo.SupportsRenderTextureFormat(RenderTextureFormat.RFloat)) return RenderTextureFormat.RFloat;
-        return RenderTextureFormat.R8;
-    }
-
-    void ApplySharpEdgesPreset()
-    {
-        // no-op after render pipeline removal
-    }
-
-    void ApplyRealisticWaterPreset()
-    {
-        viscosity = 0.02f;
     }
 
     void Release(ComputeBuffer b) { if (b != null) b.Release(); }
@@ -736,60 +680,6 @@ public class MPMFluidMobile : MonoBehaviour
             Mathf.Clamp(p.y, boundsMin.y, boundsMax.y),
             Mathf.Clamp(p.z, boundsMin.z, boundsMax.z)
         );
-    }
-
-    Mesh CreateSphereMesh()
-    {
-        int segments = Application.isMobilePlatform ? 16 : 24;
-        int rings = Application.isMobilePlatform ? 12 : 16;
-        var verts = new Vector3[(rings + 1) * (segments + 1)];
-        var normals = new Vector3[verts.Length];
-        var uvs = new Vector2[verts.Length];
-        int vi = 0;
-        for (int r = 0; r <= rings; r++)
-        {
-            float v = (float)r / rings;
-            float phi = v * Mathf.PI;
-            for (int s = 0; s <= segments; s++)
-            {
-                float u = (float)s / segments;
-                float theta = u * Mathf.PI * 2f;
-                float x = Mathf.Sin(phi) * Mathf.Cos(theta);
-                float y = Mathf.Cos(phi);
-                float z = Mathf.Sin(phi) * Mathf.Sin(theta);
-                var p = new Vector3(x, y, z);
-                verts[vi] = p;
-                normals[vi] = p.normalized;
-                uvs[vi] = new Vector2(u, v);
-                vi++;
-            }
-        }
-        int[] tris = new int[rings * segments * 6];
-        int ti = 0;
-        for (int r = 0; r < rings; r++)
-        {
-            for (int s = 0; s < segments; s++)
-            {
-                int a = r * (segments + 1) + s;
-                int b = a + segments + 1;
-                int c = a + 1;
-                int d = b + 1;
-                tris[ti++] = a;
-                tris[ti++] = b;
-                tris[ti++] = c;
-                tris[ti++] = c;
-                tris[ti++] = b;
-                tris[ti++] = d;
-            }
-        }
-        var mesh = new Mesh();
-        mesh.name = "ProceduralSphere";
-        mesh.vertices = verts;
-        mesh.normals = normals;
-        mesh.uv = uvs;
-        mesh.triangles = tris;
-        mesh.RecalculateBounds();
-        return mesh;
     }
 
     void ApplyCameraClipTuning(Camera cam)

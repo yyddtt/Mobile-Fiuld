@@ -47,8 +47,6 @@ public class SPHStandardMobile : MonoBehaviour
     [Header("Physics Preset")]
     public bool realisticWaterPreset = true;
     public bool sweepFlowPreset = true;
-    [Tooltip("开启时仅保留历史名称；渲染参数请直接在下方 SSFR 区块调节（与 MPM 一致）。不再强制覆盖模糊/染色。")]
-    public bool sharpEdgesPreset = false;
     [Header("Adaptive/Power")]
     [HideInInspector] public int targetFrameRate = 60;
     [Header("Camera")]
@@ -253,58 +251,22 @@ public class SPHStandardMobile : MonoBehaviour
             }
         }
 
-        var gph = Shader.Find("Instanced/GridParticleMobile");
-        if (gph != null)
-        {
-            gridParticleMat = new Material(gph);
-            gridParticleMat.enableInstancing = true;
-            gridParticleMat.SetFloat("_size", particleSize);
-        }
+        var sm = MobileSsfRenderShared.CreateSsfMaterials(particleSize, particlesBuffer);
+        gridParticleMat = sm.gridParticle;
+        depthMat = sm.depth;
+        debugDepthMat = sm.debugDepth;
+        blurMat = sm.blur;
+        gaussianMat = sm.gaussian;
+        thicknessMat = sm.thickness;
+        thicknessBlurMat = sm.thicknessBlur;
+        debugThicknessMat = sm.debugThickness;
+        normalMat = sm.normal;
+        debugNormalMat = sm.debugNormal;
+        compositeMat = sm.composite;
 
-        var dph = Shader.Find("Instanced/GridParticleDepth");
-        if (dph != null)
-        {
-            depthMat = new Material(dph);
-            depthMat.enableInstancing = true;
-        }
-
-        var debugShader = Shader.Find("Fluid/DebugDepth");
-        if (debugShader != null) debugDepthMat = new Material(debugShader);
-
-        var blurShader = Shader.Find("SSFR/DepthBilateral");
-        if (blurShader != null) blurMat = new Material(blurShader);
-
-        var gaussShader = Shader.Find("SSFR/DepthGaussianSmart");
-        if (gaussShader != null) gaussianMat = new Material(gaussShader);
-
-        var thShader = Shader.Find("Instanced/GridParticleThickness");
-        if (thShader != null)
-        {
-            thicknessMat = new Material(thShader);
-            thicknessMat.enableInstancing = true;
-        }
-
-        var thBlurShader = Shader.Find("SSFR/ThicknessBlur");
-        if (thBlurShader != null) thicknessBlurMat = new Material(thBlurShader);
-
-        var debugThShader = Shader.Find("Fluid/DebugThickness");
-        if (debugThShader != null) debugThicknessMat = new Material(debugThShader);
-
-        var normShader = Shader.Find("SSFR/FluidNormals");
-        if (normShader != null) normalMat = new Material(normShader);
-
-        var debugNormShader = Shader.Find("Fluid/DebugNormal");
-        if (debugNormShader != null) debugNormalMat = new Material(debugNormShader);
-
-        var compShader = Shader.Find("SSFR/FluidComposite");
-        if (compShader != null) compositeMat = new Material(compShader);
-
-        sphereMesh = CreateSphereMesh();
+        sphereMesh = MobileSsfRenderShared.CreateParticleSphereMesh();
         props = new MaterialPropertyBlock();
         drawBounds = new Bounds((boundsMin + boundsMax) * 0.5f, boundsMax - boundsMin + Vector3.one * 2f);
-
-        if (depthMat != null) depthMat.SetBuffer("_particlesBuffer", particlesBuffer);
-        if (thicknessMat != null) thicknessMat.SetBuffer("_particlesBuffer", particlesBuffer);
 
         mainCam = Camera.main;
         if (mainCam != null)
@@ -341,7 +303,6 @@ public class SPHStandardMobile : MonoBehaviour
             ApplyMediumParticleStability();
         }
         if (targetFrameRate > 0) Application.targetFrameRate = targetFrameRate;
-        if (sharpEdgesPreset) ApplySharpEdgesPreset();
         if (Application.isMobilePlatform)
         {
             QualitySettings.pixelLightCount = Mathf.Max(QualitySettings.pixelLightCount, 4);
@@ -1039,6 +1000,21 @@ public class SPHStandardMobile : MonoBehaviour
         cs.Dispatch(kMain, groupsMain, 1, 1);
     }
 
+    void BindParticleSplatPropsAndGlobals()
+    {
+        props.Clear();
+        props.SetFloat("_size", particleSize);
+        props.SetFloat("_SizeScale", renderParticleScale);
+        props.SetFloat("_AnisotropyScale", anisotropyScale);
+        props.SetFloat("_MaxAnisotropy", maxAnisotropy);
+        props.SetBuffer("_particlesBuffer", particlesBuffer);
+        Shader.SetGlobalBuffer("_particlesBuffer", particlesBuffer);
+        Shader.SetGlobalFloat("_SizeScale", renderParticleScale);
+        Shader.SetGlobalFloat("_size", particleSize);
+        Shader.SetGlobalFloat("_AnisotropyScale", anisotropyScale);
+        Shader.SetGlobalFloat("_MaxAnisotropy", maxAnisotropy);
+    }
+
     void Draw()
     {
         if (sphereMesh == null || particlesBuffer == null) return;
@@ -1048,17 +1024,7 @@ public class SPHStandardMobile : MonoBehaviour
         if (renderMode == RenderMode.GridParticles)
         {
             if (gridParticleMat == null) return;
-            props.Clear();
-            props.SetFloat("_size", particleSize);
-            props.SetFloat("_SizeScale", renderParticleScale);
-            props.SetFloat("_AnisotropyScale", anisotropyScale);
-            props.SetFloat("_MaxAnisotropy", maxAnisotropy);
-            props.SetBuffer("_particlesBuffer", particlesBuffer);
-            Shader.SetGlobalBuffer("_particlesBuffer", particlesBuffer);
-            Shader.SetGlobalFloat("_SizeScale", renderParticleScale);
-            Shader.SetGlobalFloat("_size", particleSize);
-            Shader.SetGlobalFloat("_AnisotropyScale", anisotropyScale);
-            Shader.SetGlobalFloat("_MaxAnisotropy", maxAnisotropy);
+            BindParticleSplatPropsAndGlobals();
             Graphics.DrawMeshInstancedProcedural(sphereMesh, 0, gridParticleMat, drawBounds, particleCount, props, ShadowCastingMode.On, true);
             return;
         }
@@ -1069,18 +1035,7 @@ public class SPHStandardMobile : MonoBehaviour
             return;
         }
 
-        props.Clear();
-        props.SetFloat("_size", particleSize);
-        props.SetFloat("_SizeScale", renderParticleScale);
-        props.SetFloat("_AnisotropyScale", anisotropyScale);
-        props.SetFloat("_MaxAnisotropy", maxAnisotropy);
-        props.SetBuffer("_particlesBuffer", particlesBuffer);
-
-        Shader.SetGlobalBuffer("_particlesBuffer", particlesBuffer);
-        Shader.SetGlobalFloat("_SizeScale", renderParticleScale);
-        Shader.SetGlobalFloat("_size", particleSize);
-        Shader.SetGlobalFloat("_AnisotropyScale", anisotropyScale);
-        Shader.SetGlobalFloat("_MaxAnisotropy", maxAnisotropy);
+        BindParticleSplatPropsAndGlobals();
 
         if (renderParticles && gridParticleMat != null)
         {
@@ -1101,7 +1056,7 @@ public class SPHStandardMobile : MonoBehaviour
 
             if (depthMat != null)
             {
-                RenderTextureFormat depthFmt = SelectSingleChannelFloatFormat();
+                RenderTextureFormat depthFmt = MobileSsfRenderShared.SelectSingleChannelFloatFormat();
 
                 int effectiveDownsample = depthDownsample;
                 if (targetDepthHeight > 0)
@@ -1147,7 +1102,7 @@ public class SPHStandardMobile : MonoBehaviour
                 props.SetFloat("_SizeScale", renderParticleScale);
                 int w = Screen.width / thicknessDownsample;
                 int h = Screen.height / thicknessDownsample;
-                RenderTextureFormat thickFmt = SelectSingleChannelFloatFormat();
+                RenderTextureFormat thickFmt = MobileSsfRenderShared.SelectSingleChannelFloatFormat();
 
                 fluidCmd.GetTemporaryRT(thicknessTexID, w, h, 0, FilterMode.Bilinear, thickFmt);
                 fluidCmd.SetRenderTarget(thicknessTexID);
@@ -1248,16 +1203,7 @@ public class SPHStandardMobile : MonoBehaviour
         }
         Release(bufX); Release(bufV); Release(bufRho); Release(bufCellHead); Release(bufNextIndex); Release(particlesBuffer); Release(bufImpulses); Release(bufObstacles);
     }
-    
-    RenderTextureFormat SelectSingleChannelFloatFormat()
-    {
-        if (SystemInfo.SupportsRenderTextureFormat(RenderTextureFormat.RHalf)) return RenderTextureFormat.RHalf;
-        if (SystemInfo.SupportsRenderTextureFormat(RenderTextureFormat.RFloat)) return RenderTextureFormat.RFloat;
-        return RenderTextureFormat.R8;
-    }
-    
-    
-    
+
     void ApplyCameraClipTuning(Camera cam)
     {
         Vector3 bmin = boundsMin;
@@ -1298,20 +1244,7 @@ public class SPHStandardMobile : MonoBehaviour
         cam.nearClipPlane = near;
         cam.farClipPlane = far;
     }
-    
-    
 
-    
-    
-
-    
-    
-
-    void ApplySharpEdgesPreset()
-    {
-        // 与 MPMFluidMobile 一致：不在此预设里改写 SSFR，避免与 MPM 的 Gaussian/高模糊/染色 完全两套逻辑。
-    }
-    
     void ApplyMediumParticleStability()
     {
         // 粒子多时仍保持可接受的子步数；过高子步 + 强边界阻尼易造成“一碰底就吸住”。
@@ -1654,59 +1587,4 @@ public class SPHStandardMobile : MonoBehaviour
         lastStirPos = newWorldPos;
     }
     
-    // Removed buoyant block runtime helpers; use BuoyantBlockFloat component and menu creator instead.
-
-    Mesh CreateSphereMesh()
-    {
-        int segments = Application.isMobilePlatform ? 16 : 24;
-        int rings = Application.isMobilePlatform ? 12 : 16;
-        var verts = new Vector3[(rings + 1) * (segments + 1)];
-        var normals = new Vector3[verts.Length];
-        var uvs = new Vector2[verts.Length];
-        int vi = 0;
-        for (int r = 0; r <= rings; r++)
-        {
-            float v = (float)r / rings;
-            float phi = v * Mathf.PI;
-            for (int s = 0; s <= segments; s++)
-            {
-                float u = (float)s / segments;
-                float theta = u * Mathf.PI * 2f;
-                float x = Mathf.Sin(phi) * Mathf.Cos(theta);
-                float y = Mathf.Cos(phi);
-                float z = Mathf.Sin(phi) * Mathf.Sin(theta);
-                var p = new Vector3(x, y, z);
-                verts[vi] = p;
-                normals[vi] = p.normalized;
-                uvs[vi] = new Vector2(u, v);
-                vi++;
-            }
-        }
-        int[] tris = new int[rings * segments * 6];
-        int ti = 0;
-        for (int r = 0; r < rings; r++)
-        {
-            for (int s = 0; s < segments; s++)
-            {
-                int a = r * (segments + 1) + s;
-                int b = a + segments + 1;
-                int c = a + 1;
-                int d = b + 1;
-                tris[ti++] = a;
-                tris[ti++] = b;
-                tris[ti++] = c;
-                tris[ti++] = c;
-                tris[ti++] = b;
-                tris[ti++] = d;  
-            }
-        }
-        var mesh = new Mesh();
-        mesh.name = "ProceduralSphere";
-        mesh.vertices = verts;
-        mesh.normals = normals;
-        mesh.uv = uvs;
-        mesh.triangles = tris;
-        mesh.RecalculateBounds();
-        return mesh;
-    }
 }
