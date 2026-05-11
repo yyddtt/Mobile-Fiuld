@@ -271,7 +271,7 @@ void GridUpdate(uint3 id : SV_DispatchThreadID) {
                 float3 relPos = gpos - hs.sphere.xyz;
                 float dist = length(relPos);
                 if (dist < hs.sphere.w) {
-                    float3 normal = normalize(relPos);
+                    float3 normal = (dist > 1e-5) ? (relPos / dist) : float3(0, 1, 0);
                     // Use a stronger velocity interaction for wake
                     float3 relVel = vel - hs.velocity; 
                     float vProj = dot(relVel, normal);
@@ -297,7 +297,7 @@ void GridUpdate(uint3 id : SV_DispatchThreadID) {
             float3 relPos = gpos - colliderSphere.xyz;
             float dist = length(relPos);
             if (dist < colliderSphere.w) {
-                float3 normal = normalize(relPos);
+                float3 normal = (dist > 1e-5) ? (relPos / dist) : float3(0, 1, 0);
                 float3 relVel = vel - colliderVelocity;
                 float vProj = dot(relVel, normal);
                 if (vProj < 0) {
@@ -317,7 +317,7 @@ void GridUpdate(uint3 id : SV_DispatchThreadID) {
             float3 relPos = gpos - stirrerSphere.xyz;
             float dist = length(relPos);
             if (dist < stirrerSphere.w) {
-                float3 normal = normalize(relPos);
+                float3 normal = (dist > 1e-5) ? (relPos / dist) : float3(0, 1, 0);
                 float3 relVel = vel - stirrerVelocity;
                 float vProj = dot(relVel, normal);
                 if (vProj < 0) {
@@ -576,9 +576,10 @@ void ProbeGrid(uint id : SV_DispatchThreadID) {
         }
     }
     
-    if (totalW > 0) {
+    if (totalW > 1e-4) {
         p.velocity = avgVel / totalW;
-        p.density = avgRho / totalW;
+        float rho = avgRho / totalW;
+        p.density = clamp(rho, 0.0, restDensity * 2.5);
     } else {
         p.velocity = 0;
         p.density = 0;

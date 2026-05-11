@@ -4,6 +4,8 @@ using UnityEngine.Rendering;
 public class AutoLighting : MonoBehaviour
 {
     public SPHStandardMobile fluid;
+    [Tooltip("与 MPM 同场景时赋值；布局会跟随当前启用的流体。")]
+    public MPMFluidMobile mpmFluid;
     public Light directionalLight;
     public Light spotLight;
     public ReflectionProbe reflectionProbe;
@@ -51,6 +53,7 @@ public class AutoLighting : MonoBehaviour
     void EnsureReferences()
     {
         if (fluid == null) fluid = GetComponent<SPHStandardMobile>();
+        if (mpmFluid == null) mpmFluid = GetComponent<MPMFluidMobile>();
         if (root == null)
         {
             var existing = transform.Find("AutoLighting");
@@ -116,9 +119,23 @@ public class AutoLighting : MonoBehaviour
 
     void ApplyLayout()
     {
-        if (fluid == null) return;
-        var min = fluid.boundsMin;
-        var max = fluid.boundsMax;
+        Vector3 min, max;
+        if (mpmFluid != null && mpmFluid.enabled && (fluid == null || !fluid.enabled))
+        {
+            min = mpmFluid.boundsMin;
+            max = mpmFluid.boundsMax;
+        }
+        else if (fluid != null)
+        {
+            min = fluid.boundsMin;
+            max = fluid.boundsMax;
+        }
+        else if (mpmFluid != null)
+        {
+            min = mpmFluid.boundsMin;
+            max = mpmFluid.boundsMax;
+        }
+        else return;
         var center = (min + max) * 0.5f;
         var size = new Vector3(Mathf.Max(max.x - min.x, 0.001f), Mathf.Max(max.y - min.y, 0.001f), Mathf.Max(max.z - min.z, 0.001f));
         if (directionalLight != null)

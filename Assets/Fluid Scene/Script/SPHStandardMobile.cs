@@ -16,32 +16,39 @@ public class SPHStandardMobile : MonoBehaviour
     public float neighbourRadius = 0.35f;
     [HideInInspector] public float particleMass = 1.0f;
     public float restDensity = 1000.0f;
-    [Tooltip("越大越「糖浆」；想轻盈可保持偏低并与 XSPH 配合。")]
-    public float viscosity = 0.055f;
-    [HideInInspector] public float eosGamma = 7.0f;
-    [HideInInspector] public float soundSpeed = 25.0f;
+    [Tooltip("Mueller 粘性系数；标准移动端 SPH 取 0.020–0.040 即为轻盈水，>0.06 开始发糖浆。")]
+    public float viscosity = 0.025f;
+    [Tooltip("Tait EOS 的 γ：1=线性 EOS（移动端最稳定，几乎不沸腾）；7=硬水（更不可压，但易沸腾）。建议保持 1.")]
+    public float eosGamma = 1.0f;
+    [Tooltip("声速 c。EOS 刚度 K = ρ₀·c²/γ；过大刚度大易抖，过小则水太软可压缩明显。建议 28–40。")]
+    public float soundSpeed = 32.0f;
     public Vector3 gravity = new Vector3(0,-9.8f,0);
-    [HideInInspector] public float maxSpeed = 12.0f;
-    [HideInInspector] public float boundaryDamping = 0.5f;
-    [HideInInspector] public float boundaryDampingZ = 0.6f;
+    [HideInInspector] public float maxSpeed = 14.0f;
+    [Tooltip("反射边界能量保留比例；过低会显「贴墙吸住」。建议 0.45–0.65。")]
+    [HideInInspector] public float boundaryDamping = 0.55f;
+    [HideInInspector] public float boundaryDampingZ = 0.55f;
     [HideInInspector] public float boundaryMaxBounceSpeedZ = 3.5f;
-    [HideInInspector] public float xsphC = 0.14f;
+    [Tooltip("XSPH 速度平滑系数；0.04–0.08 平滑掉 SPH 经典的高频「沸腾」抖动而不至发胶。")]
+    [HideInInspector] public float xsphC = 0.05f;
     [Tooltip("SSFR 椭球基准半径（世界单位）。SPH 排列较规则，可略小于 MPM；过大则屏上 splat 显胖、细节糊成一片。建议约 0.08–0.11。")]
     public float particleSize = 0.102f;
     public bool runSimulation = true;
-    [HideInInspector] public bool enableLowParticleCountTuning = true;
-    public float minSpeed = 0.015f;
+    [HideInInspector] public bool enableLowParticleCountTuning = false;
+    [Tooltip("速度上限（标准移动端 SPH 不做休眠）；保留字段以兼容老 inspector。")]
+    public float minSpeed = 0.0f;
     
     [Tooltip("初始粒子生成盒最小角，坐标必须在 boundsMin～boundsMax 内；若越界会被钳制，x 偏小且 boundsMin.x 较大时会整团贴在左墙。")]
     public Vector3 spawnMin = new Vector3(4,2,1);
     [Tooltip("初始粒子生成盒最大角，须大于 spawnMin 且落在边界盒内。")]
     public Vector3 spawnMax = new Vector3(10,6,4);
     [HideInInspector] public bool autoCalibrateMass = true;
+    [Tooltip("初始粒子质量缩放。<1 可抑制开局过压导致的瞬时膨胀；建议 0.93–1.00。")]
+    [Range(0.85f, 1.15f)] public float initialMassScale = 0.96f;
     [HideInInspector] public bool autoNeighbourRadius = true;
-    [HideInInspector] public float initialJitter = 0.05f;
+    [HideInInspector] public float initialJitter = 0.02f;
     public bool enableSubstepping = true;
     public float fixedTimeStep = 0.004f;
-    public int maxSubsteps = 6;
+    public int maxSubsteps = 8;
     public RenderMode renderMode = RenderMode.Fluid;
     [HideInInspector] public bool simulateInLateUpdate = true;
     [Header("Physics Preset")]
@@ -49,6 +56,13 @@ public class SPHStandardMobile : MonoBehaviour
     public bool sweepFlowPreset = true;
     [Header("Adaptive/Power")]
     [HideInInspector] public int targetFrameRate = 60;
+    public enum MobileQualityProfile { Auto, Performance, Balanced, Quality }
+    public MobileQualityProfile mobileQualityProfile = MobileQualityProfile.Balanced;
+    public bool adaptiveQuality = false;
+    [Range(30f, 120f)] public float qualityDownshiftFps = 50f;
+    [Range(30f, 120f)] public float qualityUpshiftFps = 58f;
+    [Range(10, 240)] public int qualityCheckIntervalFrames = 20;
+    [Range(30, 600)] public int qualityCooldownFrames = 120;
     [Header("Camera")]
     public bool autoCameraClipTuning = true;
     public float clipMargin = 5f;
@@ -68,8 +82,8 @@ public class SPHStandardMobile : MonoBehaviour
     [Range(0f, 0.5f)] public float thicknessCutoff = 0.065f;
     [Range(0f, 0.2f)] public float refractionStrength = 0.02f;
     [Header("Thickness")]
-    [Range(0.01f, 0.5f)] public float thicknessContribution = 0.056f;
-    [Range(0, 5)] public int thicknessBlurIterations = 2;
+    [Range(0.01f, 0.5f)] public float thicknessContribution = 0.052f;
+    [Range(0, 5)] public int thicknessBlurIterations = 1;
     [Range(1, 20)] public int thicknessBlurRadius = 5;
     [Range(1, 5)] public int thicknessDownsample = 2;
     [Header("Normals")]
@@ -77,25 +91,32 @@ public class SPHStandardMobile : MonoBehaviour
     [Range(0.1f, 10f)] public float normalStrength = 0.86f;
     [Header("Anisotropy (grid particles & fluid splats)")]
     [Tooltip("乘在 particleSize 上（着色器内 splat 尺寸）。MPM 常需 1.4+ 填洞；SPH 可降到约 1.15–1.28 以保留轮廓细节。")]
-    [Range(1f, 2f)] public float renderParticleScale = 1.38f;
-    [Range(0f, 5f)] public float anisotropyScale = 0.38f;
-    [Range(1f, 10f)] public float maxAnisotropy = 4f;
+    [Range(1f, 2f)] public float renderParticleScale = 1.22f;
+    [Range(0f, 5f)] public float anisotropyScale = 0.26f;
+    [Range(1f, 10f)] public float maxAnisotropy = 2.8f;
     [Header("Depth filtering")]
     public DepthFilterType filterType = DepthFilterType.Gaussian;
     public enum DepthFilterType { Bilateral, Gaussian }
     [Tooltip("深度 RT 目标高度；略提高可减轻锯齿（SPH 可略锐于 MPM）。0 则仅用 depthDownsample。")]
     public int targetDepthHeight = 520;
     [Range(1, 4)] public int depthDownsample = 2;
-    [Range(0, 10)] public int blurIterations = 2;
-    [Range(0.1f, 50f)] public float blurSigmaSpatial = 6.8f;
-    [Range(0.01f, 5f)] public float blurSigmaRange = 2.35f;
+    [Range(0, 10)] public int blurIterations = 1;
+    [Range(0.1f, 50f)] public float blurSigmaSpatial = 5.4f;
+    [Range(0.01f, 5f)] public float blurSigmaRange = 2.1f;
     [Range(1, 20)] public int blurRadius = 6;
+    [Header("Particle Surface Tuning")]
+    public bool autoTuneParticleSurface = false;
+    [Range(0.45f, 0.9f)] public float particleOverlapRatio = 0.62f;
+    [Range(0.2f, 0.8f)] public float minParticleToCellRatio = 0.34f;
+    [Range(0.5f, 1.2f)] public float maxParticleToCellRatio = 0.88f;
+    [Range(0.01f, 1f)] public float particleSurfaceTuneLerp = 0.18f;
 
     ComputeShader cs;
     int kClearGrid;
     int kBuildGrid;
     int kDensity;
-    int kMain;
+    int kForces;
+    int kIntegrate;
 
     ComputeBuffer bufX;
     ComputeBuffer bufV;
@@ -104,6 +125,11 @@ public class SPHStandardMobile : MonoBehaviour
     ComputeBuffer bufNextIndex;
     ComputeBuffer bufImpulses;
     ComputeBuffer bufObstacles;
+    ComputeBuffer bufBoatCouplingSpheres;
+    ComputeBuffer bufBoatCouplingVelocities;
+    // 力计算与积分分离用的中间缓冲（消除 kernel 内 race）
+    ComputeBuffer bufAccOut;
+    ComputeBuffer bufVCorrOut;
 
     ComputeBuffer particlesBuffer;
     Material gridParticleMat;
@@ -134,17 +160,33 @@ public class SPHStandardMobile : MonoBehaviour
     public float stirStrength = 50f;
     public Transform[] obstacleTransforms;
     public float obstacleDefaultRadius = 0.5f;
-    public float obstaclePushStrength = 40f;
-    public float obstacleDamping = 0.6f;
+    public float obstaclePushStrength = 8f;
+    public float obstacleDamping = 0.52f;
     public Transform barrierTransform;
     public bool enableBarrierMove = true;
     public bool requireSelectionToMove = true;
     public LayerMask selectableMask = ~0;
-    [Tooltip("涡量约束强度；>0.2 时显式 WCSPH 极易抖。扫流预设已改为上限夹紧。")]
-    public float vorticityEps = 0.08f;
-    public float surfaceTension = 0.0f;
-    public float freeSurfaceDamping = 0.0f;
-    public float freeSurfaceThreshold = 0.75f;
+    [Tooltip("已弃用：标准 WCSPH 不使用涡量约束。")]
+    [HideInInspector] public float vorticityEps = 0.0f;
+    [HideInInspector] public float surfaceTension = 0.0f;
+    [HideInInspector] public float freeSurfaceDamping = 0.0f;
+    [HideInInspector] public float freeSurfaceThreshold = 0.75f;
+
+    [Header("Artificial Viscosity (Monaghan-Gingold)")]
+    [Tooltip("线性人工粘性系数 α。让显式 WCSPH 真正稳定的关键项。水建议 0.3–0.6；过大显糖浆，过小则沸腾。")]
+    [Range(0f, 2f)] public float artViscAlpha = 0.55f;
+    [Tooltip("二次人工粘性系数 β。仅冲击波场景有意义，水可保持 0。")]
+    [Range(0f, 4f)] public float artViscBeta = 0.0f;
+    [Tooltip("单步加速度上限（m/s²）。安全网，防极端瞬间引爆 EOS。")]
+    [Range(20f, 500f)] public float maxAcceleration = 80f;
+
+    // 已弃用字段：保留仅为序列化兼容，shader 不读取。
+    [HideInInspector] public float pressureRatioCap = 100f;
+    [HideInInspector] public float internalJitterDamping = 0f;
+    [HideInInspector] public float internalDampingBand = 1f;
+    [HideInInspector] public float floorDampingBand = 0f;
+    [HideInInspector] public float floorTangentialDamping = 0f;
+    [HideInInspector] public float floorNormalDamping = 0f;
     
     public int maxImpulses = 8;
     public float stirStrengthScale = 2f;
@@ -162,6 +204,24 @@ public class SPHStandardMobile : MonoBehaviour
     public float stirAngularBoost = 2.8f;
     public float obstacleTangentialStrength = 45f;
     public float obstacleFriction = 0.08f;
+    [Header("Boat Coupling")]
+    [Tooltip("船体径向冲量峰值 m/s²；只有船在动时才生效，仅做造尾迹用，主推还是靠耦合球的非穿透。")]
+    public float boatImpulseStrength = 6f;
+    [Tooltip("船速→冲量权重缩放；0.05–0.15 即可，过大则船一动就把附近水踢翻。")]
+    public float boatImpulseVelocityScale = 0.08f;
+    public float boatObstacleStrengthScale = 0.2f;
+    [Range(0.02f, 1.2f)] public float couplingBandWidth = 0.32f;
+    [Range(0f, 30f)] public float couplingBandStrength = 2.5f;
+    [Range(0f, 1f)] public float couplingVelocityBlend = 0.12f;
+    [Range(0f, 2f)] public float couplingTangentialFriction = 0.55f;
+    public struct BoatSphere
+    {
+        public Vector4 sphere;
+        public Vector3 velocity;
+        public float padding;
+    }
+    BoatSphere[] externalBoatSpheres;
+    int externalBoatSphereCount = 0;
     enum InputSelectedTarget { None, Stir, Barrier }
     InputSelectedTarget inputSelected = InputSelectedTarget.None;
     int activePointerId = -1;
@@ -180,10 +240,40 @@ public class SPHStandardMobile : MonoBehaviour
     Vector3[] cpuVCache;
     int cpuCacheFrame = -999;
     public int cpuCacheStrideFrames = 4;
+    int baseTargetDepthHeight;
+    int baseDepthDownsample;
+    int baseThicknessDownsample;
+    int baseBlurIterations;
+    int baseThicknessBlurIterations;
+    int baseMaxSubsteps;
+    float baseFixedTimeStep;
+    float baseRenderParticleScale;
+    float baseParticleSize;
+    float baseThicknessContribution;
+    int runtimeTargetDepthHeight;
+    int runtimeDepthDownsample;
+    int runtimeThicknessDownsample;
+    int runtimeBlurIterations;
+    int runtimeThicknessBlurIterations;
+    int runtimeMaxSubsteps;
+    float runtimeFixedTimeStep;
+    float runtimeRenderParticleScale;
+    float runtimeParticleSize;
+    float runtimeThicknessContribution;
+    int runtimeQualityLevel = 2;
+    float frameTimeEma = 1f / 60f;
+    // 经典 fixed-step 累加器：dt 不再随帧率波动，避免「dt 抖动 → 压力响应抖动」。
+    float simAccumulator = 0f;
+    int nextQualityEvalFrame = 0;
+    Vector4[] impulseTmp;
+    Vector4[] obstacleTmp;
+    Vector4[] couplingSpheresTmp;
+    Vector4[] couplingVelsTmp;
+    Vector4[] chainTmp;
 
-    [Tooltip("首帧渲染前在 GPU 上预跑的子步数，缓解初始密度未建立导致的「悬在空中」与首帧乱溅。")]
-    [Range(0, 48)]
-    public int simulationWarmupSteps = 12;
+    [Tooltip("首帧前在 GPU 预跑的子步数。重力按 0→1 平滑斜坡，让密度场先建立、再加全重力，可显著抑制初始沸腾。")]
+    [Range(0, 96)]
+    public int simulationWarmupSteps = 32;
 
 #if UNITY_EDITOR
     void OnValidate()
@@ -191,6 +281,11 @@ public class SPHStandardMobile : MonoBehaviour
         particleCount = Mathf.Clamp(particleCount, MinParticleCount, MaxParticleCountMobile);
         gridResolution = Mathf.Clamp(gridResolution, 16, 48);
         maxImpulses = Mathf.Max(1, maxImpulses);
+        if (qualityUpshiftFps < qualityDownshiftFps + 2f) qualityUpshiftFps = qualityDownshiftFps + 2f;
+        if (maxParticleToCellRatio < minParticleToCellRatio + 0.05f) maxParticleToCellRatio = minParticleToCellRatio + 0.05f;
+        couplingBandWidth = Mathf.Max(0.001f, couplingBandWidth);
+        couplingBandStrength = Mathf.Max(0f, couplingBandStrength);
+        couplingTangentialFriction = Mathf.Max(0f, couplingTangentialFriction);
     }
 #endif
 
@@ -203,7 +298,8 @@ public class SPHStandardMobile : MonoBehaviour
         kClearGrid = cs.FindKernel("ClearGrid");
         kBuildGrid = cs.FindKernel("BuildGrid");
         kDensity = cs.FindKernel("ComputeDensity");
-        kMain = cs.FindKernel("SPHMain");
+        kForces = cs.FindKernel("SPHForces");
+        kIntegrate = cs.FindKernel("SPHIntegrate");
 
         int gridCount = gridResolution * gridResolution * gridResolution;
         bufX = new ComputeBuffer(particleCount, sizeof(float) * 3);
@@ -211,6 +307,8 @@ public class SPHStandardMobile : MonoBehaviour
         bufRho = new ComputeBuffer(particleCount, sizeof(float));
         bufCellHead = new ComputeBuffer(gridCount, sizeof(int));
         bufNextIndex = new ComputeBuffer(particleCount, sizeof(int));
+        bufAccOut = new ComputeBuffer(particleCount, sizeof(float) * 4);
+        bufVCorrOut = new ComputeBuffer(particleCount, sizeof(float) * 4);
         particlesBuffer = new ComputeBuffer(particleCount, sizeof(float) * 12);
         int impulseCapacity = Mathf.Max(1, maxImpulses);
         if (enableStir)
@@ -218,6 +316,10 @@ public class SPHStandardMobile : MonoBehaviour
         bufImpulses = new ComputeBuffer(impulseCapacity, sizeof(float) * 4);
         bufImpulses.SetData(new Vector4[1] { Vector4.zero });
         bufObstacles = new ComputeBuffer(Mathf.Max(1, obstacleTransforms != null ? obstacleTransforms.Length : 1), sizeof(float) * 4);
+        bufBoatCouplingSpheres = new ComputeBuffer(1, sizeof(float) * 4);
+        bufBoatCouplingVelocities = new ComputeBuffer(1, sizeof(float) * 4);
+        bufBoatCouplingSpheres.SetData(new Vector4[1] { Vector4.zero });
+        bufBoatCouplingVelocities.SetData(new Vector4[1] { Vector4.zero });
 
         BindSphPersistentKernelBuffers();
 
@@ -235,19 +337,20 @@ public class SPHStandardMobile : MonoBehaviour
         {
             Vector3 sMin, sMax; GetSpawnBounds(out sMin, out sMax);
             Vector3 size = sMax - sMin;
-            int nx = Mathf.Max(1, Mathf.CeilToInt(Mathf.Pow(particleCount, 1f / 3f)));
-            int ny = nx;
-            int nz = nx;
-            Vector3 step = new Vector3(size.x / nx, size.y / ny, size.z / nz);
+            // 与 FillInitial 的各向同性 spawn 保持一致：用统一间距 s = (V/N)^(1/3)
+            float spawnVol = Mathf.Max(1e-6f, size.x * size.y * size.z);
+            float s = Mathf.Pow(spawnVol / Mathf.Max(1, particleCount), 1f / 3f);
+            s = Mathf.Max(s, 1e-3f);
             if (autoCalibrateMass)
             {
-                float cellVol = Mathf.Max(step.x * step.y * step.z, 1e-6f);
-                particleMass = restDensity * cellVol;
+                // 立方 cell 体积 = s³；mass = ρ₀ · s³，让 SPH 估算密度恰为 restDensity。
+                float cellVol = s * s * s;
+                particleMass = restDensity * cellVol * Mathf.Clamp(initialMassScale, 0.85f, 1.15f);
             }
             if (autoNeighbourRadius)
             {
-                float maxStep = Mathf.Max(step.x, Mathf.Max(step.y, step.z));
-                neighbourRadius = Mathf.Max(neighbourRadius, maxStep * 2.0f);
+                // 邻居半径 ≈ 2·s（≈8–32 个邻居），WCSPH 经典选择，不用再考虑各向异性。
+                neighbourRadius = Mathf.Max(neighbourRadius, s * 2.0f);
             }
         }
 
@@ -280,15 +383,13 @@ public class SPHStandardMobile : MonoBehaviour
             depthTexID = Shader.PropertyToID("_FluidDepthTexture");
             thicknessTexID = Shader.PropertyToID("_FluidThicknessTexture");
             normalTexID = Shader.PropertyToID("_FluidNormalTexture");
-            mainCam.AddCommandBuffer(CameraEvent.BeforeForwardAlpha, fluidCmd);
         }
+        RegisterFluidCommandBuffer();
         if (enableLowParticleCountTuning && particleCount < 8000)
         {
+            // 仅微调时间步与子步上限；不再强抬粘度/边界阻尼，避免「糖浆+贴墙」感
             maxSubsteps = Mathf.Max(maxSubsteps, 6);
-            fixedTimeStep = Mathf.Min(fixedTimeStep, 0.0045f);
-            viscosity = Mathf.Max(viscosity, 0.09f);
-            xsphC = Mathf.Clamp(xsphC, 0.22f, 0.42f);
-            boundaryDamping = Mathf.Clamp(boundaryDamping, 0.68f, 0.9f);
+            fixedTimeStep = Mathf.Min(fixedTimeStep, 0.0048f);
         }
         if (realisticWaterPreset)
         {
@@ -303,6 +404,7 @@ public class SPHStandardMobile : MonoBehaviour
             ApplyMediumParticleStability();
         }
         if (targetFrameRate > 0) Application.targetFrameRate = targetFrameRate;
+        InitializeAdaptiveQualityState();
         if (Application.isMobilePlatform)
         {
             QualitySettings.pixelLightCount = Mathf.Max(QualitySettings.pixelLightCount, 4);
@@ -312,14 +414,56 @@ public class SPHStandardMobile : MonoBehaviour
         WarmupSimulation();
     }
 
+    void OnEnable()
+    {
+        RegisterFluidCommandBuffer();
+    }
+
+    void OnDisable()
+    {
+        if (mainCam != null && fluidCmd != null)
+            mainCam.RemoveCommandBuffer(CameraEvent.BeforeForwardAlpha, fluidCmd);
+    }
+
+    void RegisterFluidCommandBuffer()
+    {
+        if (!isActiveAndEnabled || mainCam == null || fluidCmd == null) return;
+        mainCam.RemoveCommandBuffer(CameraEvent.BeforeForwardAlpha, fluidCmd);
+        mainCam.AddCommandBuffer(CameraEvent.BeforeForwardAlpha, fluidCmd);
+    }
+
+    public void SetBoatSpheres(BoatSphere[] spheres, int count)
+    {
+        if (spheres == null || count <= 0)
+        {
+            externalBoatSphereCount = 0;
+            return;
+        }
+        int c = Mathf.Clamp(count, 0, spheres.Length);
+        if (externalBoatSpheres == null || externalBoatSpheres.Length < c)
+            externalBoatSpheres = new BoatSphere[c];
+        for (int i = 0; i < c; i++) externalBoatSpheres[i] = spheres[i];
+        externalBoatSphereCount = c;
+    }
+
     void WarmupSimulation()
     {
         if (!runSimulation || simulationWarmupSteps <= 0 || cs == null) return;
         if (bufX == null || bufV == null || bufImpulses == null || bufObstacles == null || particlesBuffer == null)
             return;
-        float dtW = Mathf.Min(fixedTimeStep * 0.45f, 0.0032f);
+        // 渐进式重力暖启动：先在弱重力下让密度场建立、压力场达到准平衡，再过渡到正常重力。
+        // 直接全重力 + 完美晶格初始 → 第一帧就有密度抖动 → SPH 沸腾，难以平复。
+        float dtW = Mathf.Min(fixedTimeStep * 0.5f, 0.003f);
+        Vector3 originalGravity = gravity;
         for (int i = 0; i < simulationWarmupSteps; i++)
+        {
+            float t = (i + 1f) / simulationWarmupSteps;
+            // 0 → 1 的平滑曲线（缓启动重力，让密度场先建好）
+            float gScale = Mathf.SmoothStep(0f, 1f, t);
+            gravity = originalGravity * gScale;
             SimulateStep(dtW);
+        }
+        gravity = originalGravity;
     }
     
 
@@ -342,25 +486,43 @@ public class SPHStandardMobile : MonoBehaviour
 
     void SimulateFrame()
     {
+        UpdateAdaptiveQualityState();
+        UpdateParticleSurfaceRuntime();
         if (!runSimulation) { Draw(); return; }
+
         float dtFrame = Mathf.Clamp(Time.deltaTime, 1e-4f, 0.05f);
-        int steps = enableSubstepping ? Mathf.Clamp(Mathf.CeilToInt(dtFrame / fixedTimeStep), 1, maxSubsteps) : 1;
-        float dtStep = dtFrame / steps;
-        // 粗略 CFL：显式压力对 dt 敏感，步长过大易见整团弹跳/抖动
+
+        // 标准显式 WCSPH 的 CFL：dt < 0.4 * h / c。取 0.35 作为余量。
         float h = Mathf.Max(neighbourRadius, 0.01f);
         float c = Mathf.Max(soundSpeed, 8f);
-        float dtCfl = 0.28f * h / c;
-        if (enableSubstepping && dtStep > dtCfl && dtCfl > 1e-5f)
+        float dtCfl = 0.35f * h / c;
+
+        // 关键修复：使用 *固定* 子步长 dt，避免帧率波动直接修改 dt 引发压力响应抖动。
+        // dt 取 min(用户设定, CFL)，且每步都用同一个值。
+        float fixedDt = Mathf.Max(1e-4f, runtimeFixedTimeStep);
+        if (dtCfl > 1e-5f) fixedDt = Mathf.Min(fixedDt, dtCfl);
+
+        if (!enableSubstepping)
         {
-            int need = Mathf.Clamp(Mathf.CeilToInt(dtFrame / dtCfl), 1, Mathf.Max(maxSubsteps * 2, maxSubsteps));
-            steps = Mathf.Max(steps, need);
-            steps = Mathf.Min(steps, Mathf.Max(maxSubsteps * 2, 12));
-            dtStep = dtFrame / steps;
+            SimulateStep(fixedDt);
+            Draw();
+            return;
         }
-        for (int s = 0; s < steps; s++)
+
+        // Glenn Fiedler 风格的累加器：积压实时时间，按固定 dt 推进，多余时间留给下一帧。
+        simAccumulator += dtFrame;
+        int maxStepsPerFrame = Mathf.Max(1, runtimeMaxSubsteps);
+        int steps = 0;
+        while (simAccumulator >= fixedDt && steps < maxStepsPerFrame)
         {
-            SimulateStep(dtStep);
+            SimulateStep(fixedDt);
+            simAccumulator -= fixedDt;
+            steps++;
         }
+        // lag spike 后避免「补帧爆炸」：积压超过单帧上限就丢掉，回到稳态
+        float maxAccumulated = fixedDt * maxStepsPerFrame * 1.25f;
+        if (simAccumulator > maxAccumulated) simAccumulator = fixedDt * 0.5f;
+
         Draw();
     }
 
@@ -745,20 +907,31 @@ public class SPHStandardMobile : MonoBehaviour
         cs.SetBuffer(kDensity, "rho", bufRho);
         cs.SetBuffer(kDensity, "cellHead", bufCellHead);
         cs.SetBuffer(kDensity, "nextIndex", bufNextIndex);
-        cs.SetBuffer(kMain, "x", bufX);
-        cs.SetBuffer(kMain, "v", bufV);
-        cs.SetBuffer(kMain, "rho", bufRho);
-        cs.SetBuffer(kMain, "cellHead", bufCellHead);
-        cs.SetBuffer(kMain, "nextIndex", bufNextIndex);
-        cs.SetBuffer(kMain, "_particlesBuffer", particlesBuffer);
-        cs.SetBuffer(kMain, "impulses", bufImpulses);
-        cs.SetBuffer(kMain, "obstacles", bufObstacles);
+        // SPHForces：纯只读 x/v/rho，写入 accOut / vCorrOut
+        cs.SetBuffer(kForces, "x", bufX);
+        cs.SetBuffer(kForces, "v", bufV);
+        cs.SetBuffer(kForces, "rho", bufRho);
+        cs.SetBuffer(kForces, "cellHead", bufCellHead);
+        cs.SetBuffer(kForces, "nextIndex", bufNextIndex);
+        cs.SetBuffer(kForces, "impulses", bufImpulses);
+        cs.SetBuffer(kForces, "accOut", bufAccOut);
+        cs.SetBuffer(kForces, "vCorrOut", bufVCorrOut);
+        // SPHIntegrate：每个粒子只读自身 + accOut/vCorrOut + 障碍/船体输入
+        cs.SetBuffer(kIntegrate, "x", bufX);
+        cs.SetBuffer(kIntegrate, "v", bufV);
+        cs.SetBuffer(kIntegrate, "rho", bufRho);
+        cs.SetBuffer(kIntegrate, "accOut", bufAccOut);
+        cs.SetBuffer(kIntegrate, "vCorrOut", bufVCorrOut);
+        cs.SetBuffer(kIntegrate, "_particlesBuffer", particlesBuffer);
+        cs.SetBuffer(kIntegrate, "obstacles", bufObstacles);
+        cs.SetBuffer(kIntegrate, "boatCouplingSpheres", bufBoatCouplingSpheres);
+        cs.SetBuffer(kIntegrate, "boatCouplingVelocities", bufBoatCouplingVelocities);
     }
 
     void SimulateStep(float dt)
     {
         if (cs == null || bufX == null || bufV == null || bufRho == null || bufCellHead == null || bufNextIndex == null
-            || bufImpulses == null || bufObstacles == null || particlesBuffer == null)
+            || bufImpulses == null || bufObstacles == null || bufBoatCouplingSpheres == null || bufBoatCouplingVelocities == null || particlesBuffer == null)
             return;
 
         float hConst = Mathf.Max(neighbourRadius, 1e-3f);
@@ -800,160 +973,66 @@ public class SPHStandardMobile : MonoBehaviour
         cs.SetFloat("surfaceTension", Mathf.Max(0f, surfaceTension));
         cs.SetFloat("freeSurfaceDamping", Mathf.Max(0f, freeSurfaceDamping));
         cs.SetFloat("freeSurfaceThreshold", Mathf.Clamp(freeSurfaceThreshold, 0f, 1.5f));
-        cs.SetVector("swirlAxis", swirlAxis);
+        // Monaghan-Gingold 人工粘性 + 加速度上限：让显式 WCSPH 稳定。
+        cs.SetFloat("artViscAlpha", Mathf.Max(0f, artViscAlpha));
+        cs.SetFloat("artViscBeta", Mathf.Max(0f, artViscBeta));
+        cs.SetFloat("maxAcceleration", Mathf.Max(1f, maxAcceleration));
+        // 已弃用，仍写以兼容旧 shader 残留 binding（实际不使用）
+        cs.SetFloat("pressureRatioCap", Mathf.Max(1.05f, pressureRatioCap));
+        cs.SetFloat("internalJitterDamping", Mathf.Max(0f, internalJitterDamping));
+        cs.SetFloat("internalDampingBand", Mathf.Clamp(internalDampingBand, 0.05f, 1f));
+        cs.SetFloat("floorDampingBand", Mathf.Max(0.001f, floorDampingBand));
+        cs.SetFloat("floorTangentialDamping", Mathf.Max(0f, floorTangentialDamping));
+        cs.SetFloat("floorNormalDamping", Mathf.Max(0f, floorNormalDamping));
+        cs.SetVector("swirlAxis", Vector3.up);
         cs.SetFloat("impulseNormalCoeff", Mathf.Max(0f, impulseNormalCoeff));
         cs.SetFloat("impulseTangentialCoeff", Mathf.Max(0f, impulseTangentialCoeff));
-        int iCount = 0;
-        float iRad = 0f;
-        float iStr = 0f;
-        float dynImpulseRadius = 0f;
-        float speedFactor = 1f + Mathf.Clamp(stirSpeed * stirSpeedBoost, 0f, 5f);
-        float boostFromRadius = 1f;
+        int boatCount = Mathf.Min(Mathf.Max(0, externalBoatSphereCount), 3);
+        int desiredCount = Mathf.Max(1, (enableStir && stirTransform != null ? 1 : 0) + boatCount);
         bool impulsesBufferRebuilt = false;
-        if (enableStir && stirTransform != null && bufImpulses != null)
+        if (bufImpulses == null || bufImpulses.count != desiredCount)
         {
-            Vector3 p = ClampToBounds(stirTransform.position);
-            int safeImp = Mathf.Max(1, maxImpulses);
-            int desiredCount = Mathf.Min(16, safeImp);
-            if (bufImpulses.count < desiredCount)
-            {
-                bufImpulses.Release();
-                bufImpulses = new ComputeBuffer(desiredCount, sizeof(float) * 4);
-                impulsesBufferRebuilt = true;
-            }
-            var arr = new Vector4[desiredCount];
-            int wr = 0;
-            arr[wr++] = new Vector4(p.x, p.y, p.z, 1f);
-            float offs = Mathf.Max(0.01f, stirRadius * 0.35f);
-            Vector3 p1 = ClampToBounds(new Vector3(p.x + offs, p.y, p.z));
-            Vector3 p2 = ClampToBounds(new Vector3(p.x - offs, p.y, p.z));
-            Vector3 p3 = ClampToBounds(new Vector3(p.x, p.y, p.z + offs));
-            Vector3 p4 = ClampToBounds(new Vector3(p.x, p.y, p.z - offs));
-            if (wr < desiredCount) arr[wr++] = new Vector4(p1.x, p1.y, p1.z, 1f);
-            if (wr < desiredCount) arr[wr++] = new Vector4(p2.x, p2.y, p2.z, 1f);
-            if (wr < desiredCount) arr[wr++] = new Vector4(p3.x, p3.y, p3.z, 1f);
-            if (wr < desiredCount) arr[wr++] = new Vector4(p4.x, p4.y, p4.z, 1f);
-            Vector3 axis = (stirTransform.parent != null ? stirTransform.parent.up : Vector3.up);
-            Vector3 pa = ClampToBounds(p + axis * offs);
-            Vector3 pb = ClampToBounds(p - axis * offs);
-            if (wr < desiredCount) arr[wr++] = new Vector4(pa.x, pa.y, pa.z, 1f);
-            if (wr < desiredCount) arr[wr++] = new Vector4(pb.x, pb.y, pb.z, 1f);
-            if (wr < desiredCount)
-            {
-                Vector3 pc = ClampToBounds(p + axis * (offs * 2f));
-                arr[wr++] = new Vector4(pc.x, pc.y, pc.z, 1f);
-            }
-            Vector3 dirXZ = (stirDirXZ.sqrMagnitude < 1e-6f) ? Vector3.forward : stirDirXZ.normalized;
-            Vector3 pf = ClampToBounds(p + dirXZ * offs);
-            Vector3 pbk = ClampToBounds(p - dirXZ * offs);
-            if (wr < desiredCount) arr[wr++] = new Vector4(pf.x, pf.y, pf.z, 1f);
-            if (wr < desiredCount) arr[wr++] = new Vector4(pbk.x, pbk.y, pbk.z, 1f);
-            int ringN = 6;
-            for (int ri = 0; ri < ringN && wr < desiredCount; ri++)
-            {
-                float ang = (Mathf.PI * 2f / ringN) * ri;
-                Vector3 pr = new Vector3(p.x + Mathf.Cos(ang) * offs, p.y, p.z + Mathf.Sin(ang) * offs);
-                pr = ClampToBounds(pr);
-                arr[wr++] = new Vector4(pr.x, pr.y, pr.z, 1f);
-            }
-            bufImpulses.SetData(arr);
-            iCount = wr;
-            iRad = Mathf.Max(0.001f, stirRadius);
-            Transform stickPivot = stirTransform != null && stirTransform.parent != null ? stirTransform.parent : stirTransform;
-            float angFactor = 1f;
-            if (stickPivot != null)
-            {
-                if (!stickRotInitialized)
-                {
-                    lastStickRot = stickPivot.rotation;
-                    stickRotInitialized = true;
-                    stickAngularSpeed = 0f;
-                }
-                else
-                {
-                    Quaternion dq = stickPivot.rotation * Quaternion.Inverse(lastStickRot);
-                    float angDeg; Vector3 ax;
-                    dq.ToAngleAxis(out angDeg, out ax);
-                    float angRad = Mathf.Deg2Rad * Mathf.Min(angDeg, 180f);
-                    float align = Mathf.Abs(Vector3.Dot(ax.normalized, stickPivot.up.normalized));
-                    float s = angRad / Mathf.Max(dt, 1e-4f);
-                    stickAngularSpeed = Mathf.Lerp(stickAngularSpeed, s * align, 0.65f);
-                    lastStickRot = stickPivot.rotation;
-                }
-                angFactor = 1f + Mathf.Clamp(stickAngularSpeed * stirAngularBoost, 0f, 6f);
-            }
-            iStr = stirStrength * Mathf.Max(1.5f, stirStrengthFactor * stirStrengthScale) * speedFactor * angFactor;
+            if (bufImpulses != null) bufImpulses.Release();
+            bufImpulses = new ComputeBuffer(desiredCount, sizeof(float) * 4);
+            impulsesBufferRebuilt = true;
         }
-        cs.SetInt("impulseCount", iCount);
-        cs.SetFloat("impulseRadius", Mathf.Max(iRad, dynImpulseRadius));
-        cs.SetFloat("impulseStrength", iStr);
-        if (impulsesBufferRebuilt) cs.SetBuffer(kMain, "impulses", bufImpulses);
-        int obstCountBase = obstacleTransforms != null ? obstacleTransforms.Length : 0;
-        int chainN = 0;
-        Transform stickRoot = stirTransform != null && stirTransform.parent != null ? stirTransform.parent : stirTransform;
-        Vector4[] chain = null;
+        if (impulseTmp == null || impulseTmp.Length != desiredCount) impulseTmp = new Vector4[desiredCount];
+        var arr = impulseTmp;
+        System.Array.Clear(arr, 0, arr.Length);
+        int wr = 0;
+        float impulseRadiusRuntime = Mathf.Max(0.001f, stirRadius);
+        float impulseStrengthRuntime = 0f;
         if (enableStir && stirTransform != null)
         {
-            int segN = Mathf.Max(3, stirSegments);
-            chain = new Vector4[segN];
-            CapsuleCollider cap = stickRoot != null ? stickRoot.GetComponent<CapsuleCollider>() : null;
-            MeshRenderer mr = stickRoot != null ? stickRoot.GetComponent<MeshRenderer>() : null;
-            if (cap != null && stirUseCapsuleSegments)
+            Vector3 p = ClampToBounds(stirTransform.position);
+            arr[wr++] = new Vector4(p.x, p.y, p.z, 1f);
+            impulseStrengthRuntime = Mathf.Max(impulseStrengthRuntime, stirStrength * Mathf.Max(1f, stirStrengthFactor));
+        }
+        if (boatCount > 0 && externalBoatSpheres != null)
+        {
+            for (int bi = 0; bi < boatCount && wr < desiredCount; bi++)
             {
-                int dir = cap.direction;
-                Vector3 axis = (dir == 0) ? stickRoot.right : (dir == 1 ? stickRoot.up : stickRoot.forward);
-                axis = axis.normalized;
-                Vector3 cWorld = stickRoot.TransformPoint(cap.center);
-                float sx = stickRoot.lossyScale.x;
-                float sy = stickRoot.lossyScale.y;
-                float sz = stickRoot.lossyScale.z;
-                float sAxis = (dir == 0) ? sx : (dir == 1 ? sy : sz);
-                float sRad = (dir == 0) ? Mathf.Max(sy, sz) : (dir == 1 ? Mathf.Max(sx, sz) : Mathf.Max(sx, sy));
-                float heightWorld = Mathf.Max(0.001f, cap.height * sAxis);
-                float radWorld = Mathf.Max(0.001f, cap.radius * sRad);
-                Vector3 start = cWorld - axis * Mathf.Max(0.0f, heightWorld * 0.5f - radWorld);
-                Vector3 end = cWorld + axis * Mathf.Max(0.0f, heightWorld * 0.5f - radWorld);
-                for (int si = 0; si < segN; si++)
-                {
-                    float tSeg = segN == 1 ? 0.5f : (float)si / (float)(segN - 1);
-                    Vector3 pi = Vector3.Lerp(start, end, tSeg);
-                    Vector3 pc = ClampToBounds(pi);
-                    chain[si] = new Vector4(pc.x, pc.y, pc.z, radWorld);
-                }
-                chainN = segN;
-                dynImpulseRadius = Mathf.Max(dynImpulseRadius, radWorld * impulseRadiusScaleFromCapsule);
-                boostFromRadius = Mathf.Clamp(smallStickRadiusRef / Mathf.Max(radWorld, 1e-3f), 1f, smallStickBoostMax);
-            }
-            else if (mr != null)
-            {
-                Vector3 axis = stickRoot.up.normalized;
-                Bounds b = mr.bounds;
-                Vector3 cWorld = b.center;
-                float heightWorld = Mathf.Max(0.001f, Vector3.Dot(b.size, new Vector3(Mathf.Abs(axis.x), Mathf.Abs(axis.y), Mathf.Abs(axis.z))));
-                float radWorld = Mathf.Max(0.001f, Mathf.Max(b.extents.x, b.extents.z));
-                Vector3 start = cWorld - axis * Mathf.Max(0.0f, heightWorld * 0.5f - radWorld);
-                Vector3 end = cWorld + axis * Mathf.Max(0.0f, heightWorld * 0.5f - radWorld);
-                for (int si = 0; si < segN; si++)
-                {
-                    float tSeg = segN == 1 ? 0.5f : (float)si / (float)(segN - 1);
-                    Vector3 pi = Vector3.Lerp(start, end, tSeg);
-                    Vector3 pc = ClampToBounds(pi);
-                    chain[si] = new Vector4(pc.x, pc.y, pc.z, radWorld);
-                }
-                chainN = segN;
-                dynImpulseRadius = Mathf.Max(dynImpulseRadius, radWorld * impulseRadiusScaleFromCapsule);
-                boostFromRadius = Mathf.Clamp(smallStickRadiusRef / Mathf.Max(radWorld, 1e-3f), 1f, smallStickBoostMax);
-            }
-            else
-            {
-                float r = Mathf.Max(0.001f, stirRadius);
-                Vector3 pc = ClampToBounds(stirTransform.position);
-                chain[0] = new Vector4(pc.x, pc.y, pc.z, r);
-                chainN = 1;
-                dynImpulseRadius = Mathf.Max(dynImpulseRadius, r * impulseRadiusScaleFromCapsule);
+                BoatSphere bs = externalBoatSpheres[bi];
+                Vector3 bp = ClampToBounds(new Vector3(bs.sphere.x, bs.sphere.y, bs.sphere.z));
+                float velMag = bs.velocity.magnitude;
+                // 关键修复：w 与船速成正比；静止小船 → w=0 → 无径向冲量，
+                // 否则即使船不动也会持续径向推水，制造「船周围一圈沸腾」。
+                float w = Mathf.Clamp(velMag * Mathf.Max(boatImpulseVelocityScale, 0.1f) * 6f, 0f, 1.5f);
+                if (w < 1e-3f) continue; // 完全静止时跳过该冲量点
+                arr[wr++] = new Vector4(bp.x, bp.y, bp.z, w);
+                impulseRadiusRuntime = Mathf.Max(impulseRadiusRuntime, Mathf.Max(0.02f, bs.sphere.w * 1.1f));
+                impulseStrengthRuntime = Mathf.Max(impulseStrengthRuntime, boatImpulseStrength);
             }
         }
-        int obstCount = obstCountBase + chainN;
+        if (wr == 0) arr[0] = Vector4.zero;
+        bufImpulses.SetData(arr);
+        cs.SetInt("impulseCount", wr);
+        cs.SetFloat("impulseRadius", Mathf.Max(impulseRadiusRuntime, minImpulseRadius));
+        cs.SetFloat("impulseStrength", impulseStrengthRuntime);
+        if (impulsesBufferRebuilt) cs.SetBuffer(kForces, "impulses", bufImpulses);
+
+        int obstCountBase = obstacleTransforms != null ? obstacleTransforms.Length : 0;
+        int obstCount = obstCountBase;
         int allocCount = Mathf.Max(1, obstCount);
         bool obstaclesBufferRebuilt = false;
         if (bufObstacles == null || bufObstacles.count != allocCount)
@@ -962,57 +1041,96 @@ public class SPHStandardMobile : MonoBehaviour
             bufObstacles = new ComputeBuffer(allocCount, sizeof(float) * 4);
             obstaclesBufferRebuilt = true;
         }
-        var obs = new Vector4[allocCount];
-        if (obstCountBase > 0)
+        if (obstacleTmp == null || obstacleTmp.Length != allocCount) obstacleTmp = new Vector4[allocCount];
+        var obs = obstacleTmp;
+        System.Array.Clear(obs, 0, obs.Length);
+        for (int oi = 0; oi < obstCountBase; oi++)
         {
-            for (int oi = 0; oi < obstCountBase; oi++)
-            {
-                Transform t = obstacleTransforms[oi];
-                if (t == null) { obs[oi] = Vector4.zero; continue; }
-                Vector3 op = ClampToBounds(t.position);
-                float r = obstacleDefaultRadius;
-                var sc2 = t.GetComponent<SphereCollider>();
-                if (sc2 != null) r = Mathf.Max(0.001f, sc2.radius * Mathf.Max(t.lossyScale.x, Mathf.Max(t.lossyScale.y, t.lossyScale.z)));
-                obs[oi] = new Vector4(op.x, op.y, op.z, r);
-            }
-        }
-        if (chainN > 0 && chain != null)
-        {
-            for (int ci = 0; ci < chainN; ci++) obs[obstCountBase + ci] = chain[ci];
+            Transform t = obstacleTransforms[oi];
+            if (t == null) continue;
+            Vector3 op = ClampToBounds(t.position);
+            float r = obstacleDefaultRadius;
+            var sc2 = t.GetComponent<SphereCollider>();
+            if (sc2 != null) r = Mathf.Max(0.001f, sc2.radius * Mathf.Max(t.lossyScale.x, Mathf.Max(t.lossyScale.y, t.lossyScale.z)));
+            obs[oi] = new Vector4(op.x, op.y, op.z, r);
         }
         if (allocCount == 1 && obstCount == 0) obs[0] = Vector4.zero;
         bufObstacles.SetData(obs);
         cs.SetInt("obstacleCount", obstCount);
-        float angFactorOb = 1f + Mathf.Clamp(stickAngularSpeed * stirAngularBoost, 0f, 6f);
-        cs.SetFloat("obstaclePushStrength", obstaclePushStrength * Mathf.Max(1f, speedFactor * angFactorOb * obstaclePushSpeedScale * boostFromRadius));
+        cs.SetFloat("obstaclePushStrength", obstaclePushStrength);
         cs.SetFloat("obstacleDamping", obstacleDamping);
-        float tanScale = 1f + Mathf.Clamp(stickAngularSpeed * 1.5f, 0f, 8f);
-        cs.SetFloat("obstacleTangentialStrength", obstacleTangentialStrength * tanScale);
+        cs.SetFloat("obstacleTangentialStrength", obstacleTangentialStrength);
         cs.SetFloat("obstacleFriction", obstacleFriction);
-        if (obstaclesBufferRebuilt) cs.SetBuffer(kMain, "obstacles", bufObstacles);
-        if (enableStir && stirTransform != null)
+        if (obstaclesBufferRebuilt) cs.SetBuffer(kIntegrate, "obstacles", bufObstacles);
+
+        int couplingCount = (externalBoatSpheres != null) ? boatCount : 0;
+        int couplingAlloc = Mathf.Max(1, couplingCount);
+        bool boatCouplingRebuilt = false;
+        if (bufBoatCouplingSpheres == null || bufBoatCouplingSpheres.count != couplingAlloc)
         {
-            Vector3 axDyn = (stickRoot != null ? stickRoot.up : stirTransform.up);
-            cs.SetVector("swirlAxis", axDyn);
+            if (bufBoatCouplingSpheres != null) bufBoatCouplingSpheres.Release();
+            bufBoatCouplingSpheres = new ComputeBuffer(couplingAlloc, sizeof(float) * 4);
+            boatCouplingRebuilt = true;
         }
-        dynImpulseRadius = Mathf.Max(dynImpulseRadius, minImpulseRadius);
-        iStr *= Mathf.Max(1f, boostFromRadius);
-        cs.Dispatch(kMain, groupsMain, 1, 1);
+        if (bufBoatCouplingVelocities == null || bufBoatCouplingVelocities.count != couplingAlloc)
+        {
+            if (bufBoatCouplingVelocities != null) bufBoatCouplingVelocities.Release();
+            bufBoatCouplingVelocities = new ComputeBuffer(couplingAlloc, sizeof(float) * 4);
+            boatCouplingRebuilt = true;
+        }
+        if (couplingSpheresTmp == null || couplingSpheresTmp.Length != couplingAlloc) couplingSpheresTmp = new Vector4[couplingAlloc];
+        if (couplingVelsTmp == null || couplingVelsTmp.Length != couplingAlloc) couplingVelsTmp = new Vector4[couplingAlloc];
+        var couplingSpheres = couplingSpheresTmp;
+        var couplingVels = couplingVelsTmp;
+        System.Array.Clear(couplingSpheres, 0, couplingSpheres.Length);
+        System.Array.Clear(couplingVels, 0, couplingVels.Length);
+        for (int bi = 0; bi < couplingCount; bi++)
+        {
+            BoatSphere bs = externalBoatSpheres[bi];
+            Vector3 bp = ClampToBounds(new Vector3(bs.sphere.x, bs.sphere.y, bs.sphere.z));
+            float rad = Mathf.Max(0.02f, bs.sphere.w);
+            couplingSpheres[bi] = new Vector4(bp.x, bp.y, bp.z, rad);
+            couplingVels[bi] = new Vector4(bs.velocity.x, bs.velocity.y, bs.velocity.z, 0f);
+        }
+        if (couplingAlloc == 1 && couplingCount == 0)
+        {
+            couplingSpheres[0] = Vector4.zero;
+            couplingVels[0] = Vector4.zero;
+        }
+        bufBoatCouplingSpheres.SetData(couplingSpheres);
+        bufBoatCouplingVelocities.SetData(couplingVels);
+        cs.SetInt("boatCouplingCount", couplingCount);
+        cs.SetFloat("couplingBandWidth", Mathf.Max(0.001f, couplingBandWidth));
+        cs.SetFloat("couplingBandStrength", Mathf.Max(0f, couplingBandStrength));
+        cs.SetFloat("couplingVelocityBlend", Mathf.Clamp01(couplingVelocityBlend));
+        cs.SetFloat("couplingTangentialFriction", Mathf.Max(0f, couplingTangentialFriction));
+        if (boatCouplingRebuilt)
+        {
+            cs.SetBuffer(kIntegrate, "boatCouplingSpheres", bufBoatCouplingSpheres);
+            cs.SetBuffer(kIntegrate, "boatCouplingVelocities", bufBoatCouplingVelocities);
+        }
+        // 力计算（只读）→ 积分（只写自身）：两次 dispatch 之间 Unity 自动插入 barrier，
+        // 彻底消除「kernel 内既读邻居又写自身」造成的非确定性扰动。
+        cs.Dispatch(kForces, groupsMain, 1, 1);
+        cs.Dispatch(kIntegrate, groupsMain, 1, 1);
     }
 
     void BindParticleSplatPropsAndGlobals()
     {
+        // SPH 关闭各向异性：避免底层粒子被速度拉伸后触发不稳定的深度/厚度抖动。
+        const float sphAnisoScale = 0f;
+        const float sphMaxAniso = 1f;
         props.Clear();
-        props.SetFloat("_size", particleSize);
-        props.SetFloat("_SizeScale", renderParticleScale);
-        props.SetFloat("_AnisotropyScale", anisotropyScale);
-        props.SetFloat("_MaxAnisotropy", maxAnisotropy);
+        props.SetFloat("_size", runtimeParticleSize);
+        props.SetFloat("_SizeScale", runtimeRenderParticleScale);
+        props.SetFloat("_AnisotropyScale", sphAnisoScale);
+        props.SetFloat("_MaxAnisotropy", sphMaxAniso);
         props.SetBuffer("_particlesBuffer", particlesBuffer);
         Shader.SetGlobalBuffer("_particlesBuffer", particlesBuffer);
-        Shader.SetGlobalFloat("_SizeScale", renderParticleScale);
-        Shader.SetGlobalFloat("_size", particleSize);
-        Shader.SetGlobalFloat("_AnisotropyScale", anisotropyScale);
-        Shader.SetGlobalFloat("_MaxAnisotropy", maxAnisotropy);
+        Shader.SetGlobalFloat("_SizeScale", runtimeRenderParticleScale);
+        Shader.SetGlobalFloat("_size", runtimeParticleSize);
+        Shader.SetGlobalFloat("_AnisotropyScale", sphAnisoScale);
+        Shader.SetGlobalFloat("_MaxAnisotropy", sphMaxAniso);
     }
 
     void Draw()
@@ -1058,11 +1176,11 @@ public class SPHStandardMobile : MonoBehaviour
             {
                 RenderTextureFormat depthFmt = MobileSsfRenderShared.SelectSingleChannelFloatFormat();
 
-                int effectiveDownsample = depthDownsample;
-                if (targetDepthHeight > 0)
+                int effectiveDownsample = runtimeDepthDownsample;
+                if (runtimeTargetDepthHeight > 0)
                 {
-                    float scale = (float)Screen.height / (float)targetDepthHeight;
-                    effectiveDownsample = Mathf.Max(depthDownsample, Mathf.RoundToInt(scale));
+                    float scale = (float)Screen.height / (float)runtimeTargetDepthHeight;
+                    effectiveDownsample = Mathf.Max(runtimeDepthDownsample, Mathf.RoundToInt(scale));
                 }
 
                 int dw = Mathf.Max(1, Screen.width / effectiveDownsample);
@@ -1077,7 +1195,7 @@ public class SPHStandardMobile : MonoBehaviour
 
                 Material currentBlurMat = (filterType == DepthFilterType.Gaussian && gaussianMat != null) ? gaussianMat : blurMat;
 
-                if (currentBlurMat != null && blurIterations > 0)
+                if (currentBlurMat != null && runtimeBlurIterations > 0)
                 {
                     currentBlurMat.SetFloat("_SigmaSpatial", blurSigmaSpatial);
                     currentBlurMat.SetFloat("_SigmaRange", blurSigmaRange);
@@ -1086,7 +1204,7 @@ public class SPHStandardMobile : MonoBehaviour
                     int tempDepthID = Shader.PropertyToID("_FluidDepthTemp");
                     fluidCmd.GetTemporaryRT(tempDepthID, dw, dh, 0, FilterMode.Bilinear, depthFmt);
 
-                    for (int i = 0; i < blurIterations; i++)
+                    for (int i = 0; i < runtimeBlurIterations; i++)
                     {
                         fluidCmd.Blit(depthTexID, tempDepthID, currentBlurMat, 0);
                         fluidCmd.Blit(tempDepthID, depthTexID, currentBlurMat, 1);
@@ -1098,10 +1216,10 @@ public class SPHStandardMobile : MonoBehaviour
 
             if (thicknessMat != null)
             {
-                props.SetFloat("_ContributionScale", thicknessContribution);
-                props.SetFloat("_SizeScale", renderParticleScale);
-                int w = Screen.width / thicknessDownsample;
-                int h = Screen.height / thicknessDownsample;
+                props.SetFloat("_ContributionScale", runtimeThicknessContribution);
+                props.SetFloat("_SizeScale", runtimeRenderParticleScale);
+                int w = Screen.width / runtimeThicknessDownsample;
+                int h = Screen.height / runtimeThicknessDownsample;
                 RenderTextureFormat thickFmt = MobileSsfRenderShared.SelectSingleChannelFloatFormat();
 
                 fluidCmd.GetTemporaryRT(thicknessTexID, w, h, 0, FilterMode.Bilinear, thickFmt);
@@ -1109,12 +1227,12 @@ public class SPHStandardMobile : MonoBehaviour
                 fluidCmd.ClearRenderTarget(false, true, Color.black);
                 fluidCmd.DrawMeshInstancedProcedural(sphereMesh, 0, thicknessMat, 0, particleCount, props);
 
-                if (thicknessBlurMat != null && thicknessBlurIterations > 0)
+                if (thicknessBlurMat != null && runtimeThicknessBlurIterations > 0)
                 {
                     thicknessBlurMat.SetInt("_FilterRadius", thicknessBlurRadius);
                     int tempID = Shader.PropertyToID("_FluidThicknessTemp");
                     fluidCmd.GetTemporaryRT(tempID, w, h, 0, FilterMode.Bilinear, thickFmt);
-                    for (int i = 0; i < thicknessBlurIterations; i++)
+                    for (int i = 0; i < runtimeThicknessBlurIterations; i++)
                     {
                         fluidCmd.Blit(thicknessTexID, tempID, thicknessBlurMat, 0);
                         fluidCmd.Blit(tempID, thicknessTexID, thicknessBlurMat, 1);
@@ -1176,21 +1294,6 @@ public class SPHStandardMobile : MonoBehaviour
             if (Event.current.type.Equals(EventType.Repaint))
                 Graphics.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), Texture2D.whiteTexture, debugNormalMat);
         }
-
-        int btnW = 132;
-        int btnH = 54;
-        int pad = 10;
-        if (Application.isMobilePlatform)
-        {
-            Rect r1 = new Rect(pad, Screen.height - btnH - pad, btnW, btnH);
-            Rect r2 = new Rect(pad + btnW + 8, Screen.height - btnH - pad, btnW, btnH);
-            if (GUI.Button(r1, "重新开始")) ResetSimulation();
-            string toggleLabel = runSimulation ? "暂停" : "继续";
-            if (GUI.Button(r2, toggleLabel))
-            {
-                if (runSimulation) Pause(); else Resume();
-            }
-        }
     }
 
     void OnDestroy()
@@ -1201,7 +1304,7 @@ public class SPHStandardMobile : MonoBehaviour
             fluidCmd.Release();
             fluidCmd = null;
         }
-        Release(bufX); Release(bufV); Release(bufRho); Release(bufCellHead); Release(bufNextIndex); Release(particlesBuffer); Release(bufImpulses); Release(bufObstacles);
+        Release(bufX); Release(bufV); Release(bufRho); Release(bufCellHead); Release(bufNextIndex); Release(particlesBuffer); Release(bufImpulses); Release(bufObstacles); Release(bufBoatCouplingSpheres); Release(bufBoatCouplingVelocities); Release(bufAccOut); Release(bufVCorrOut);
     }
 
     void ApplyCameraClipTuning(Camera cam)
@@ -1245,52 +1348,157 @@ public class SPHStandardMobile : MonoBehaviour
         cam.farClipPlane = far;
     }
 
+    void InitializeAdaptiveQualityState()
+    {
+        baseTargetDepthHeight = targetDepthHeight;
+        baseDepthDownsample = depthDownsample;
+        baseThicknessDownsample = thicknessDownsample;
+        baseBlurIterations = blurIterations;
+        baseThicknessBlurIterations = thicknessBlurIterations;
+        baseMaxSubsteps = maxSubsteps;
+        baseFixedTimeStep = fixedTimeStep;
+        baseRenderParticleScale = renderParticleScale;
+        baseParticleSize = particleSize;
+        baseThicknessContribution = thicknessContribution;
+
+        runtimeQualityLevel = ResolveInitialQualityLevel();
+        ApplyQualityLevel(runtimeQualityLevel, false);
+        runtimeParticleSize = particleSize;
+        runtimeThicknessContribution = thicknessContribution;
+        UpdateParticleSurfaceRuntime();
+    }
+
+    int ResolveInitialQualityLevel()
+    {
+        if (mobileQualityProfile == MobileQualityProfile.Performance) return 0;
+        if (mobileQualityProfile == MobileQualityProfile.Balanced) return 1;
+        if (mobileQualityProfile == MobileQualityProfile.Quality) return 2;
+        if (!Application.isMobilePlatform) return 2;
+        bool lowMemory = SystemInfo.systemMemorySize > 0 && SystemInfo.systemMemorySize <= 3000;
+        bool lowGpuMemory = SystemInfo.graphicsMemorySize > 0 && SystemInfo.graphicsMemorySize <= 1200;
+        if (lowMemory || lowGpuMemory) return 0;
+        bool midMemory = SystemInfo.systemMemorySize > 0 && SystemInfo.systemMemorySize <= 5000;
+        return midMemory ? 1 : 2;
+    }
+
+    void UpdateAdaptiveQualityState()
+    {
+        frameTimeEma = Mathf.Lerp(frameTimeEma, Mathf.Clamp(Time.unscaledDeltaTime, 1e-4f, 0.1f), 0.08f);
+        if (!adaptiveQuality || qualityDownshiftFps >= qualityUpshiftFps) return;
+        if (Time.frameCount < nextQualityEvalFrame) return;
+        if ((Time.frameCount % Mathf.Max(1, qualityCheckIntervalFrames)) != 0) return;
+        float fps = 1f / Mathf.Max(frameTimeEma, 1e-4f);
+        if (fps < qualityDownshiftFps && runtimeQualityLevel > 0)
+        {
+            ApplyQualityLevel(runtimeQualityLevel - 1, true);
+            nextQualityEvalFrame = Time.frameCount + Mathf.Max(1, qualityCooldownFrames);
+        }
+        else if (fps > qualityUpshiftFps && runtimeQualityLevel < 2)
+        {
+            ApplyQualityLevel(runtimeQualityLevel + 1, true);
+            nextQualityEvalFrame = Time.frameCount + Mathf.Max(1, qualityCooldownFrames);
+        }
+    }
+
+    void ApplyQualityLevel(int level, bool logChange)
+    {
+        runtimeQualityLevel = Mathf.Clamp(level, 0, 2);
+        int depthDsAdd = 2 - runtimeQualityLevel;
+        runtimeTargetDepthHeight = Mathf.Max(0, baseTargetDepthHeight - (2 - runtimeQualityLevel) * 120);
+        runtimeDepthDownsample = Mathf.Clamp(baseDepthDownsample + depthDsAdd, 1, 4);
+        runtimeThicknessDownsample = Mathf.Clamp(baseThicknessDownsample + depthDsAdd, 1, 5);
+        runtimeBlurIterations = Mathf.Clamp(baseBlurIterations - (2 - runtimeQualityLevel), 0, 10);
+        runtimeThicknessBlurIterations = Mathf.Clamp(baseThicknessBlurIterations - (2 - runtimeQualityLevel), 0, 5);
+        runtimeMaxSubsteps = Mathf.Clamp(baseMaxSubsteps - (2 - runtimeQualityLevel), 1, 12);
+        runtimeFixedTimeStep = Mathf.Clamp(baseFixedTimeStep * (1f + (2 - runtimeQualityLevel) * 0.08f), 0.0025f, 0.02f);
+        runtimeRenderParticleScale = Mathf.Clamp(baseRenderParticleScale + (2 - runtimeQualityLevel) * 0.04f, 1f, 2f);
+        if (logChange)
+            Debug.Log($"SPH Adaptive Quality -> L{runtimeQualityLevel} fps~{(1f / Mathf.Max(frameTimeEma, 1e-4f)):F1}, depthDS={runtimeDepthDownsample}, thickDS={runtimeThicknessDownsample}, substeps={runtimeMaxSubsteps}");
+    }
+
+    void UpdateParticleSurfaceRuntime()
+    {
+        if (!autoTuneParticleSurface)
+        {
+            runtimeParticleSize = particleSize;
+            runtimeThicknessContribution = thicknessContribution;
+            return;
+        }
+        Vector3 simSize = boundsMax - boundsMin;
+        float cellSize = (simSize.x + simSize.y + simSize.z) / (3f * Mathf.Max(1, gridResolution));
+        cellSize = Mathf.Max(cellSize, 1e-4f);
+        Vector3 sMin, sMax;
+        GetSpawnBounds(out sMin, out sMax);
+        Vector3 spawnSize = sMax - sMin;
+        float spawnVol = Mathf.Max(1e-6f, spawnSize.x * spawnSize.y * spawnSize.z);
+        float spacing = Mathf.Pow(spawnVol / Mathf.Max(1, particleCount), 1f / 3f);
+        float targetEffectiveRadius = spacing * particleOverlapRatio;
+        float minEffectiveRadius = cellSize * minParticleToCellRatio;
+        float maxEffectiveRadius = cellSize * maxParticleToCellRatio;
+        float effectiveRadius = Mathf.Clamp(targetEffectiveRadius, minEffectiveRadius, maxEffectiveRadius);
+        float baseEffective = Mathf.Max(1e-4f, baseParticleSize * Mathf.Max(baseRenderParticleScale, 0.01f));
+        effectiveRadius = Mathf.Max(effectiveRadius, baseEffective * 0.84f);
+        float targetParticleSize = effectiveRadius / Mathf.Max(0.01f, runtimeRenderParticleScale);
+        targetParticleSize = Mathf.Clamp(targetParticleSize, 0.045f, 0.5f);
+        runtimeParticleSize = Mathf.Lerp(runtimeParticleSize, targetParticleSize, Mathf.Clamp01(particleSurfaceTuneLerp));
+        float effectiveNow = runtimeParticleSize * runtimeRenderParticleScale;
+        float shrink = Mathf.Clamp(baseEffective / Mathf.Max(effectiveNow, 1e-4f), 0.75f, 1.9f);
+        float thicknessBoost = Mathf.Pow(shrink, 0.85f);
+        runtimeThicknessContribution = thicknessContribution * thicknessBoost;
+        runtimeThicknessContribution = Mathf.Clamp(runtimeThicknessContribution, thicknessContribution * 0.92f, thicknessContribution * 1.85f);
+    }
+
     void ApplyMediumParticleStability()
     {
-        // 粒子多时仍保持可接受的子步数；过高子步 + 强边界阻尼易造成“一碰底就吸住”。
-        maxSubsteps = Mathf.Clamp(Mathf.Max(maxSubsteps, 8), 8, 12);
-        fixedTimeStep = Mathf.Clamp(fixedTimeStep, 0.0033f, 0.0042f);
-        // 不强行抬高黏度，避免把「轻盈水」又拉回糖浆感；只做上限防止极端发散
-        viscosity = Mathf.Min(viscosity, 0.095f);
-        if (viscosity < 0.04f) viscosity = 0.04f;
-        xsphC = Mathf.Clamp(xsphC, 0.08f, 0.22f);
-        boundaryDamping = Mathf.Clamp(boundaryDamping, 0.55f, 0.72f);
-        soundSpeed = Mathf.Clamp(soundSpeed, 26f, 38f);
-        maxSpeed = Mathf.Min(maxSpeed, 12.5f);
-        initialJitter = Mathf.Min(initialJitter, 0.015f);
-        // 与着色器里“贴壁休眠”配合：过小会在稀疏邻域误判静止
-        minSpeed = Mathf.Max(minSpeed, 0.012f);
-        vorticityEps = Mathf.Min(vorticityEps, 0.14f);
+        // 标准 WCSPH 中粒子档：依靠人工粘性维持稳定。
+        maxSubsteps = Mathf.Clamp(Mathf.Max(maxSubsteps, 6), 6, 12);
+        fixedTimeStep = Mathf.Clamp(fixedTimeStep, 0.0035f, 0.005f);
+        viscosity = Mathf.Clamp(viscosity, 0.015f, 0.04f);
+        xsphC = Mathf.Clamp(xsphC, 0.03f, 0.10f);
+        boundaryDamping = Mathf.Clamp(boundaryDamping, 0.45f, 0.65f);
+        boundaryDampingZ = Mathf.Clamp(boundaryDampingZ, 0.45f, 0.65f);
+        soundSpeed = Mathf.Clamp(soundSpeed, 28f, 42f);
+        maxSpeed = Mathf.Min(maxSpeed, 14.0f);
+        initialJitter = Mathf.Clamp(initialJitter, 0.015f, 0.04f);
+        eosGamma = 1.0f;
+        // 人工粘性是真正让显式 WCSPH 稳的关键，不能为 0
+        artViscAlpha = Mathf.Clamp(artViscAlpha, 0.4f, 0.85f);
+        maxAcceleration = Mathf.Clamp(maxAcceleration, 60f, 150f);
     }
     
     void ApplyRealisticWaterPreset()
     {
+        // 标准移动端 SPH 「活水」基线：线性 EOS + 人工粘性 + 弱 Mueller + 弱 XSPH。
         enableLowParticleCountTuning = false;
-        viscosity = 0.055f;
-        xsphC = 0.14f;
-        boundaryDamping = 0.58f;
-        boundaryDampingZ = 0.60f;
+        viscosity = 0.02f;
+        xsphC = 0.05f;
+        boundaryDamping = 0.55f;
+        boundaryDampingZ = 0.55f;
         boundaryMaxBounceSpeedZ = 3.5f;
-        minSpeed = 0.015f;
-        soundSpeed = Mathf.Max(soundSpeed, 24f);
-        maxSpeed = Mathf.Min(maxSpeed, 10.0f);
+        minSpeed = 0.0f;
+        eosGamma = 1.0f;
+        soundSpeed = Mathf.Clamp(soundSpeed, 28f, 38f);
+        maxSpeed = Mathf.Min(maxSpeed, 14.0f);
+        artViscAlpha = 0.55f;     // 关键稳定项；0.5–0.7 是水的常用区间
+        artViscBeta = 0.0f;
+        maxAcceleration = 80f;
     }
     void ApplySweepFlowPreset()
     {
-        // 曾误写为 Clamp(0.65, …) 恒等于 0.65，涡量过强会导致整流体高频抖、跳。
-        vorticityEps = Mathf.Clamp(vorticityEps, 0f, 0.16f);
-        obstacleTangentialStrength = 85f;
-        obstaclePushStrength = 52f;
-        obstacleFriction = 0.12f;
-        stirStrengthScale = 2.6f;
-        stirAngularBoost = 3.5f;
-        impulseNormalCoeff = 1.15f;
-        impulseTangentialCoeff = 1.35f;
-        freeSurfaceDamping = 0.0f;
-        freeSurfaceThreshold = 0.70f;
-        minImpulseRadius = Mathf.Max(minImpulseRadius, 0.9f);
+        // 仅调外部交互强度与渲染外观；不再额外修改物理阻尼。
+        obstaclePushStrength = 0f;       // 已不在 shader 内推力，仅球体非穿透
+        obstacleTangentialStrength = 0f;  // 同上
+        obstacleFriction = 0.0f;
+        stirStrengthScale = 2.0f;
+        stirAngularBoost = 2.0f;
+        impulseNormalCoeff = 1.0f;
+        impulseTangentialCoeff = 1.0f;
+        minImpulseRadius = Mathf.Max(minImpulseRadius, 0.6f);
         normalStrength = Mathf.Clamp(normalStrength, 0.85f, 1.6f);
-        // 扫流预设只调物理/交互；不再抬高深度模糊，避免 SPH 被强制糊成「MPM 填洞」档。
+        renderParticleScale = Mathf.Clamp(renderParticleScale, 1.12f, 1.32f);
+        anisotropyScale = 0f;            // SPH 不做各向异性
+        blurIterations = Mathf.Clamp(blurIterations, 1, 2);
+        thicknessBlurIterations = Mathf.Clamp(thicknessBlurIterations, 1, 2);
     }
     public void ResetSimulation()
     {
@@ -1303,7 +1511,20 @@ public class SPHStandardMobile : MonoBehaviour
         int gridCount = gridResolution * gridResolution * gridResolution;
         if (bufCellHead != null) bufCellHead.SetData(CreateFilled(gridCount, -1));
         if (bufNextIndex != null) bufNextIndex.SetData(CreateFilled(particleCount, -1));
+        externalBoatSphereCount = 0;
+        if (bufImpulses != null) bufImpulses.SetData(new Vector4[Mathf.Max(1, bufImpulses.count)]);
+        if (bufObstacles != null) bufObstacles.SetData(new Vector4[Mathf.Max(1, bufObstacles.count)]);
+        if (bufBoatCouplingSpheres != null) bufBoatCouplingSpheres.SetData(new Vector4[Mathf.Max(1, bufBoatCouplingSpheres.count)]);
+        if (bufBoatCouplingVelocities != null) bufBoatCouplingVelocities.SetData(new Vector4[Mathf.Max(1, bufBoatCouplingVelocities.count)]);
+        if (bufAccOut != null) bufAccOut.SetData(new Vector4[particleCount]);
+        if (bufVCorrOut != null) bufVCorrOut.SetData(new Vector4[particleCount]);
+        simAccumulator = 0f;
+        stirSpeed = 0f;
+        stickAngularSpeed = 0f;
+        stirPosInitialized = false;
+        stickRotInitialized = false;
         runSimulation = true;
+        WarmupSimulation();
     }
 
     public void Pause()
@@ -1314,6 +1535,14 @@ public class SPHStandardMobile : MonoBehaviour
     public void Resume()
     {
         runSimulation = true;
+    }
+
+    public void StepOnce()
+    {
+        if (cs == null || !isActiveAndEnabled) return;
+        float dt = Mathf.Clamp(runtimeFixedTimeStep, 1e-4f, 0.05f);
+        SimulateStep(dt);
+        Draw();
     }
 
     void Release(ComputeBuffer b){ if (b != null) b.Release(); }
@@ -1329,16 +1558,26 @@ public class SPHStandardMobile : MonoBehaviour
     {
         Vector3 sMin, sMax; GetSpawnBounds(out sMin, out sMax);
         Vector3 size = sMax - sMin;
-        int nx = Mathf.Max(1, Mathf.CeilToInt(Mathf.Pow(particleCount, 1f / 3f)));
-        int ny = nx;
-        int nz = nx;
+
+        // 各向同性排布：根据 spawn 盒体积与目标粒子数推一个统一间距 s，
+        // 然后按 s 反算 (nx, ny, nz)。这样三方向间距相等，避免初始密度的方向偏差
+        // 引发的「方向性压力梯度 → 沸腾」。
+        float spawnVol = Mathf.Max(1e-6f, size.x * size.y * size.z);
+        float s = Mathf.Pow(spawnVol / Mathf.Max(1, particleCount), 1f / 3f);
+        s = Mathf.Max(s, 1e-3f);
+        int nx = Mathf.Max(1, Mathf.CeilToInt(size.x / s));
+        int ny = Mathf.Max(1, Mathf.CeilToInt(size.y / s));
+        int nz = Mathf.Max(1, Mathf.CeilToInt(size.z / s));
+        // 微调使三向 step 接近 s（避免最后一行/列被压扁）
         Vector3 step = new Vector3(size.x / nx, size.y / ny, size.z / nz);
+
         int idx = 0;
         for (int iz = 0; iz < nz && idx < particleCount; iz++)
         for (int iy = 0; iy < ny && idx < particleCount; iy++)
         for (int ix = 0; ix < nx && idx < particleCount; ix++)
         {
-            Vector3 jitter = new Vector3((Random.value - 0.5f) * step.x, (Random.value - 0.5f) * step.y, (Random.value - 0.5f) * step.z) * initialJitter;
+            // 抖动用各向同性的 s，而不是 step（否则又把 step 的差异带回来）
+            Vector3 jitter = new Vector3(Random.value - 0.5f, Random.value - 0.5f, Random.value - 0.5f) * (s * initialJitter);
             Vector3 p = sMin + new Vector3((ix + 0.5f) * step.x, (iy + 0.5f) * step.y, (iz + 0.5f) * step.z) + jitter;
             xInit[idx] = p;
             vInit[idx] = Vector3.zero;
@@ -1399,6 +1638,24 @@ public class SPHStandardMobile : MonoBehaviour
         return n > 0;
     }
     
+    // 维护 top-K 高度的小型有序数组（升序）。
+    static void InsertTopK(float[] topK, ref int topCount, int K, float y)
+    {
+        if (topCount < K)
+        {
+            int idx = topCount;
+            while (idx > 0 && topK[idx - 1] > y) { topK[idx] = topK[idx - 1]; idx--; }
+            topK[idx] = y;
+            topCount++;
+        }
+        else if (y > topK[0])
+        {
+            int idx = 0;
+            while (idx + 1 < K && topK[idx + 1] < y) { topK[idx] = topK[idx + 1]; idx++; }
+            topK[idx] = y;
+        }
+    }
+
     public bool TryGetLocalWaterLevel(Vector3 center, float radius, int maxSamples, out float level)
     {
         level = (spawnMin.y + spawnMax.y) * 0.5f;
@@ -1416,9 +1673,14 @@ public class SPHStandardMobile : MonoBehaviour
         int rx = Mathf.Clamp(Mathf.CeilToInt(radius / cellSize.x), 0, gridResolution - 1);
         int ry = Mathf.Clamp(Mathf.CeilToInt(radius / cellSize.y), 0, gridResolution - 1);
         int rz = Mathf.Clamp(Mathf.CeilToInt(radius / cellSize.z), 0, gridResolution - 1);
-        float sum = 0f;
+        // 关键修正：水位必须是「上表面」，所以对附近粒子的 y 取 top-K 平均值，
+        // 而不是简单平均（旧实现会把整个水柱中点当作水位 → SPH 模式船一直沉）。
+        const int K = 6;
+        float[] topK = new float[K];
+        int topCount = 0;
         int n = 0;
         int maxN = Mathf.Max(1, maxSamples);
+        float r2 = radius * radius;
         for (int iz = Mathf.Max(0, cz - rz); iz <= Mathf.Min(gridResolution - 1, cz + rz) && n < maxN; iz++)
         {
             for (int iy = Mathf.Max(0, cy - ry); iy <= Mathf.Min(gridResolution - 1, cy + ry) && n < maxN; iy++)
@@ -1437,9 +1699,9 @@ public class SPHStandardMobile : MonoBehaviour
                         Vector3 p = posArr[0];
                         Vector3 d = p - center;
                         d.y = 0f;
-                        if (d.sqrMagnitude <= radius * radius)
+                        if (d.sqrMagnitude <= r2)
                         {
-                            sum += p.y;
+                            InsertTopK(topK, ref topCount, K, p.y);
                             n++;
                         }
                         var nextArr = new int[1];
@@ -1450,8 +1712,13 @@ public class SPHStandardMobile : MonoBehaviour
                 }
             }
         }
-        if (n > 0) level = sum / n;
-        return n > 0;
+        if (topCount > 0)
+        {
+            float s = 0f;
+            for (int i = 0; i < topCount; i++) s += topK[i];
+            level = s / topCount;
+        }
+        return topCount > 0;
     }
     
     public bool TryGetLocalFlow(Vector3 center, float radius, int maxSamples, out Vector3 avgVel)
@@ -1528,7 +1795,11 @@ public class SPHStandardMobile : MonoBehaviour
         level = (spawnMin.y + spawnMax.y) * 0.5f;
         UpdateCpuCacheIfNeeded(false);
         if (cpuXCache == null) return false;
-        float sum = 0f;
+        // 关键修正：以 top-K 平均（最高粒子）作为水位，避免对水柱整体取平均把船的水位
+        // 永远拉到水柱中点 → SPH 浮力始终偏弱、小船下沉。
+        const int K = 8;
+        float[] topK = new float[K];
+        int topCount = 0;
         int n = 0;
         float r2 = radius * radius;
         for (int i = 0; i < cpuXCache.Length; i++)
@@ -1537,11 +1808,16 @@ public class SPHStandardMobile : MonoBehaviour
             Vector3 d = p - center; d.y = 0f;
             if (d.sqrMagnitude <= r2)
             {
-                sum += p.y;
+                InsertTopK(topK, ref topCount, K, p.y);
                 n++;
             }
         }
-        if (n > 0) level = sum / n;
+        if (topCount > 0)
+        {
+            float s = 0f;
+            for (int i = 0; i < topCount; i++) s += topK[i];
+            level = s / topCount;
+        }
         return n > 0;
     }
     

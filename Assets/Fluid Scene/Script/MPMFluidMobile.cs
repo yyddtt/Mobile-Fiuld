@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.Rendering;
 
+[DefaultExecutionOrder(-20)]
 public class MPMFluidMobile : MonoBehaviour
 {
     public const int MaxParticleCountMobile = 10000;
@@ -103,6 +104,15 @@ public class MPMFluidMobile : MonoBehaviour
     [HideInInspector] public bool simulateInLateUpdate = true;
     [Header("Adaptive/Power")]
     [HideInInspector] public int targetFrameRate = 60;
+    public enum MobileQualityProfile { Auto, Performance, Balanced, Quality }
+    [Tooltip("移动端质量档：Auto 会按设备能力给初始档位，并可在运行时自适应。")]
+    public MobileQualityProfile mobileQualityProfile = MobileQualityProfile.Balanced;
+    [Tooltip("运行时根据帧率动态升降质。开启后优先保证帧率，再尽量保留液面细节。")]
+    public bool adaptiveQuality = false;
+    [Range(30f, 120f)] public float qualityDownshiftFps = 50f;
+    [Range(30f, 120f)] public float qualityUpshiftFps = 58f;
+    [Range(10, 240)] public int qualityCheckIntervalFrames = 20;
+    [Range(30, 600)] public int qualityCooldownFrames = 120;
     [Header("Camera")]
     public bool autoCameraClipTuning = true;
     public float clipMargin = 5f;
@@ -147,7 +157,7 @@ public class MPMFluidMobile : MonoBehaviour
     public enum DepthFilterType { Bilateral, Gaussian }
     
     [Tooltip("Target vertical resolution for the depth buffer (e.g. 720p). 0 = Manual Downsample。普通机型建议 360–480。")]
-    public int targetDepthHeight = 420;
+    public int targetDepthHeight = 520;
     [Range(1, 4)] public int depthDownsample = 2;
     [Range(0, 10)] public int blurIterations = 2;
     [Range(0.1f, 50f)] public float blurSigmaSpatial = 9.5f;
@@ -179,6 +189,13 @@ public class MPMFluidMobile : MonoBehaviour
     [Range(0f, 1f)] public float specular = 0.58f;
     [Range(0f, 0.5f)] public float thicknessCutoff = 0.05f; // New threshold to trim wavy edges
     [Range(0f, 0.2f)] public float refractionStrength = 0.02f; // New refraction strength
+    [Header("Particle Surface Tuning")]
+    [Tooltip("根据粒子平均间距自动匹配渲染半径与厚度，减少颗粒感/糊面。")]
+    public bool autoTuneParticleSurface = false;
+    [Range(0.45f, 0.9f)] public float particleOverlapRatio = 0.62f;
+    [Range(0.2f, 0.8f)] public float minParticleToCellRatio = 0.34f;
+    [Range(0.5f, 1.2f)] public float maxParticleToCellRatio = 0.88f;
+    [Range(0.01f, 1f)] public float particleSurfaceTuneLerp = 0.18f;
 
     MaterialPropertyBlock props;
     
@@ -186,6 +203,31 @@ public class MPMFluidMobile : MonoBehaviour
 
     Mesh sphereMesh;
     Bounds drawBounds;
+    int baseTargetDepthHeight;
+    int baseDepthDownsample;
+    int baseThicknessDownsample;
+    int baseBlurIterations;
+    int baseThicknessBlurIterations;
+    int baseMaxSubsteps;
+    float baseFixedTimeStep;
+    float baseGridSmooth;
+    float baseRenderParticleScale;
+    float baseParticleSize;
+    float baseThicknessContribution;
+    int runtimeTargetDepthHeight;
+    int runtimeDepthDownsample;
+    int runtimeThicknessDownsample;
+    int runtimeBlurIterations;
+    int runtimeThicknessBlurIterations;
+    int runtimeMaxSubsteps;
+    float runtimeFixedTimeStep;
+    float runtimeGridSmooth;
+    float runtimeRenderParticleScale;
+    float runtimeParticleSize;
+    float runtimeThicknessContribution;
+    int runtimeQualityLevel = 2;
+    float frameTimeEma = 1f / 60f;
+    int nextQualityEvalFrame = 0;
 
     [Header("Spawn Settings")]
     [Tooltip("How to distribute particles initially.")]
@@ -202,6 +244,8 @@ public class MPMFluidMobile : MonoBehaviour
     {
         particleCount = Mathf.Clamp(particleCount, MinParticleCount, MaxParticleCountMobile);
         gridResolution = Mathf.Clamp(gridResolution, 16, 48);
+        if (qualityUpshiftFps < qualityDownshiftFps + 2f) qualityUpshiftFps = qualityDownshiftFps + 2f;
+        if (maxParticleToCellRatio < minParticleToCellRatio + 0.05f) maxParticleToCellRatio = minParticleToCellRatio + 0.05f;
     }
 #endif
 
@@ -269,6 +313,16 @@ public class MPMFluidMobile : MonoBehaviour
         drawBounds = new Bounds((boundsMin + boundsMax) * 0.5f, boundsMax - boundsMin + Vector3.one * 2f);
 
         if (targetFrameRate > 0) Application.targetFrameRate = targetFrameRate;
+        InitializeAdaptiveQualityState();
+
+        // 启动 warmup：模拟少量步（无重力或小重力都可以保持当前重力），让粒子从 spawn
+        // 区下落开始接近稳态。FluidBoat 还会有 settle 期，组合起来确保第一帧画面已经稳定。
+        // 注意：这里仅是「先跑几步」让 GPU buffer 进入有效状态，避免编辑器编译热重载时
+        // 第一帧因 buffer 尚未填充导致渲染瞬间空帧/突跳。
+        {
+            float dtWarmStart = Mathf.Clamp(runtimeFixedTimeStep, 1e-4f, 0.01f);
+            for (int i = 0; i < 3; i++) SimulateStep(dtWarmStart);
+        }
 
         mainCam = Camera.main;
         if (mainCam != null)
@@ -282,9 +336,71 @@ public class MPMFluidMobile : MonoBehaviour
             depthTexID = Shader.PropertyToID("_FluidDepthTexture");
             thicknessTexID = Shader.PropertyToID("_FluidThicknessTexture");
             normalTexID = Shader.PropertyToID("_FluidNormalTexture");
-            
-            mainCam.AddCommandBuffer(CameraEvent.BeforeForwardAlpha, fluidCmd);
         }
+        RegisterFluidCommandBuffer();
+    }
+
+    void OnEnable()
+    {
+        RegisterFluidCommandBuffer();
+    }
+
+    void OnDisable()
+    {
+        if (mainCam != null && fluidCmd != null)
+            mainCam.RemoveCommandBuffer(CameraEvent.BeforeForwardAlpha, fluidCmd);
+    }
+
+    void RegisterFluidCommandBuffer()
+    {
+        if (!isActiveAndEnabled || mainCam == null || fluidCmd == null) return;
+        mainCam.RemoveCommandBuffer(CameraEvent.BeforeForwardAlpha, fluidCmd);
+        mainCam.AddCommandBuffer(CameraEvent.BeforeForwardAlpha, fluidCmd);
+    }
+
+    public void Pause() { runSimulation = false; }
+
+    public void Resume() { runSimulation = true; }
+
+    public void ResetSimulation()
+    {
+        if (bufX == null || bufV == null || cs == null) return;
+        simTime = 0f;
+        var xInit = new Vector3[particleCount];
+        var vInit = new Vector3[particleCount];
+        FillInitial(xInit, vInit);
+        bufX.SetData(xInit);
+        bufV.SetData(vInit);
+        bufC0.SetData(new Vector3[particleCount]);
+        bufC1.SetData(new Vector3[particleCount]);
+        bufC2.SetData(new Vector3[particleCount]);
+        int gridCount = gridResolution * gridResolution * gridResolution;
+        bufGridMassI.SetData(new int[gridCount]);
+        bufGridMomX.SetData(new int[gridCount]);
+        bufGridMomY.SetData(new int[gridCount]);
+        bufGridMomZ.SetData(new int[gridCount]);
+        boatSphereCount = 0;
+        if (boatSpheresBuffer != null)
+        {
+            boatSpheresBuffer.SetData(new HullSphere[1]);
+            if (cs != null) cs.SetBuffer(kGridUpdate, "boatSpheres", boatSpheresBuffer);
+        }
+        colliderSphere = Vector4.zero;
+        colliderVelocity = Vector3.zero;
+        stirrerSphere = Vector4.zero;
+        stirrerVelocity = Vector3.zero;
+        // 重置后做少量预热，减少第一帧压力尖峰导致的抽搐。
+        float dtWarm = Mathf.Clamp(runtimeFixedTimeStep * 0.8f, 1e-4f, 0.02f);
+        for (int i = 0; i < 4; i++) SimulateStep(dtWarm);
+        runSimulation = true;
+    }
+
+    public void StepOnce()
+    {
+        if (cs == null || !isActiveAndEnabled) return;
+        float dt = Mathf.Clamp(runtimeFixedTimeStep, 1e-4f, 0.05f);
+        SimulateStep(dt);
+        Draw();
     }
 
     void Update()
@@ -301,9 +417,11 @@ public class MPMFluidMobile : MonoBehaviour
 
     void SimulateFrame()
     {
+        UpdateAdaptiveQualityState();
+        UpdateParticleSurfaceRuntime();
         if (!runSimulation) { Draw(); return; }
         float dtFrame = Mathf.Clamp(Time.deltaTime, 1e-4f, 0.05f);
-        int steps = enableSubstepping ? Mathf.Clamp(Mathf.CeilToInt(dtFrame / fixedTimeStep), 1, maxSubsteps) : 1;
+        int steps = enableSubstepping ? Mathf.Clamp(Mathf.CeilToInt(dtFrame / runtimeFixedTimeStep), 1, runtimeMaxSubsteps) : 1;
         float dtStep = dtFrame / steps;
         for (int s = 0; s < steps; s++)
         {
@@ -315,9 +433,16 @@ public class MPMFluidMobile : MonoBehaviour
 
     void SimulateStep(float dt)
     {
+        if (cs == null || bufX == null || bufGridMassI == null || particlesBuffer == null) return;
+
         int gridCount = gridResolution * gridResolution * gridResolution;
         int groupsGrid = (gridCount + 127) / 128;
         int groupsParticle = (particleCount + 127) / 128;
+
+        // 每步重新绑定：shader 在编辑器重编译等情况下会清空内核 buffer 绑定，否则 Dispatch 报 Property not set。
+        BindMpmPersistentKernelBuffers();
+        if (boatSpheresBuffer != null)
+            cs.SetBuffer(kGridUpdate, "boatSpheres", boatSpheresBuffer);
 
         cs.SetInt("n_grid", gridResolution);
         cs.SetInt("particle_num", particleCount);
@@ -330,7 +455,7 @@ public class MPMFluidMobile : MonoBehaviour
         cs.SetVector("gravity", gravity);
         cs.SetFloat("eosGamma", eosGamma);
         cs.SetFloat("soundSpeed", soundSpeed);
-        cs.SetFloat("gridSmoothWeight", gridSmooth);
+        cs.SetFloat("gridSmoothWeight", runtimeGridSmooth);
         cs.SetFloat("boundaryFriction", boundaryFriction);
         simTime += dt;
         float ramp = pressureRampTime > 0f ? Mathf.Clamp01(simTime / pressureRampTime) : 1f;
@@ -428,16 +553,16 @@ public class MPMFluidMobile : MonoBehaviour
         drawBounds.size = boundsMax - boundsMin + Vector3.one * 2f;
         
         props.Clear();
-        props.SetFloat("_size", particleSize);
-        props.SetFloat("_SizeScale", renderParticleScale);
+        props.SetFloat("_size", runtimeParticleSize);
+        props.SetFloat("_SizeScale", runtimeRenderParticleScale);
         props.SetFloat("_AnisotropyScale", anisotropyScale);
         props.SetFloat("_MaxAnisotropy", maxAnisotropy);
         props.SetBuffer("_particlesBuffer", particlesBuffer);
         
         // GLOBAL BUFFER SETTING (Critical for CommandBuffer Instancing)
         Shader.SetGlobalBuffer("_particlesBuffer", particlesBuffer);
-        Shader.SetGlobalFloat("_SizeScale", renderParticleScale);
-        Shader.SetGlobalFloat("_size", particleSize);
+        Shader.SetGlobalFloat("_SizeScale", runtimeRenderParticleScale);
+        Shader.SetGlobalFloat("_size", runtimeParticleSize);
         Shader.SetGlobalFloat("_AnisotropyScale", anisotropyScale);
         Shader.SetGlobalFloat("_MaxAnisotropy", maxAnisotropy);
 
@@ -464,11 +589,11 @@ public class MPMFluidMobile : MonoBehaviour
                 
                 // Adaptive Downsampling: Ensure consistent blur radius across different screen DPIs
                 // If targetDepthHeight > 0, we calculate downsample to match that height roughly.
-                int effectiveDownsample = depthDownsample;
-                if (targetDepthHeight > 0)
+                int effectiveDownsample = runtimeDepthDownsample;
+                if (runtimeTargetDepthHeight > 0)
                 {
-                    float scale = (float)Screen.height / (float)targetDepthHeight;
-                    effectiveDownsample = Mathf.Max(depthDownsample, Mathf.RoundToInt(scale));
+                    float scale = (float)Screen.height / (float)runtimeTargetDepthHeight;
+                    effectiveDownsample = Mathf.Max(runtimeDepthDownsample, Mathf.RoundToInt(scale));
                 }
 
                 int dw = Mathf.Max(1, Screen.width / effectiveDownsample);
@@ -484,7 +609,7 @@ public class MPMFluidMobile : MonoBehaviour
                 // Depth Blur（中间 RT 必须与深度同分辨率；原先用全屏 -1 在移动端会浪费大量带宽）
                 Material currentBlurMat = (filterType == DepthFilterType.Gaussian && gaussianMat != null) ? gaussianMat : blurMat;
 
-                if (currentBlurMat != null && blurIterations > 0)
+                if (currentBlurMat != null && runtimeBlurIterations > 0)
                 {
                     currentBlurMat.SetFloat("_SigmaSpatial", blurSigmaSpatial);
                     // Always pass SigmaRange now, even for Gaussian (Smart Gaussian uses it for edge preservation)
@@ -494,7 +619,7 @@ public class MPMFluidMobile : MonoBehaviour
                     int tempDepthID = Shader.PropertyToID("_FluidDepthTemp");
                     fluidCmd.GetTemporaryRT(tempDepthID, dw, dh, 0, FilterMode.Bilinear, depthFmt);
 
-                    for (int i = 0; i < blurIterations; i++)
+                    for (int i = 0; i < runtimeBlurIterations; i++)
                     {
                         fluidCmd.Blit(depthTexID, tempDepthID, currentBlurMat, 0);
                         fluidCmd.Blit(tempDepthID, depthTexID, currentBlurMat, 1);
@@ -507,10 +632,10 @@ public class MPMFluidMobile : MonoBehaviour
             // 3. Thickness Pass
             if (thicknessMat != null)
             {
-                props.SetFloat("_ContributionScale", thicknessContribution);
-                props.SetFloat("_SizeScale", renderParticleScale); // Sync size scale for thickness
-                int w = Screen.width / thicknessDownsample;
-                int h = Screen.height / thicknessDownsample;
+                props.SetFloat("_ContributionScale", runtimeThicknessContribution);
+                props.SetFloat("_SizeScale", runtimeRenderParticleScale); // Sync size scale for thickness
+                int w = Screen.width / runtimeThicknessDownsample;
+                int h = Screen.height / runtimeThicknessDownsample;
                 RenderTextureFormat thickFmt = MobileSsfRenderShared.SelectSingleChannelFloatFormat();
                 
                 fluidCmd.GetTemporaryRT(thicknessTexID, w, h, 0, FilterMode.Bilinear, thickFmt);
@@ -518,12 +643,12 @@ public class MPMFluidMobile : MonoBehaviour
                 fluidCmd.ClearRenderTarget(false, true, Color.black);
                 fluidCmd.DrawMeshInstancedProcedural(sphereMesh, 0, thicknessMat, 0, particleCount, props);
 
-                if (thicknessBlurMat != null && thicknessBlurIterations > 0)
+                if (thicknessBlurMat != null && runtimeThicknessBlurIterations > 0)
                 {
                     thicknessBlurMat.SetInt("_FilterRadius", thicknessBlurRadius);
                     int tempID = Shader.PropertyToID("_FluidThicknessTemp");
                     fluidCmd.GetTemporaryRT(tempID, w, h, 0, FilterMode.Bilinear, thickFmt);
-                    for(int i=0; i<thicknessBlurIterations; i++)
+                    for(int i=0; i<runtimeThicknessBlurIterations; i++)
                     {
                         fluidCmd.Blit(thicknessTexID, tempID, thicknessBlurMat, 0);
                         fluidCmd.Blit(tempID, thicknessTexID, thicknessBlurMat, 1);
@@ -575,9 +700,10 @@ public class MPMFluidMobile : MonoBehaviour
 
     void OnDestroy()
     {
-        if (mainCam != null)
+        if (mainCam != null && fluidCmd != null)
         {
-            if (fluidCmd != null) { mainCam.RemoveCommandBuffer(CameraEvent.BeforeForwardAlpha, fluidCmd); fluidCmd.Release(); }
+            mainCam.RemoveCommandBuffer(CameraEvent.BeforeForwardAlpha, fluidCmd);
+            fluidCmd.Release();
         }
 
         Release(bufX); Release(bufV); Release(bufC0); Release(bufC1); Release(bufC2); Release(bufGridMassI); Release(bufGridMomX); Release(bufGridMomY); Release(bufGridMomZ);
@@ -719,6 +845,122 @@ public class MPMFluidMobile : MonoBehaviour
         far = Mathf.Min(far, near + 120f);
         cam.nearClipPlane = near;
         cam.farClipPlane = far;
+    }
+
+    void InitializeAdaptiveQualityState()
+    {
+        baseTargetDepthHeight = targetDepthHeight;
+        baseDepthDownsample = depthDownsample;
+        baseThicknessDownsample = thicknessDownsample;
+        baseBlurIterations = blurIterations;
+        baseThicknessBlurIterations = thicknessBlurIterations;
+        baseMaxSubsteps = maxSubsteps;
+        baseFixedTimeStep = fixedTimeStep;
+        baseGridSmooth = gridSmooth;
+        baseRenderParticleScale = renderParticleScale;
+        baseParticleSize = particleSize;
+        baseThicknessContribution = thicknessContribution;
+
+        runtimeQualityLevel = ResolveInitialQualityLevel();
+        ApplyQualityLevel(runtimeQualityLevel, false);
+        runtimeParticleSize = particleSize;
+        runtimeThicknessContribution = thicknessContribution;
+        UpdateParticleSurfaceRuntime();
+    }
+
+    int ResolveInitialQualityLevel()
+    {
+        if (mobileQualityProfile == MobileQualityProfile.Performance) return 0;
+        if (mobileQualityProfile == MobileQualityProfile.Balanced) return 1;
+        if (mobileQualityProfile == MobileQualityProfile.Quality) return 2;
+
+        if (!Application.isMobilePlatform) return 2;
+        bool lowMemory = SystemInfo.systemMemorySize > 0 && SystemInfo.systemMemorySize <= 3000;
+        bool lowGpuMemory = SystemInfo.graphicsMemorySize > 0 && SystemInfo.graphicsMemorySize <= 1200;
+        if (lowMemory || lowGpuMemory) return 0;
+        bool midMemory = SystemInfo.systemMemorySize > 0 && SystemInfo.systemMemorySize <= 5000;
+        return midMemory ? 1 : 2;
+    }
+
+    void UpdateAdaptiveQualityState()
+    {
+        frameTimeEma = Mathf.Lerp(frameTimeEma, Mathf.Clamp(Time.unscaledDeltaTime, 1e-4f, 0.1f), 0.08f);
+        if (!adaptiveQuality || qualityDownshiftFps >= qualityUpshiftFps) return;
+        if (Time.frameCount < nextQualityEvalFrame) return;
+        if ((Time.frameCount % Mathf.Max(1, qualityCheckIntervalFrames)) != 0) return;
+
+        float fps = 1f / Mathf.Max(frameTimeEma, 1e-4f);
+        if (fps < qualityDownshiftFps && runtimeQualityLevel > 0)
+        {
+            ApplyQualityLevel(runtimeQualityLevel - 1, true);
+            nextQualityEvalFrame = Time.frameCount + Mathf.Max(1, qualityCooldownFrames);
+        }
+        else if (fps > qualityUpshiftFps && runtimeQualityLevel < 2)
+        {
+            ApplyQualityLevel(runtimeQualityLevel + 1, true);
+            nextQualityEvalFrame = Time.frameCount + Mathf.Max(1, qualityCooldownFrames);
+        }
+    }
+
+    void ApplyQualityLevel(int level, bool logChange)
+    {
+        runtimeQualityLevel = Mathf.Clamp(level, 0, 2);
+        int depthDsAdd = 2 - runtimeQualityLevel;
+        int thickDsAdd = 2 - runtimeQualityLevel;
+        int blurMinus = 2 - runtimeQualityLevel;
+
+        runtimeTargetDepthHeight = Mathf.Max(0, baseTargetDepthHeight - (2 - runtimeQualityLevel) * 120);
+        runtimeDepthDownsample = Mathf.Clamp(baseDepthDownsample + depthDsAdd, 1, 4);
+        runtimeThicknessDownsample = Mathf.Clamp(baseThicknessDownsample + thickDsAdd, 1, 5);
+        runtimeBlurIterations = Mathf.Clamp(baseBlurIterations - blurMinus, 0, 10);
+        runtimeThicknessBlurIterations = Mathf.Clamp(baseThicknessBlurIterations - (2 - runtimeQualityLevel), 0, 5);
+        runtimeMaxSubsteps = Mathf.Clamp(baseMaxSubsteps - (2 - runtimeQualityLevel), 1, 8);
+        runtimeFixedTimeStep = Mathf.Clamp(baseFixedTimeStep * (1f + (2 - runtimeQualityLevel) * 0.08f), 0.0025f, 0.02f);
+        runtimeGridSmooth = Mathf.Clamp(baseGridSmooth + (2 - runtimeQualityLevel) * 0.05f, 0f, 1f);
+        runtimeRenderParticleScale = Mathf.Clamp(baseRenderParticleScale + (2 - runtimeQualityLevel) * 0.04f, 1f, 2f);
+
+        if (logChange)
+        {
+            Debug.Log($"MPM Adaptive Quality -> L{runtimeQualityLevel} fps~{(1f / Mathf.Max(frameTimeEma, 1e-4f)):F1}, depthDS={runtimeDepthDownsample}, thickDS={runtimeThicknessDownsample}, substeps={runtimeMaxSubsteps}");
+        }
+    }
+
+    void UpdateParticleSurfaceRuntime()
+    {
+        if (!autoTuneParticleSurface)
+        {
+            runtimeParticleSize = particleSize;
+            runtimeThicknessContribution = thicknessContribution;
+            return;
+        }
+
+        Vector3 simSize = boundsMax - boundsMin;
+        float cellSize = (simSize.x + simSize.y + simSize.z) / (3f * Mathf.Max(1, gridResolution));
+        cellSize = Mathf.Max(cellSize, 1e-4f);
+
+        Vector3 sMin, sMax;
+        GetSpawnBounds(out sMin, out sMax);
+        Vector3 spawnSize = sMax - sMin;
+        float spawnVol = Mathf.Max(1e-6f, spawnSize.x * spawnSize.y * spawnSize.z);
+        float spacing = Mathf.Pow(spawnVol / Mathf.Max(1, particleCount), 1f / 3f);
+
+        float targetEffectiveRadius = spacing * particleOverlapRatio;
+        float minEffectiveRadius = cellSize * minParticleToCellRatio;
+        float maxEffectiveRadius = cellSize * maxParticleToCellRatio;
+        float effectiveRadius = Mathf.Clamp(targetEffectiveRadius, minEffectiveRadius, maxEffectiveRadius);
+        float baseEffective = Mathf.Max(1e-4f, baseParticleSize * Mathf.Max(baseRenderParticleScale, 0.01f));
+        // 避免自动标定把粒径压得过小导致液面明显发透明。
+        effectiveRadius = Mathf.Max(effectiveRadius, baseEffective * 0.84f);
+
+        float targetParticleSize = effectiveRadius / Mathf.Max(0.01f, runtimeRenderParticleScale);
+        targetParticleSize = Mathf.Clamp(targetParticleSize, 0.045f, 0.5f);
+        runtimeParticleSize = Mathf.Lerp(runtimeParticleSize, targetParticleSize, Mathf.Clamp01(particleSurfaceTuneLerp));
+
+        float effectiveNow = runtimeParticleSize * runtimeRenderParticleScale;
+        float shrink = Mathf.Clamp(baseEffective / Mathf.Max(effectiveNow, 1e-4f), 0.75f, 1.9f);
+        float thicknessBoost = Mathf.Pow(shrink, 0.85f);
+        runtimeThicknessContribution = thicknessContribution * thicknessBoost;
+        runtimeThicknessContribution = Mathf.Clamp(runtimeThicknessContribution, thicknessContribution * 0.92f, thicknessContribution * 1.85f);
     }
 
     void LogStatsIfNeeded()

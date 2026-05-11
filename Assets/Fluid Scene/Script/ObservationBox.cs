@@ -3,6 +3,8 @@ using UnityEngine;
 public class ObservationBox : MonoBehaviour
 {
     public SPHStandardMobile fluid;
+    [Tooltip("与 MPM 共用场景时赋值；墙体与边界同步会跟随当前启用的流体组件。")]
+    public MPMFluidMobile mpmFluid;
     public float thickness = 0.2f;
     public float margin = 0f;
     public Material wallMaterial;
@@ -21,24 +23,46 @@ public class ObservationBox : MonoBehaviour
     
     float Padding()
     {
-        if (fluid == null) return margin;
-        float drawSize = Mathf.Max(fluid.particleSize, fluid.neighbourRadius * 0.9f);
-        return margin + drawSize * 0.5f;
+        if (TryGetActiveFluid(out var sph, out var mpm))
+        {
+            if (mpm != null)
+                return margin + mpm.particleSize * 0.5f;
+            if (sph != null)
+            {
+                float drawSize = Mathf.Max(sph.particleSize, sph.neighbourRadius * 0.9f);
+                return margin + drawSize * 0.5f;
+            }
+        }
+        return margin;
+    }
+
+    bool TryGetActiveFluid(out SPHStandardMobile sph, out MPMFluidMobile mpm)
+    {
+        sph = fluid;
+        mpm = mpmFluid;
+        if (mpm != null && mpm.enabled && (sph == null || !sph.enabled)) { sph = null; return mpm != null; }
+        if (sph != null && sph.enabled) { mpm = null; return true; }
+        if (mpm != null) { sph = null; return true; }
+        if (sph != null) { mpm = null; return true; }
+        return false;
     }
     
     public void SyncBoundsFromWalls()
     {
-        if (!syncBoundsFromWalls || fluid == null) return;
+        if (!syncBoundsFromWalls) return;
+        if (!TryGetActiveFluid(out var sph, out var mpm)) return;
         if (leftWall == null || rightWall == null || backWall == null) return;
         var pad = Padding();
         var minX = leftWall.position.x + thickness * 0.5f + pad;
         var maxX = rightWall.position.x - thickness * 0.5f - pad;
         var minZ = backWall.position.z + thickness * 0.5f + pad;
-        var minY = bottomWall != null ? bottomWall.position.y + thickness * 0.5f + pad : fluid.boundsMin.y;
+        float refMinY = mpm != null ? mpm.boundsMin.y : (sph != null ? sph.boundsMin.y : 0f);
+        float refMaxY = mpm != null ? mpm.boundsMax.y : (sph != null ? sph.boundsMax.y : 0f);
+        var minY = bottomWall != null ? bottomWall.position.y + thickness * 0.5f + pad : refMinY;
         var bmin = new Vector3(minX, minY, minZ);
-        var bmax = new Vector3(maxX, fluid.boundsMax.y, fluid.boundsMax.z);
-        fluid.boundsMin = bmin;
-        fluid.boundsMax = bmax;
+        var bmax = new Vector3(maxX, refMaxY, mpm != null ? mpm.boundsMax.z : sph.boundsMax.z);
+        if (mpm != null) { mpm.boundsMin = bmin; mpm.boundsMax = bmax; }
+        if (sph != null) { sph.boundsMin = bmin; sph.boundsMax = bmax; }
     }
 
     void Start()
@@ -63,15 +87,16 @@ public class ObservationBox : MonoBehaviour
     void GenerateWalls()
     {
         if (fluid == null) fluid = GetComponent<SPHStandardMobile>();
-        if (fluid == null) return;
+        if (mpmFluid == null) mpmFluid = GetComponent<MPMFluidMobile>();
+        if (!TryGetActiveFluid(out var sph, out var mpm)) return;
+        var min = mpm != null ? mpm.boundsMin : sph.boundsMin;
+        var max = mpm != null ? mpm.boundsMax : sph.boundsMax;
         if (wallsRoot == null)
         {
             var existing = transform.Find("ObservationBoxWalls");
             wallsRoot = existing != null ? existing : new GameObject("ObservationBoxWalls").transform;
             wallsRoot.SetParent(transform, false);
         }
-        var min = fluid.boundsMin;
-        var max = fluid.boundsMax;
         var centerY = (min.y + max.y) * 0.5f;
         var centerZ = (min.z + max.z) * 0.5f;
         var centerX = (min.x + max.x) * 0.5f;

@@ -1,15 +1,27 @@
 #pragma kernel ClearGrid
 #pragma kernel BuildGrid
 #pragma kernel ComputeDensity
-#pragma kernel SPHMain
+#pragma kernel SPHForces
+#pragma kernel SPHIntegrate
 #pragma target 4.5
 #pragma only_renderers d3d11 vulkan metal gles3
+
+// ────────────────────────────────────────────────────────────────────────────
+//  标准移动端 WCSPH（无 race）：
+//   ClearGrid → BuildGrid → ComputeDensity → SPHForces → SPHIntegrate
+//   关键：力计算与积分分两个 kernel，避免「线程内既读又写 x/v 的邻居」竞态
+//   导致每帧调度顺序不同 → 力扰动不同 → 视觉上的「沸腾抖动」。
+// ────────────────────────────────────────────────────────────────────────────
 
 RWStructuredBuffer<float3> x;
 RWStructuredBuffer<float3> v;
 RWStructuredBuffer<float> rho;
 RWStructuredBuffer<int> cellHead;
 RWStructuredBuffer<int> nextIndex;
+
+// 每帧由 SPHForces 写入、SPHIntegrate 读出。
+RWStructuredBuffer<float4> accOut;     // .xyz = 加速度（含压力+粘性+重力+冲量），.w 暂未用
+RWStructuredBuffer<float4> vCorrOut;   // .xyz = XSPH 速度修正项，.w 暂未用
 
 // Same layout as MPM for Instanced/GridParticleDepth & GridParticleThickness
 struct Particle { float4 position; float4 color; float4 velocity; };
@@ -41,6 +53,10 @@ float vorticityEps;
 float surfaceTension;
 float freeSurfaceDamping;
 float freeSurfaceThreshold;
+// Monaghan-Gingold 人工粘性（让显式 WCSPH 稳定的关键项）
+float artViscAlpha;   // 线性项系数（典型 0.2–1.0），水建议 0.3–0.5
+float artViscBeta;    // 二次项系数（仅冲击波时需要，水可保持 0）
+float maxAcceleration; // 单步加速度上限，安全网
 
 StructuredBuffer<float4> impulses;
 int impulseCount;
@@ -55,6 +71,19 @@ float obstaclePushStrength;
 float obstacleDamping;
 float obstacleTangentialStrength;
 float obstacleFriction;
+StructuredBuffer<float4> boatCouplingSpheres;
+StructuredBuffer<float4> boatCouplingVelocities;
+int boatCouplingCount;
+float couplingBandWidth;
+float couplingBandStrength;
+float couplingVelocityBlend;
+float couplingTangentialFriction;
+float pressureRatioCap;
+float internalJitterDamping;
+float internalDampingBand;
+float floorDampingBand;
+float floorTangentialDamping;
+float floorNormalDamping;
 
 int gridIndex(int3 c){ return c.x + c.y * n_grid + c.z * n_grid * n_grid; }
 
@@ -106,9 +135,10 @@ void ComputeDensity(uint3 id : SV_DispatchThreadID)
     for (int dx = -1; dx <= 1; dx++)
     {
         int3 c;
-        c.x = clamp(baseCell.x + dx, 0, n_grid - 1);
-        c.y = clamp(baseCell.y + dy, 0, n_grid - 1);
-        c.z = clamp(baseCell.z + dz, 0, n_grid - 1);
+        c.x = baseCell.x + dx;
+        c.y = baseCell.y + dy;
+        c.z = baseCell.z + dz;
+        if (c.x < 0 || c.x >= n_grid || c.y < 0 || c.y >= n_grid || c.z < 0 || c.z >= n_grid) continue;
         int head = cellHead[gridIndex(c)];
         int j = head;
         int it = 0;
@@ -131,82 +161,95 @@ void ComputeDensity(uint3 id : SV_DispatchThreadID)
     rho[i] = rho_i;
 }
 
+// ────────────────────────────────────────────────────────────────────────────
+//  SPHForces：纯只读 x/v/rho，输出 acc 与 v_corr（无竞态）
+// ────────────────────────────────────────────────────────────────────────────
 [numthreads(128,1,1)]
-void SPHMain(uint3 id : SV_DispatchThreadID)
+void SPHForces(uint3 id : SV_DispatchThreadID)
 {
     uint i = id.x;
     if (i >= (uint)particle_num) return;
+
     float3 xi = x[i];
-    float3 vi = v[i] + gravity * dt;
+    float3 vi = v[i];
     float h = max(neighbourRadius, 1e-3);
     float h2 = h * h;
+
     float3 size = boundsMax - boundsMin;
-    float3 pn = saturate((xi - boundsMin) / max(size, float3(1e-3,1e-3,1e-3)));
+    float3 pn = saturate((xi - boundsMin) / max(size, float3(1e-3, 1e-3, 1e-3)));
     int3 baseCell;
     baseCell.x = clamp((int)(pn.x * n_grid), 0, n_grid - 1);
     baseCell.y = clamp((int)(pn.y * n_grid), 0, n_grid - 1);
     baseCell.z = clamp((int)(pn.z * n_grid), 0, n_grid - 1);
 
+    // Tait EOS：p = K * ((rho/rho0)^gamma - 1)，仅取正压（无张力）
     float rho_i = max(rho[i], 1e-3);
     float rhoRatio_i = rho_i / max(restDensity, 1e-3);
-    float p_i = eosK * max(pow(rhoRatio_i, max(eosGamma, 1.0)) - 1.0, 0.0);
+    float p_i = max(eosK * (pow(rhoRatio_i, max(eosGamma, 1.0)) - 1.0), 0.0);
 
-    float3 acc_p = float3(0,0,0);
-    float3 acc_v = float3(0,0,0);
-    float3 v_corr = float3(0,0,0);
-    float3 omega = float3(0,0,0);
-    float3 n_est = float3(0,0,0);
-    float3 acc_st = float3(0,0,0);
+    float3 acc_p = float3(0, 0, 0);
+    float3 acc_v = float3(0, 0, 0);
+    float3 v_corr = float3(0, 0, 0);
 
     for (int dz2 = -1; dz2 <= 1; dz2++)
     for (int dy2 = -1; dy2 <= 1; dy2++)
     for (int dx2 = -1; dx2 <= 1; dx2++)
     {
         int3 c2;
-        c2.x = clamp(baseCell.x + dx2, 0, n_grid - 1);
-        c2.y = clamp(baseCell.y + dy2, 0, n_grid - 1);
-        c2.z = clamp(baseCell.z + dz2, 0, n_grid - 1);
-        int head2 = cellHead[gridIndex(c2)];
-        int k = head2;
+        c2.x = baseCell.x + dx2;
+        c2.y = baseCell.y + dy2;
+        c2.z = baseCell.z + dz2;
+        if (c2.x < 0 || c2.x >= n_grid || c2.y < 0 || c2.y >= n_grid || c2.z < 0 || c2.z >= n_grid) continue;
+        int k = cellHead[gridIndex(c2)];
         int it2 = 0;
         while (k >= 0 && it2 < 4096)
         {
             if (k != (int)i)
             {
                 float3 xk = x[k];
-                float3 d2 = xk - xi;
-                float dsq2 = dot(d2,d2);
-                if (dsq2 <= h2)
+                float3 rij = xi - xk;
+                float dsq = dot(rij, rij);
+                if (dsq < h2 && dsq > 1e-8)
                 {
-                    float r = sqrt(max(dsq2, 1e-6));
-                    float hr = max(h - r, 0.0);
-                    float3 dir = -d2 / max(r, 1e-6);
-                    float3 gradW = -spiky_const * (hr * hr) * dir;
-                    float rho_k = max(rho[k], 1e-3);
-                    float rhoRatio_k = rho_k / max(restDensity, 1e-3);
-                    float p_k = eosK * max(pow(rhoRatio_k, max(eosGamma, 1.0)) - 1.0, 0.0);
-                    float sym = 0.5 * (p_i / (rho_i * rho_i) + p_k / (rho_k * rho_k));
-                    acc_p += -particleMass * sym * gradW;
+                    float r = sqrt(dsq);
+                    float hr = h - r;
+                    float3 dir = rij / r;
+                    // Spiky 梯度：grad W_ij = -spiky_const * (h-r)^2 * (xi - xj)/r
+                    float3 gradW = -spiky_const * hr * hr * dir;
 
-                    float lapW = visc_const * hr / max(h, 1e-3);
+                    float rho_k = max(rho[k], 1e-3);
+                    float p_k = max(eosK * (pow(rho_k / max(restDensity, 1e-3), max(eosGamma, 1.0)) - 1.0), 0.0);
+
+                    // 对称压力（Monaghan）
+                    float sym = (p_i / (rho_i * rho_i) + p_k / (rho_k * rho_k));
                     float3 vk = v[k];
+
+                    // ─── Monaghan-Gingold 人工粘性 ───
+                    // 仅当粒子相互逼近时（v_ij · r_ij < 0）激活，
+                    // 防止「粒子互相穿插 → 反弹 → 再穿插」式沸腾。
+                    float3 vij = vi - vk;
+                    float vij_dot_rij = dot(vij, rij);
+                    float pi_visc = 0.0;
+                    if (vij_dot_rij < 0.0)
+                    {
+                        float mu_ij = h * vij_dot_rij / (dsq + 0.01 * h2);
+                        float rho_avg = 0.5 * (rho_i + rho_k);
+                        // c 由声速取（与 EOS 配套）
+                        float c_avg = soundSpeed;
+                        pi_visc = (-artViscAlpha * c_avg * mu_ij + artViscBeta * mu_ij * mu_ij) / max(rho_avg, 1e-3);
+                    }
+
+                    // 压力 + 人工粘性合并到一个 gradW 项
+                    acc_p += -particleMass * (sym + pi_visc) * gradW;
+
+                    // Mueller 粘性 laplacian（保留作为切向阻尼，但现在系数可以小很多）
+                    float lapW = visc_const * hr;
                     acc_v += viscosity * particleMass * (vk - vi) / rho_k * lapW;
 
-                    float t2 = max(h2 - dsq2, 0.0);
+                    // XSPH 速度平滑（用 poly6 权重）
+                    float t2 = h2 - dsq;
                     float w2 = poly6_const * t2 * t2 * t2;
                     v_corr += particleMass * (vk - vi) / rho_k * w2;
-
-                    float3 omega_ij = cross(vk - vi, gradW);
-                    float om_mag = length(omega_ij);
-                    omega += particleMass * omega_ij / rho_k;
-                    n_est += particleMass * gradW * om_mag / rho_k;
-
-                    float rhoRatio_k2 = rho_k / max(restDensity, 1e-3);
-                    if (surfaceTension > 0.0)
-                    {
-                        float surfLocal = saturate(1.0 - 0.5 * (rhoRatio_i + rhoRatio_k2));
-                        acc_st += surfaceTension * particleMass * surfLocal * gradW;
-                    }
                 }
             }
             k = nextIndex[k];
@@ -214,116 +257,114 @@ void SPHMain(uint3 id : SV_DispatchThreadID)
         }
     }
 
-    float3 acc = acc_p + acc_v;
-    if (vorticityEps > 0.0)
-    {
-        float3 n_dir = normalize(n_est + float3(1e-6,1e-6,1e-6));
-        float3 f_vor = vorticityEps * cross(n_dir, omega);
-        acc += f_vor;
-    }
-    if (surfaceTension > 0.0)
-        acc += acc_st;
+    float3 acc = acc_p + acc_v + gravity;
+
+    // 外部冲量（搅拌/船体）：纯只读，不会引入竞态
     for (int t = 0; t < impulseCount; t++)
     {
         float3 ip = impulses[t].xyz;
-        float str = impulseStrength * impulses[t].w;
+        float w = impulses[t].w;
         float3 dd = xi - ip;
         float rr = length(dd);
-        if (rr < impulseRadius)
+        if (rr < impulseRadius && rr > 1e-6)
         {
-            float hr = max(impulseRadius - rr, 0.0);
-            float w = hr * hr * hr;
-            float3 dirI = normalize(dd + float3(1e-6,1e-6,1e-6));
-            float3 ax = normalize(swirlAxis + float3(1e-6,1e-6,1e-6));
-            float3 tanDir = normalize(cross(ax, dirI) + float3(1e-6,1e-6,1e-6));
-            acc += str * (impulseNormalCoeff * dirI + impulseTangentialCoeff * tanDir) * w;
+            float falloff = 1.0 - rr / max(impulseRadius, 1e-4);
+            float3 dirI = dd / rr;
+            acc += dirI * (impulseStrength * w * falloff);
         }
     }
+
+    // 加速度上限：单步极端加速度（如初始撞击瞬间）会引爆 EOS 形成持续震荡。
+    {
+        float accCap = max(maxAcceleration, 1.0);
+        float accMag = length(acc);
+        if (accMag > accCap) acc *= (accCap / max(accMag, 1e-6));
+    }
+
+    accOut[i]   = float4(acc, 0.0);
+    vCorrOut[i] = float4(v_corr, 0.0);
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+//  SPHIntegrate：每个粒子只读自身 x/v/acc/vCorr，写自身 x/v——无竞态
+// ────────────────────────────────────────────────────────────────────────────
+[numthreads(128,1,1)]
+void SPHIntegrate(uint3 id : SV_DispatchThreadID)
+{
+    uint i = id.x;
+    if (i >= (uint)particle_num) return;
+
+    float3 xi = x[i];
+    float3 vi = v[i];
+    float3 acc = accOut[i].xyz;
+    float3 v_corr = vCorrOut[i].xyz;
+
+    // 半隐式欧拉
     vi += acc * dt;
     vi += xsphC * v_corr;
-    {
-        float low = minSpeed * 2.0;
-        float m2 = dot(vi, vi);
-        if (m2 < low * low)
-        {
-            float f = max(0.0, 1.0 - freeSurfaceDamping * dt);
-            if (rhoRatio_i < freeSurfaceThreshold)
-            {
-                float kf = saturate((freeSurfaceThreshold - rhoRatio_i) / max(freeSurfaceThreshold, 1e-3));
-                f = max(0.0, 1.0 - freeSurfaceDamping * (1.0 + kf) * dt);
-            }
-            vi *= f;
-        }
-    }
 
-    // 与 minSpeed（用于自由面/休眠）解耦：底面用固定撞击阈值，避免极小 minSpeed 时一碰底就 vy=0 像“胶水”。
-    const float floorImpactVy = 0.035;
-    const float wallEps = 1e-4;
-
-    float3 s = (xi - boundsMin) / (boundsMax - boundsMin);
-    if (xi.x < boundsMin.x) { xi.x = boundsMin.x; vi.x = -vi.x * boundaryDamping; }
-    if (xi.y < boundsMin.y)
-    {
-        xi.y = boundsMin.y;
-        if (vi.y < -floorImpactVy) { vi.y = -vi.y * boundaryDamping; }
-        else if (vi.y < 0.0) { vi.y *= boundaryDamping; }
-    }
-    if (xi.z < boundsMin.z) { xi.z = boundsMin.z; vi.z = -vi.z * boundaryDampingZ; float az = min(abs(vi.z), boundaryMaxBounceSpeedZ); vi.z = (vi.z < 0 ? -az : az); }
-    if (xi.x > boundsMax.x) { xi.x = boundsMax.x; vi.x = -vi.x * boundaryDamping; }
-    if (xi.y > boundsMax.y) { xi.y = boundsMax.y; vi.y = -vi.y * boundaryDamping; }
-    if (xi.z > boundsMax.z) { xi.z = boundsMax.z; vi.z = -vi.z * boundaryDampingZ; float az = min(abs(vi.z), boundaryMaxBounceSpeedZ); vi.z = (vi.z < 0 ? -az : az); }
-
-    if (xi.y <= boundsMin.y + wallEps)
-    {
-        if (vi.y < 0.0) { vi.y = 0.0; }
-    }
-    if (obstacleCount > 0)
-    {
-        for (int ob = 0; ob < obstacleCount; ob++)
-        {
-            float3 op = obstacles[ob].xyz;
-            float rad = obstacles[ob].w;
-            float3 dd = xi - op;
-            float rr = length(dd);
-            if (rr < rad)
-            {
-                float3 dir = normalize(dd + float3(1e-6,1e-6,1e-6));
-                float pen = rad - rr;
-                xi = op + dir * rad;
-                float vn = dot(vi, dir);
-                vi -= vn * dir;
-                vi += dir * (obstaclePushStrength * pen);
-                vi *= obstacleDamping;
-                float3 ax = normalize(swirlAxis + float3(1e-6,1e-6,1e-6));
-                float3 tanDir = normalize(cross(ax, dir) + float3(1e-6,1e-6,1e-6));
-                vi += tanDir * (obstacleTangentialStrength * pen);
-                float vt = dot(vi, tanDir);
-                vi -= tanDir * (vt * obstacleFriction);
-            }
-        }
-    }
-
+    // 速度上限（防极端发散）
     float msq = dot(vi, vi);
     if (msq > maxSpeed * maxSpeed) vi = normalize(vi) * maxSpeed;
-    else
-    {
-        // 仅贴边界时做“休眠”清零，避免流体内部因邻域稀疏/力抵消被误判为静止而悬在空中。
-        float margin = max(neighbourRadius * 1.25, minSpeed * 10.0);
-        bool nearWall =
-            xi.x <= boundsMin.x + margin || xi.x >= boundsMax.x - margin ||
-            xi.y <= boundsMin.y + margin || xi.y >= boundsMax.y - margin ||
-            xi.z <= boundsMin.z + margin || xi.z >= boundsMax.z - margin;
-        if (nearWall && msq < minSpeed * minSpeed) vi = float3(0,0,0);
-    }
+
+    // 位置积分
     xi += vi * dt;
+
+    // 反射式边界：仅在朝墙运动时翻转法向，切向自由滑动
+    if (xi.x < boundsMin.x) { xi.x = boundsMin.x; if (vi.x < 0.0) vi.x = -vi.x * boundaryDamping; }
+    if (xi.x > boundsMax.x) { xi.x = boundsMax.x; if (vi.x > 0.0) vi.x = -vi.x * boundaryDamping; }
+    if (xi.y < boundsMin.y) { xi.y = boundsMin.y; if (vi.y < 0.0) vi.y = -vi.y * boundaryDamping; }
+    if (xi.y > boundsMax.y) { xi.y = boundsMax.y; if (vi.y > 0.0) vi.y = -vi.y * boundaryDamping; }
+    if (xi.z < boundsMin.z) { xi.z = boundsMin.z; if (vi.z < 0.0) vi.z = -vi.z * boundaryDampingZ; }
+    if (xi.z > boundsMax.z) { xi.z = boundsMax.z; if (vi.z > 0.0) vi.z = -vi.z * boundaryDampingZ; }
+
+    // 球体障碍：非穿透 + 反弹（只读 obstacles 缓冲，不写 x[k]）
+    for (int ob = 0; ob < obstacleCount; ob++)
+    {
+        float3 op = obstacles[ob].xyz;
+        float rad = obstacles[ob].w;
+        if (rad <= 1e-4) continue;
+        float3 dd = xi - op;
+        float rr = length(dd);
+        if (rr < rad && rr > 1e-6)
+        {
+            float3 dir = dd / rr;
+            xi = op + dir * rad;
+            float vn = dot(vi, dir);
+            if (vn < 0.0) vi -= (1.0 + obstacleDamping) * vn * dir;
+        }
+    }
+
+    // 船体耦合：投影 + 法向防穿透 + 与船体速度对齐（同样只读 boatCoupling 缓冲）
+    for (int bc = 0; bc < boatCouplingCount; bc++)
+    {
+        float3 cp = boatCouplingSpheres[bc].xyz;
+        float cr = max(boatCouplingSpheres[bc].w, 1e-4);
+        float3 cv = boatCouplingVelocities[bc].xyz;
+        float3 dd = xi - cp;
+        float rr = length(dd);
+        if (rr < cr && rr > 1e-6)
+        {
+            float3 dir = dd / rr;
+            xi = cp + dir * cr;
+            float3 rel = vi - cv;
+            float vn = dot(rel, dir);
+            if (vn < 0.0) vi -= vn * dir;
+        }
+    }
+
     v[i] = vi;
     x[i] = xi;
 
-    float3 col = float3(saturate((xi.x - boundsMin.x) / max(boundsMax.x - boundsMin.x, 1e-3)), saturate((xi.y - boundsMin.y) / max(boundsMax.y - boundsMin.y, 1e-3)), 1.0);
+    // 写渲染粒子缓冲
+    float rho_i = max(rho[i], 1e-3);
     float densRatio = rho_i / max(restDensity, 1e-3);
     Particle pOut;
     pOut.position = float4(xi, 1.0);
-    pOut.color = float4(col, 1.0);
+    pOut.color = float4(
+        saturate((xi.x - boundsMin.x) / max(boundsMax.x - boundsMin.x, 1e-3)),
+        saturate((xi.y - boundsMin.y) / max(boundsMax.y - boundsMin.y, 1e-3)),
+        1.0, 1.0);
     pOut.velocity = float4(vi, densRatio);
     _particlesBuffer[i] = pOut;
 }
